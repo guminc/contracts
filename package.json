@@ -1,0 +1,73 @@
+{
+  "name": "scatter",
+  "version": "1.0.0",
+  "description": "Get client ready:",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "concurrently \"cd api && npm start\" \"cd app && npm run dev\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/addy-the-young/scatter.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/addy-the-young/scatter/issues"
+  },
+  "homepage": "https://github.com/addy-the-young/scatter#readme",
+  "dependencies": {
+    "@daonomic/tests-common": "^0.2.2",
+    "@rarible/exchange-interfaces": "^0.4.0",
+    "@rarible/lazy-mint": "^0.5.5",
+    "@rarible/meta-tx": "^0.1.2",
+    "@rarible/royalties": "^0.7.4",
+    "@uploadcare/upload-client": "^2.0.0",
+    "concurrently": "^6.4.0",
+    "ethereumjs-util": "^6.1.0",
+    "moment": "^2.29.1",
+    "os": "^0.1.2"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.4",
+    "@nomiclabs/hardhat-etherscan": "^2.1.8",
+    "@nomiclabs/hardhat-truffle5": "^2.0.3",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
+    "@openzeppelin/hardhat-upgrades": "^1.12.1",
+    "@openzeppelin/truffle-upgrades": "^1.11.0",
+    "@rarible/custom-matchers": "^0.3.0",
+    "@rarible/tokens": "^0.7.0",
+    "@rarible/transfer-proxy": "^0.3.0",
+    "@typechain/ethers-v5": "^7.2.0",
+    "@typechain/hardhat": "^2.3.1",
+    "@typechain/truffle-v5": "^6.0.0",
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^12.20.41",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/parser": "^4.33.0",
+    "chai": "^4.3.4",
+    "dotenv": "^10.0.0",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^3.4.1",
+    "eslint-plugin-promise": "^5.2.0",
+    "ethereum-waffle": "^3.4.0",
+    "ethers": "5.4.7",
+    "hardhat": "^2.8.2",
+    "hardhat-gas-reporter": "^1.0.7",
+    "prettier": "^2.5.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.19",
+    "solhint": "^3.3.6",
+    "solidity-coverage": "^0.7.17",
+    "ts-node": "^10.4.0",
+    "typechain": "latest",
+    "typescript": "^4.5.4",
+    "web3": "^1.6.1"
+  }
+}

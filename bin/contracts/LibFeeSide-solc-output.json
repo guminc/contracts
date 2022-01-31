@@ -1,0 +1,2679 @@
+{
+    "contracts": {
+        "/Users/andrewyoung/projects/scatter/contracts/LibFeeSide.sol": {
+            "LibFeeSide": {
+                "abi": [],
+                "devdoc": {
+                    "kind": "dev",
+                    "methods": {},
+                    "version": 1
+                },
+                "evm": {
+                    "bytecode": {
+                        "generatedSources": [],
+                        "linkReferences": {},
+                        "object": "60566023600b82828239805160001a607314601657fe5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220738224563655d01dc71381f85c6f6ebc8d62b840d80b3317bd3336adad9b972e64736f6c63430007060033",
+                        "opcodes": "PUSH1 0x56 PUSH1 0x23 PUSH1 0xB DUP3 DUP3 DUP3 CODECOPY DUP1 MLOAD PUSH1 0x0 BYTE PUSH1 0x73 EQ PUSH1 0x16 JUMPI INVALID JUMPDEST ADDRESS PUSH1 0x0 MSTORE PUSH1 0x73 DUP2 MSTORE8 DUP3 DUP2 RETURN INVALID PUSH20 0x0 ADDRESS EQ PUSH1 0x80 PUSH1 0x40 MSTORE PUSH1 0x0 DUP1 REVERT INVALID LOG2 PUSH5 0x6970667358 0x22 SLT KECCAK256 PUSH20 0x8224563655D01DC71381F85C6F6EBC8D62B840D8 SIGNEXTEND CALLER OR 0xBD CALLER CALLDATASIZE 0xAD 0xAD SWAP12 SWAP8 0x2E PUSH5 0x736F6C6343 STOP SMOD MOD STOP CALLER ",
+                        "sourceMap": "159:737:0:-:0;;;;;;;;;;;;;;;;;;;;;;;;;"
+                    },
+                    "deployedBytecode": {
+                        "generatedSources": [],
+                        "immutableReferences": {},
+                        "linkReferences": {},
+                        "object": "73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220738224563655d01dc71381f85c6f6ebc8d62b840d80b3317bd3336adad9b972e64736f6c63430007060033",
+                        "opcodes": "PUSH20 0x0 ADDRESS EQ PUSH1 0x80 PUSH1 0x40 MSTORE PUSH1 0x0 DUP1 REVERT INVALID LOG2 PUSH5 0x6970667358 0x22 SLT KECCAK256 PUSH20 0x8224563655D01DC71381F85C6F6EBC8D62B840D8 SIGNEXTEND CALLER OR 0xBD CALLER CALLDATASIZE 0xAD 0xAD SWAP12 SWAP8 0x2E PUSH5 0x736F6C6343 STOP SMOD MOD STOP CALLER ",
+                        "sourceMap": "159:737:0:-:0;;;;;;;;"
+                    },
+                    "gasEstimates": {
+                        "creation": {
+                            "codeDepositCost": "17200",
+                            "executionCost": "97",
+                            "totalCost": "17297"
+                        },
+                        "internal": {
+                            "getFeeSide(bytes4,bytes4)": "infinite"
+                        }
+                    },
+                    "methodIdentifiers": {}
+                },
+                "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/Users/andrewyoung/projects/scatter/contracts/LibFeeSide.sol\":\"LibFeeSide\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/andrewyoung/projects/scatter/contracts/LibFeeSide.sol\":{\"keccak256\":\"0x6b94c3660a48004fc5fc03dd654df8e10b87a8ad0bba55cce358bdbf462927a2\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://8f9a5c7aec782d50134a63ac90ace2a94d82d123b0b882eb36a7d98a3b3e4ebb\",\"dweb:/ipfs/QmNX3WXWYesikRTNsJqdmdmK7hnaSKCfoNgXjyStRSh9Jo\"]},\"/Users/andrewyoung/projects/scatter/node_modules/@rarible/lib-asset/contracts/LibAsset.sol\":{\"keccak256\":\"0x5d63bba4747a12a83c5628dba94bf56714b4dcf94f742ff28863034831061c8a\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://9826768c7f5c5423d9bbf49be50bd21ed2db5374ee47648150e50aa10e3c0151\",\"dweb:/ipfs/Qmex4xCv4MFRfCxMNZzzsKXYAFxbYWQRFsbaHiJfDTozYG\"]}},\"version\":1}",
+                "storageLayout": {
+                    "storage": [],
+                    "types": null
+                },
+                "userdoc": {
+                    "kind": "user",
+                    "methods": {},
+                    "version": 1
+                }
+            }
+        },
+        "/Users/andrewyoung/projects/scatter/node_modules/@rarible/lib-asset/contracts/LibAsset.sol": {
+            "LibAsset": {
+                "abi": [
+                    {
+                        "inputs": [],
+                        "name": "COLLECTION",
+                        "outputs": [
+                            {
+                                "internalType": "bytes4",
+                                "name": "",
+                                "type": "bytes4"
+                            }
+                        ],
+                        "stateMutability": "view",
+                        "type": "function"
+                    },
+                    {
+                        "inputs": [],
+                        "name": "CRYPTO_PUNKS",
+                        "outputs": [
+                            {
+                                "internalType": "bytes4",
+                                "name": "",
+                                "type": "bytes4"
+                            }
+                        ],
+                        "stateMutability": "view",
+                        "type": "function"
+                    },
+                    {
+                        "inputs": [],
+                        "name": "ERC1155_ASSET_CLASS",
+                        "outputs": [
+                            {
+                                "internalType": "bytes4",
+                                "name": "",
+                                "type": "bytes4"
+                            }
+                        ],
+                        "stateMutability": "view",
+                        "type": "function"
+                    },
+                    {
+                        "inputs": [],
+                        "name": "ERC20_ASSET_CLASS",
+                        "outputs": [
+                            {
+                                "internalType": "bytes4",
+                                "name": "",
+                                "type": "bytes4"
+                            }
+                        ],
+                        "stateMutability": "view",
+                        "type": "function"
+                    },
+                    {
+                        "inputs": [],
+                        "name": "ERC721_ASSET_CLASS",
+                        "outputs": [
+                            {
+                                "internalType": "bytes4",
+                                "name": "",
+                                "type": "bytes4"
+                            }
+                        ],
+                        "stateMutability": "view",
+                        "type": "function"
+                    },
+                    {
+                        "inputs": [],
+                        "name": "ETH_ASSET_CLASS",
+                        "outputs": [
+                            {
+                                "internalType": "bytes4",
+                                "name": "",
+                                "type": "bytes4"
+                            }
+                        ],
+                        "stateMutability": "view",
+                        "type": "function"
+                    }
+                ],
+                "devdoc": {
+                    "kind": "dev",
+                    "methods": {},
+                    "version": 1
+                },
+                "evm": {
+                    "bytecode": {
+                        "generatedSources": [],
+                        "linkReferences": {},
+                        "object": "6101cc610026600b82828239805160001a60731461001957fe5b30600052607381538281f3fe730000000000000000000000000000000000000000301460806040526004361061006c5760003560e01c80631d32813614610071578063405bf27514610096578063697b23651461009e5780636cd2c30a146100a6578063b4797da2146100ae578063c214be59146100b6575b600080fd5b6100796100be565b604080516001600160e01b03199092168252519081900360200190f35b6100796100e2565b610079610106565b61007961012a565b61007961014e565b610079610172565b7f3e6b89d41ae6cce5def8a4064ada8dba77d057c7a0113741d26b5e4eccdd2a7e81565b7f973bb64086f173ec8099b7ed3d43da984f4a332e4417a08bc6a286e6402b058681565b7ff63c282591b950c64511498574d1cdfa76078b63dbcad6d06139d12d140b61cb81565b7f8ae85d849167ff996c04040c44924fd364217285e4cad818292c7ac37c0a345b81565b7faaaebeba3810b1e6b70781f14b2d72c1cb89c0b2b320c43bb67ff79f562f5ff481565b7f73ad2146b3d3a286642c794379d750360a2d53a3459a11b3e5d6cc900f55f44a8156fea264697066735822122074221644ad02e0bed94daf42507073c36e9c6ae3c19e1ad41d9f30fb0e8d1aec64736f6c63430007060033",
+                        "opcodes": "PUSH2 0x1CC PUSH2 0x26 PUSH1 0xB DUP3 DUP3 DUP3 CODECOPY DUP1 MLOAD PUSH1 0x0 BYTE PUSH1 0x73 EQ PUSH2 0x19 JUMPI INVALID JUMPDEST ADDRESS PUSH1 0x0 MSTORE PUSH1 0x73 DUP2 MSTORE8 DUP3 DUP2 RETURN INVALID PUSH20 0x0 ADDRESS EQ PUSH1 0x80 PUSH1 0x40 MSTORE PUSH1 0x4 CALLDATASIZE LT PUSH2 0x6C JUMPI PUSH1 0x0 CALLDATALOAD PUSH1 0xE0 SHR DUP1 PUSH4 0x1D328136 EQ PUSH2 0x71 JUMPI DUP1 PUSH4 0x405BF275 EQ PUSH2 0x96 JUMPI DUP1 PUSH4 0x697B2365 EQ PUSH2 0x9E JUMPI DUP1 PUSH4 0x6CD2C30A EQ PUSH2 0xA6 JUMPI DUP1 PUSH4 0xB4797DA2 EQ PUSH2 0xAE JUMPI DUP1 PUSH4 0xC214BE59 EQ PUSH2 0xB6 JUMPI JUMPDEST PUSH1 0x0 DUP1 REVERT JUMPDEST PUSH2 0x79 PUSH2 0xBE JUMP JUMPDEST PUSH1 0x40 DUP1 MLOAD PUSH1 0x1 PUSH1 0x1 PUSH1 0xE0 SHL SUB NOT SWAP1 SWAP3 AND DUP3 MSTORE MLOAD SWAP1 DUP2 SWAP1 SUB PUSH1 0x20 ADD SWAP1 RETURN JUMPDEST PUSH2 0x79 PUSH2 0xE2 JUMP JUMPDEST PUSH2 0x79 PUSH2 0x106 JUMP JUMPDEST PUSH2 0x79 PUSH2 0x12A JUMP JUMPDEST PUSH2 0x79 PUSH2 0x14E JUMP JUMPDEST PUSH2 0x79 PUSH2 0x172 JUMP JUMPDEST PUSH32 0x3E6B89D41AE6CCE5DEF8A4064ADA8DBA77D057C7A0113741D26B5E4ECCDD2A7E DUP2 JUMP JUMPDEST PUSH32 0x973BB64086F173EC8099B7ED3D43DA984F4A332E4417A08BC6A286E6402B0586 DUP2 JUMP JUMPDEST PUSH32 0xF63C282591B950C64511498574D1CDFA76078B63DBCAD6D06139D12D140B61CB DUP2 JUMP JUMPDEST PUSH32 0x8AE85D849167FF996C04040C44924FD364217285E4CAD818292C7AC37C0A345B DUP2 JUMP JUMPDEST PUSH32 0xAAAEBEBA3810B1E6B70781F14B2D72C1CB89C0B2B320C43BB67FF79F562F5FF4 DUP2 JUMP JUMPDEST PUSH32 0x73AD2146B3D3A286642C794379D750360A2D53A3459A11B3E5D6CC900F55F44A DUP2 JUMP INVALID LOG2 PUSH5 0x6970667358 0x22 SLT KECCAK256 PUSH21 0x221644AD02E0BED94DAF42507073C36E9C6AE3C19E BYTE 0xD4 SAR SWAP16 ADDRESS 0xFB 0xE DUP14 BYTE 0xEC PUSH5 0x736F6C6343 STOP SMOD MOD STOP CALLER ",
+                        "sourceMap": "57:1372:1:-:0;;;;;;;;;;;;;;;;;;;;;;;;;"
+                    },
+                    "deployedBytecode": {
+                        "generatedSources": [],
+                        "immutableReferences": {},
+                        "linkReferences": {},
+                        "object": "730000000000000000000000000000000000000000301460806040526004361061006c5760003560e01c80631d32813614610071578063405bf27514610096578063697b23651461009e5780636cd2c30a146100a6578063b4797da2146100ae578063c214be59146100b6575b600080fd5b6100796100be565b604080516001600160e01b03199092168252519081900360200190f35b6100796100e2565b610079610106565b61007961012a565b61007961014e565b610079610172565b7f3e6b89d41ae6cce5def8a4064ada8dba77d057c7a0113741d26b5e4eccdd2a7e81565b7f973bb64086f173ec8099b7ed3d43da984f4a332e4417a08bc6a286e6402b058681565b7ff63c282591b950c64511498574d1cdfa76078b63dbcad6d06139d12d140b61cb81565b7f8ae85d849167ff996c04040c44924fd364217285e4cad818292c7ac37c0a345b81565b7faaaebeba3810b1e6b70781f14b2d72c1cb89c0b2b320c43bb67ff79f562f5ff481565b7f73ad2146b3d3a286642c794379d750360a2d53a3459a11b3e5d6cc900f55f44a8156fea264697066735822122074221644ad02e0bed94daf42507073c36e9c6ae3c19e1ad41d9f30fb0e8d1aec64736f6c63430007060033",
+                        "opcodes": "PUSH20 0x0 ADDRESS EQ PUSH1 0x80 PUSH1 0x40 MSTORE PUSH1 0x4 CALLDATASIZE LT PUSH2 0x6C JUMPI PUSH1 0x0 CALLDATALOAD PUSH1 0xE0 SHR DUP1 PUSH4 0x1D328136 EQ PUSH2 0x71 JUMPI DUP1 PUSH4 0x405BF275 EQ PUSH2 0x96 JUMPI DUP1 PUSH4 0x697B2365 EQ PUSH2 0x9E JUMPI DUP1 PUSH4 0x6CD2C30A EQ PUSH2 0xA6 JUMPI DUP1 PUSH4 0xB4797DA2 EQ PUSH2 0xAE JUMPI DUP1 PUSH4 0xC214BE59 EQ PUSH2 0xB6 JUMPI JUMPDEST PUSH1 0x0 DUP1 REVERT JUMPDEST PUSH2 0x79 PUSH2 0xBE JUMP JUMPDEST PUSH1 0x40 DUP1 MLOAD PUSH1 0x1 PUSH1 0x1 PUSH1 0xE0 SHL SUB NOT SWAP1 SWAP3 AND DUP3 MSTORE MLOAD SWAP1 DUP2 SWAP1 SUB PUSH1 0x20 ADD SWAP1 RETURN JUMPDEST PUSH2 0x79 PUSH2 0xE2 JUMP JUMPDEST PUSH2 0x79 PUSH2 0x106 JUMP JUMPDEST PUSH2 0x79 PUSH2 0x12A JUMP JUMPDEST PUSH2 0x79 PUSH2 0x14E JUMP JUMPDEST PUSH2 0x79 PUSH2 0x172 JUMP JUMPDEST PUSH32 0x3E6B89D41AE6CCE5DEF8A4064ADA8DBA77D057C7A0113741D26B5E4ECCDD2A7E DUP2 JUMP JUMPDEST PUSH32 0x973BB64086F173EC8099B7ED3D43DA984F4A332E4417A08BC6A286E6402B0586 DUP2 JUMP JUMPDEST PUSH32 0xF63C282591B950C64511498574D1CDFA76078B63DBCAD6D06139D12D140B61CB DUP2 JUMP JUMPDEST PUSH32 0x8AE85D849167FF996C04040C44924FD364217285E4CAD818292C7AC37C0A345B DUP2 JUMP JUMPDEST PUSH32 0xAAAEBEBA3810B1E6B70781F14B2D72C1CB89C0B2B320C43BB67FF79F562F5FF4 DUP2 JUMP JUMPDEST PUSH32 0x73AD2146B3D3A286642C794379D750360A2D53A3459A11B3E5D6CC900F55F44A DUP2 JUMP INVALID LOG2 PUSH5 0x6970667358 0x22 SLT KECCAK256 PUSH21 0x221644AD02E0BED94DAF42507073C36E9C6AE3C19E BYTE 0xD4 SAR SWAP16 ADDRESS 0xFB 0xE DUP14 BYTE 0xEC PUSH5 0x736F6C6343 STOP SMOD MOD STOP CALLER ",
+                        "sourceMap": "57:1372:1:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;455:71;;;:::i;:::-;;;;-1:-1:-1;;;;;;455:71:1;;;;;;;;;;;;;;303:73;;;:::i;382:67::-;;;:::i;151:69::-;;;:::i;80:65::-;;;:::i;226:71::-;;;:::i;455:::-;500:25;455:71;:::o;303:73::-;355:20;303:73;:::o;382:67::-;425:23;382:67;:::o;151:69::-;201:18;151:69;:::o;80:65::-;128:16;80:65;:::o;226:71::-;277:19;226:71;:::o"
+                    },
+                    "gasEstimates": {
+                        "creation": {
+                            "codeDepositCost": "92000",
+                            "executionCost": "166",
+                            "totalCost": "92166"
+                        },
+                        "external": {
+                            "COLLECTION()": "228",
+                            "CRYPTO_PUNKS()": "184",
+                            "ERC1155_ASSET_CLASS()": "206",
+                            "ERC20_ASSET_CLASS()": "250",
+                            "ERC721_ASSET_CLASS()": "294",
+                            "ETH_ASSET_CLASS()": "272"
+                        },
+                        "internal": {
+                            "hash(struct LibAsset.Asset memory)": "infinite",
+                            "hash(struct LibAsset.AssetType memory)": "infinite"
+                        }
+                    },
+                    "methodIdentifiers": {
+                        "COLLECTION()": "697b2365",
+                        "CRYPTO_PUNKS()": "1d328136",
+                        "ERC1155_ASSET_CLASS()": "405bf275",
+                        "ERC20_ASSET_CLASS()": "6cd2c30a",
+                        "ERC721_ASSET_CLASS()": "c214be59",
+                        "ETH_ASSET_CLASS()": "b4797da2"
+                    }
+                },
+                "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"COLLECTION\",\"outputs\":[{\"internalType\":\"bytes4\",\"name\":\"\",\"type\":\"bytes4\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CRYPTO_PUNKS\",\"outputs\":[{\"internalType\":\"bytes4\",\"name\":\"\",\"type\":\"bytes4\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ERC1155_ASSET_CLASS\",\"outputs\":[{\"internalType\":\"bytes4\",\"name\":\"\",\"type\":\"bytes4\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ERC20_ASSET_CLASS\",\"outputs\":[{\"internalType\":\"bytes4\",\"name\":\"\",\"type\":\"bytes4\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ERC721_ASSET_CLASS\",\"outputs\":[{\"internalType\":\"bytes4\",\"name\":\"\",\"type\":\"bytes4\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ETH_ASSET_CLASS\",\"outputs\":[{\"internalType\":\"bytes4\",\"name\":\"\",\"type\":\"bytes4\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/Users/andrewyoung/projects/scatter/node_modules/@rarible/lib-asset/contracts/LibAsset.sol\":\"LibAsset\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/andrewyoung/projects/scatter/node_modules/@rarible/lib-asset/contracts/LibAsset.sol\":{\"keccak256\":\"0x5d63bba4747a12a83c5628dba94bf56714b4dcf94f742ff28863034831061c8a\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://9826768c7f5c5423d9bbf49be50bd21ed2db5374ee47648150e50aa10e3c0151\",\"dweb:/ipfs/Qmex4xCv4MFRfCxMNZzzsKXYAFxbYWQRFsbaHiJfDTozYG\"]}},\"version\":1}",
+                "storageLayout": {
+                    "storage": [],
+                    "types": null
+                },
+                "userdoc": {
+                    "kind": "user",
+                    "methods": {},
+                    "version": 1
+                }
+            }
+        }
+    },
+    "sources": {
+        "/Users/andrewyoung/projects/scatter/contracts/LibFeeSide.sol": {
+            "ast": {
+                "absolutePath": "/Users/andrewyoung/projects/scatter/contracts/LibFeeSide.sol",
+                "exportedSymbols": {
+                    "LibAsset": [
+                        187
+                    ],
+                    "LibFeeSide": [
+                        74
+                    ]
+                },
+                "id": 75,
+                "license": "MIT",
+                "nodeType": "SourceUnit",
+                "nodes": [
+                    {
+                        "id": 1,
+                        "literals": [
+                            "solidity",
+                            "0.7",
+                            ".6"
+                        ],
+                        "nodeType": "PragmaDirective",
+                        "src": "33:22:0"
+                    },
+                    {
+                        "absolutePath": "/Users/andrewyoung/projects/scatter/node_modules/@rarible/lib-asset/contracts/LibAsset.sol",
+                        "file": "/Users/andrewyoung/projects/scatter/node_modules/@rarible/lib-asset/contracts/LibAsset.sol",
+                        "id": 2,
+                        "nodeType": "ImportDirective",
+                        "scope": 75,
+                        "sourceUnit": 188,
+                        "src": "57:100:0",
+                        "symbolAliases": [],
+                        "unitAlias": ""
+                    },
+                    {
+                        "abstract": false,
+                        "baseContracts": [],
+                        "contractDependencies": [],
+                        "contractKind": "library",
+                        "fullyImplemented": true,
+                        "id": 74,
+                        "linearizedBaseContracts": [
+                            74
+                        ],
+                        "name": "LibFeeSide",
+                        "nodeType": "ContractDefinition",
+                        "nodes": [
+                            {
+                                "canonicalName": "LibFeeSide.FeeSide",
+                                "id": 6,
+                                "members": [
+                                    {
+                                        "id": 3,
+                                        "name": "NONE",
+                                        "nodeType": "EnumValue",
+                                        "src": "199:4:0"
+                                    },
+                                    {
+                                        "id": 4,
+                                        "name": "MAKE",
+                                        "nodeType": "EnumValue",
+                                        "src": "205:4:0"
+                                    },
+                                    {
+                                        "id": 5,
+                                        "name": "TAKE",
+                                        "nodeType": "EnumValue",
+                                        "src": "211:4:0"
+                                    }
+                                ],
+                                "name": "FeeSide",
+                                "nodeType": "EnumDefinition",
+                                "src": "185:31:0"
+                            },
+                            {
+                                "body": {
+                                    "id": 72,
+                                    "nodeType": "Block",
+                                    "src": "300:594:0",
+                                    "statements": [
+                                        {
+                                            "condition": {
+                                                "commonType": {
+                                                    "typeIdentifier": "t_bytes4",
+                                                    "typeString": "bytes4"
+                                                },
+                                                "id": 18,
+                                                "isConstant": false,
+                                                "isLValue": false,
+                                                "isPure": false,
+                                                "lValueRequested": false,
+                                                "leftExpression": {
+                                                    "id": 15,
+                                                    "name": "make",
+                                                    "nodeType": "Identifier",
+                                                    "overloadedDeclarations": [],
+                                                    "referencedDeclaration": 8,
+                                                    "src": "314:4:0",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_bytes4",
+                                                        "typeString": "bytes4"
+                                                    }
+                                                },
+                                                "nodeType": "BinaryOperation",
+                                                "operator": "==",
+                                                "rightExpression": {
+                                                    "expression": {
+                                                        "id": 16,
+                                                        "name": "LibAsset",
+                                                        "nodeType": "Identifier",
+                                                        "overloadedDeclarations": [],
+                                                        "referencedDeclaration": 187,
+                                                        "src": "322:8:0",
+                                                        "typeDescriptions": {
+                                                            "typeIdentifier": "t_type$_t_contract$_LibAsset_$187_$",
+                                                            "typeString": "type(library LibAsset)"
+                                                        }
+                                                    },
+                                                    "id": 17,
+                                                    "isConstant": false,
+                                                    "isLValue": false,
+                                                    "isPure": false,
+                                                    "lValueRequested": false,
+                                                    "memberName": "ETH_ASSET_CLASS",
+                                                    "nodeType": "MemberAccess",
+                                                    "referencedDeclaration": 84,
+                                                    "src": "322:24:0",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_bytes4",
+                                                        "typeString": "bytes4"
+                                                    }
+                                                },
+                                                "src": "314:32:0",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_bool",
+                                                    "typeString": "bool"
+                                                }
+                                            },
+                                            "id": 23,
+                                            "nodeType": "IfStatement",
+                                            "src": "310:82:0",
+                                            "trueBody": {
+                                                "id": 22,
+                                                "nodeType": "Block",
+                                                "src": "348:44:0",
+                                                "statements": [
+                                                    {
+                                                        "expression": {
+                                                            "expression": {
+                                                                "id": 19,
+                                                                "name": "FeeSide",
+                                                                "nodeType": "Identifier",
+                                                                "overloadedDeclarations": [],
+                                                                "referencedDeclaration": 6,
+                                                                "src": "369:7:0",
+                                                                "typeDescriptions": {
+                                                                    "typeIdentifier": "t_type$_t_enum$_FeeSide_$6_$",
+                                                                    "typeString": "type(enum LibFeeSide.FeeSide)"
+                                                                }
+                                                            },
+                                                            "id": 20,
+                                                            "isConstant": false,
+                                                            "isLValue": false,
+                                                            "isPure": true,
+                                                            "lValueRequested": false,
+                                                            "memberName": "MAKE",
+                                                            "nodeType": "MemberAccess",
+                                                            "src": "369:12:0",
+                                                            "typeDescriptions": {
+                                                                "typeIdentifier": "t_enum$_FeeSide_$6",
+                                                                "typeString": "enum LibFeeSide.FeeSide"
+                                                            }
+                                                        },
+                                                        "functionReturnParameters": 14,
+                                                        "id": 21,
+                                                        "nodeType": "Return",
+                                                        "src": "362:19:0"
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "condition": {
+                                                "commonType": {
+                                                    "typeIdentifier": "t_bytes4",
+                                                    "typeString": "bytes4"
+                                                },
+                                                "id": 27,
+                                                "isConstant": false,
+                                                "isLValue": false,
+                                                "isPure": false,
+                                                "lValueRequested": false,
+                                                "leftExpression": {
+                                                    "id": 24,
+                                                    "name": "take",
+                                                    "nodeType": "Identifier",
+                                                    "overloadedDeclarations": [],
+                                                    "referencedDeclaration": 10,
+                                                    "src": "405:4:0",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_bytes4",
+                                                        "typeString": "bytes4"
+                                                    }
+                                                },
+                                                "nodeType": "BinaryOperation",
+                                                "operator": "==",
+                                                "rightExpression": {
+                                                    "expression": {
+                                                        "id": 25,
+                                                        "name": "LibAsset",
+                                                        "nodeType": "Identifier",
+                                                        "overloadedDeclarations": [],
+                                                        "referencedDeclaration": 187,
+                                                        "src": "413:8:0",
+                                                        "typeDescriptions": {
+                                                            "typeIdentifier": "t_type$_t_contract$_LibAsset_$187_$",
+                                                            "typeString": "type(library LibAsset)"
+                                                        }
+                                                    },
+                                                    "id": 26,
+                                                    "isConstant": false,
+                                                    "isLValue": false,
+                                                    "isPure": false,
+                                                    "lValueRequested": false,
+                                                    "memberName": "ETH_ASSET_CLASS",
+                                                    "nodeType": "MemberAccess",
+                                                    "referencedDeclaration": 84,
+                                                    "src": "413:24:0",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_bytes4",
+                                                        "typeString": "bytes4"
+                                                    }
+                                                },
+                                                "src": "405:32:0",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_bool",
+                                                    "typeString": "bool"
+                                                }
+                                            },
+                                            "id": 32,
+                                            "nodeType": "IfStatement",
+                                            "src": "401:82:0",
+                                            "trueBody": {
+                                                "id": 31,
+                                                "nodeType": "Block",
+                                                "src": "439:44:0",
+                                                "statements": [
+                                                    {
+                                                        "expression": {
+                                                            "expression": {
+                                                                "id": 28,
+                                                                "name": "FeeSide",
+                                                                "nodeType": "Identifier",
+                                                                "overloadedDeclarations": [],
+                                                                "referencedDeclaration": 6,
+                                                                "src": "460:7:0",
+                                                                "typeDescriptions": {
+                                                                    "typeIdentifier": "t_type$_t_enum$_FeeSide_$6_$",
+                                                                    "typeString": "type(enum LibFeeSide.FeeSide)"
+                                                                }
+                                                            },
+                                                            "id": 29,
+                                                            "isConstant": false,
+                                                            "isLValue": false,
+                                                            "isPure": true,
+                                                            "lValueRequested": false,
+                                                            "memberName": "TAKE",
+                                                            "nodeType": "MemberAccess",
+                                                            "src": "460:12:0",
+                                                            "typeDescriptions": {
+                                                                "typeIdentifier": "t_enum$_FeeSide_$6",
+                                                                "typeString": "enum LibFeeSide.FeeSide"
+                                                            }
+                                                        },
+                                                        "functionReturnParameters": 14,
+                                                        "id": 30,
+                                                        "nodeType": "Return",
+                                                        "src": "453:19:0"
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "condition": {
+                                                "commonType": {
+                                                    "typeIdentifier": "t_bytes4",
+                                                    "typeString": "bytes4"
+                                                },
+                                                "id": 36,
+                                                "isConstant": false,
+                                                "isLValue": false,
+                                                "isPure": false,
+                                                "lValueRequested": false,
+                                                "leftExpression": {
+                                                    "id": 33,
+                                                    "name": "make",
+                                                    "nodeType": "Identifier",
+                                                    "overloadedDeclarations": [],
+                                                    "referencedDeclaration": 8,
+                                                    "src": "496:4:0",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_bytes4",
+                                                        "typeString": "bytes4"
+                                                    }
+                                                },
+                                                "nodeType": "BinaryOperation",
+                                                "operator": "==",
+                                                "rightExpression": {
+                                                    "expression": {
+                                                        "id": 34,
+                                                        "name": "LibAsset",
+                                                        "nodeType": "Identifier",
+                                                        "overloadedDeclarations": [],
+                                                        "referencedDeclaration": 187,
+                                                        "src": "504:8:0",
+                                                        "typeDescriptions": {
+                                                            "typeIdentifier": "t_type$_t_contract$_LibAsset_$187_$",
+                                                            "typeString": "type(library LibAsset)"
+                                                        }
+                                                    },
+                                                    "id": 35,
+                                                    "isConstant": false,
+                                                    "isLValue": false,
+                                                    "isPure": false,
+                                                    "lValueRequested": false,
+                                                    "memberName": "ERC20_ASSET_CLASS",
+                                                    "nodeType": "MemberAccess",
+                                                    "referencedDeclaration": 92,
+                                                    "src": "504:26:0",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_bytes4",
+                                                        "typeString": "bytes4"
+                                                    }
+                                                },
+                                                "src": "496:34:0",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_bool",
+                                                    "typeString": "bool"
+                                                }
+                                            },
+                                            "id": 41,
+                                            "nodeType": "IfStatement",
+                                            "src": "492:84:0",
+                                            "trueBody": {
+                                                "id": 40,
+                                                "nodeType": "Block",
+                                                "src": "532:44:0",
+                                                "statements": [
+                                                    {
+                                                        "expression": {
+                                                            "expression": {
+                                                                "id": 37,
+                                                                "name": "FeeSide",
+                                                                "nodeType": "Identifier",
+                                                                "overloadedDeclarations": [],
+                                                                "referencedDeclaration": 6,
+                                                                "src": "553:7:0",
+                                                                "typeDescriptions": {
+                                                                    "typeIdentifier": "t_type$_t_enum$_FeeSide_$6_$",
+                                                                    "typeString": "type(enum LibFeeSide.FeeSide)"
+                                                                }
+                                                            },
+                                                            "id": 38,
+                                                            "isConstant": false,
+                                                            "isLValue": false,
+                                                            "isPure": true,
+                                                            "lValueRequested": false,
+                                                            "memberName": "MAKE",
+                                                            "nodeType": "MemberAccess",
+                                                            "src": "553:12:0",
+                                                            "typeDescriptions": {
+                                                                "typeIdentifier": "t_enum$_FeeSide_$6",
+                                                                "typeString": "enum LibFeeSide.FeeSide"
+                                                            }
+                                                        },
+                                                        "functionReturnParameters": 14,
+                                                        "id": 39,
+                                                        "nodeType": "Return",
+                                                        "src": "546:19:0"
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "condition": {
+                                                "commonType": {
+                                                    "typeIdentifier": "t_bytes4",
+                                                    "typeString": "bytes4"
+                                                },
+                                                "id": 45,
+                                                "isConstant": false,
+                                                "isLValue": false,
+                                                "isPure": false,
+                                                "lValueRequested": false,
+                                                "leftExpression": {
+                                                    "id": 42,
+                                                    "name": "take",
+                                                    "nodeType": "Identifier",
+                                                    "overloadedDeclarations": [],
+                                                    "referencedDeclaration": 10,
+                                                    "src": "589:4:0",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_bytes4",
+                                                        "typeString": "bytes4"
+                                                    }
+                                                },
+                                                "nodeType": "BinaryOperation",
+                                                "operator": "==",
+                                                "rightExpression": {
+                                                    "expression": {
+                                                        "id": 43,
+                                                        "name": "LibAsset",
+                                                        "nodeType": "Identifier",
+                                                        "overloadedDeclarations": [],
+                                                        "referencedDeclaration": 187,
+                                                        "src": "597:8:0",
+                                                        "typeDescriptions": {
+                                                            "typeIdentifier": "t_type$_t_contract$_LibAsset_$187_$",
+                                                            "typeString": "type(library LibAsset)"
+                                                        }
+                                                    },
+                                                    "id": 44,
+                                                    "isConstant": false,
+                                                    "isLValue": false,
+                                                    "isPure": false,
+                                                    "lValueRequested": false,
+                                                    "memberName": "ERC20_ASSET_CLASS",
+                                                    "nodeType": "MemberAccess",
+                                                    "referencedDeclaration": 92,
+                                                    "src": "597:26:0",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_bytes4",
+                                                        "typeString": "bytes4"
+                                                    }
+                                                },
+                                                "src": "589:34:0",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_bool",
+                                                    "typeString": "bool"
+                                                }
+                                            },
+                                            "id": 50,
+                                            "nodeType": "IfStatement",
+                                            "src": "585:84:0",
+                                            "trueBody": {
+                                                "id": 49,
+                                                "nodeType": "Block",
+                                                "src": "625:44:0",
+                                                "statements": [
+                                                    {
+                                                        "expression": {
+                                                            "expression": {
+                                                                "id": 46,
+                                                                "name": "FeeSide",
+                                                                "nodeType": "Identifier",
+                                                                "overloadedDeclarations": [],
+                                                                "referencedDeclaration": 6,
+                                                                "src": "646:7:0",
+                                                                "typeDescriptions": {
+                                                                    "typeIdentifier": "t_type$_t_enum$_FeeSide_$6_$",
+                                                                    "typeString": "type(enum LibFeeSide.FeeSide)"
+                                                                }
+                                                            },
+                                                            "id": 47,
+                                                            "isConstant": false,
+                                                            "isLValue": false,
+                                                            "isPure": true,
+                                                            "lValueRequested": false,
+                                                            "memberName": "TAKE",
+                                                            "nodeType": "MemberAccess",
+                                                            "src": "646:12:0",
+                                                            "typeDescriptions": {
+                                                                "typeIdentifier": "t_enum$_FeeSide_$6",
+                                                                "typeString": "enum LibFeeSide.FeeSide"
+                                                            }
+                                                        },
+                                                        "functionReturnParameters": 14,
+                                                        "id": 48,
+                                                        "nodeType": "Return",
+                                                        "src": "639:19:0"
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "condition": {
+                                                "commonType": {
+                                                    "typeIdentifier": "t_bytes4",
+                                                    "typeString": "bytes4"
+                                                },
+                                                "id": 54,
+                                                "isConstant": false,
+                                                "isLValue": false,
+                                                "isPure": false,
+                                                "lValueRequested": false,
+                                                "leftExpression": {
+                                                    "id": 51,
+                                                    "name": "make",
+                                                    "nodeType": "Identifier",
+                                                    "overloadedDeclarations": [],
+                                                    "referencedDeclaration": 8,
+                                                    "src": "682:4:0",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_bytes4",
+                                                        "typeString": "bytes4"
+                                                    }
+                                                },
+                                                "nodeType": "BinaryOperation",
+                                                "operator": "==",
+                                                "rightExpression": {
+                                                    "expression": {
+                                                        "id": 52,
+                                                        "name": "LibAsset",
+                                                        "nodeType": "Identifier",
+                                                        "overloadedDeclarations": [],
+                                                        "referencedDeclaration": 187,
+                                                        "src": "690:8:0",
+                                                        "typeDescriptions": {
+                                                            "typeIdentifier": "t_type$_t_contract$_LibAsset_$187_$",
+                                                            "typeString": "type(library LibAsset)"
+                                                        }
+                                                    },
+                                                    "id": 53,
+                                                    "isConstant": false,
+                                                    "isLValue": false,
+                                                    "isPure": false,
+                                                    "lValueRequested": false,
+                                                    "memberName": "ERC1155_ASSET_CLASS",
+                                                    "nodeType": "MemberAccess",
+                                                    "referencedDeclaration": 108,
+                                                    "src": "690:28:0",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_bytes4",
+                                                        "typeString": "bytes4"
+                                                    }
+                                                },
+                                                "src": "682:36:0",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_bool",
+                                                    "typeString": "bool"
+                                                }
+                                            },
+                                            "id": 59,
+                                            "nodeType": "IfStatement",
+                                            "src": "678:86:0",
+                                            "trueBody": {
+                                                "id": 58,
+                                                "nodeType": "Block",
+                                                "src": "720:44:0",
+                                                "statements": [
+                                                    {
+                                                        "expression": {
+                                                            "expression": {
+                                                                "id": 55,
+                                                                "name": "FeeSide",
+                                                                "nodeType": "Identifier",
+                                                                "overloadedDeclarations": [],
+                                                                "referencedDeclaration": 6,
+                                                                "src": "741:7:0",
+                                                                "typeDescriptions": {
+                                                                    "typeIdentifier": "t_type$_t_enum$_FeeSide_$6_$",
+                                                                    "typeString": "type(enum LibFeeSide.FeeSide)"
+                                                                }
+                                                            },
+                                                            "id": 56,
+                                                            "isConstant": false,
+                                                            "isLValue": false,
+                                                            "isPure": true,
+                                                            "lValueRequested": false,
+                                                            "memberName": "MAKE",
+                                                            "nodeType": "MemberAccess",
+                                                            "src": "741:12:0",
+                                                            "typeDescriptions": {
+                                                                "typeIdentifier": "t_enum$_FeeSide_$6",
+                                                                "typeString": "enum LibFeeSide.FeeSide"
+                                                            }
+                                                        },
+                                                        "functionReturnParameters": 14,
+                                                        "id": 57,
+                                                        "nodeType": "Return",
+                                                        "src": "734:19:0"
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "condition": {
+                                                "commonType": {
+                                                    "typeIdentifier": "t_bytes4",
+                                                    "typeString": "bytes4"
+                                                },
+                                                "id": 63,
+                                                "isConstant": false,
+                                                "isLValue": false,
+                                                "isPure": false,
+                                                "lValueRequested": false,
+                                                "leftExpression": {
+                                                    "id": 60,
+                                                    "name": "take",
+                                                    "nodeType": "Identifier",
+                                                    "overloadedDeclarations": [],
+                                                    "referencedDeclaration": 10,
+                                                    "src": "777:4:0",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_bytes4",
+                                                        "typeString": "bytes4"
+                                                    }
+                                                },
+                                                "nodeType": "BinaryOperation",
+                                                "operator": "==",
+                                                "rightExpression": {
+                                                    "expression": {
+                                                        "id": 61,
+                                                        "name": "LibAsset",
+                                                        "nodeType": "Identifier",
+                                                        "overloadedDeclarations": [],
+                                                        "referencedDeclaration": 187,
+                                                        "src": "785:8:0",
+                                                        "typeDescriptions": {
+                                                            "typeIdentifier": "t_type$_t_contract$_LibAsset_$187_$",
+                                                            "typeString": "type(library LibAsset)"
+                                                        }
+                                                    },
+                                                    "id": 62,
+                                                    "isConstant": false,
+                                                    "isLValue": false,
+                                                    "isPure": false,
+                                                    "lValueRequested": false,
+                                                    "memberName": "ERC1155_ASSET_CLASS",
+                                                    "nodeType": "MemberAccess",
+                                                    "referencedDeclaration": 108,
+                                                    "src": "785:28:0",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_bytes4",
+                                                        "typeString": "bytes4"
+                                                    }
+                                                },
+                                                "src": "777:36:0",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_bool",
+                                                    "typeString": "bool"
+                                                }
+                                            },
+                                            "id": 68,
+                                            "nodeType": "IfStatement",
+                                            "src": "773:86:0",
+                                            "trueBody": {
+                                                "id": 67,
+                                                "nodeType": "Block",
+                                                "src": "815:44:0",
+                                                "statements": [
+                                                    {
+                                                        "expression": {
+                                                            "expression": {
+                                                                "id": 64,
+                                                                "name": "FeeSide",
+                                                                "nodeType": "Identifier",
+                                                                "overloadedDeclarations": [],
+                                                                "referencedDeclaration": 6,
+                                                                "src": "836:7:0",
+                                                                "typeDescriptions": {
+                                                                    "typeIdentifier": "t_type$_t_enum$_FeeSide_$6_$",
+                                                                    "typeString": "type(enum LibFeeSide.FeeSide)"
+                                                                }
+                                                            },
+                                                            "id": 65,
+                                                            "isConstant": false,
+                                                            "isLValue": false,
+                                                            "isPure": true,
+                                                            "lValueRequested": false,
+                                                            "memberName": "TAKE",
+                                                            "nodeType": "MemberAccess",
+                                                            "src": "836:12:0",
+                                                            "typeDescriptions": {
+                                                                "typeIdentifier": "t_enum$_FeeSide_$6",
+                                                                "typeString": "enum LibFeeSide.FeeSide"
+                                                            }
+                                                        },
+                                                        "functionReturnParameters": 14,
+                                                        "id": 66,
+                                                        "nodeType": "Return",
+                                                        "src": "829:19:0"
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "expression": {
+                                                "expression": {
+                                                    "id": 69,
+                                                    "name": "FeeSide",
+                                                    "nodeType": "Identifier",
+                                                    "overloadedDeclarations": [],
+                                                    "referencedDeclaration": 6,
+                                                    "src": "875:7:0",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_type$_t_enum$_FeeSide_$6_$",
+                                                        "typeString": "type(enum LibFeeSide.FeeSide)"
+                                                    }
+                                                },
+                                                "id": 70,
+                                                "isConstant": false,
+                                                "isLValue": false,
+                                                "isPure": true,
+                                                "lValueRequested": false,
+                                                "memberName": "NONE",
+                                                "nodeType": "MemberAccess",
+                                                "src": "875:12:0",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_enum$_FeeSide_$6",
+                                                    "typeString": "enum LibFeeSide.FeeSide"
+                                                }
+                                            },
+                                            "functionReturnParameters": 14,
+                                            "id": 71,
+                                            "nodeType": "Return",
+                                            "src": "868:19:0"
+                                        }
+                                    ]
+                                },
+                                "id": 73,
+                                "implemented": true,
+                                "kind": "function",
+                                "modifiers": [],
+                                "name": "getFeeSide",
+                                "nodeType": "FunctionDefinition",
+                                "parameters": {
+                                    "id": 11,
+                                    "nodeType": "ParameterList",
+                                    "parameters": [
+                                        {
+                                            "constant": false,
+                                            "id": 8,
+                                            "mutability": "mutable",
+                                            "name": "make",
+                                            "nodeType": "VariableDeclaration",
+                                            "scope": 73,
+                                            "src": "242:11:0",
+                                            "stateVariable": false,
+                                            "storageLocation": "default",
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_bytes4",
+                                                "typeString": "bytes4"
+                                            },
+                                            "typeName": {
+                                                "id": 7,
+                                                "name": "bytes4",
+                                                "nodeType": "ElementaryTypeName",
+                                                "src": "242:6:0",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_bytes4",
+                                                    "typeString": "bytes4"
+                                                }
+                                            },
+                                            "visibility": "internal"
+                                        },
+                                        {
+                                            "constant": false,
+                                            "id": 10,
+                                            "mutability": "mutable",
+                                            "name": "take",
+                                            "nodeType": "VariableDeclaration",
+                                            "scope": 73,
+                                            "src": "255:11:0",
+                                            "stateVariable": false,
+                                            "storageLocation": "default",
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_bytes4",
+                                                "typeString": "bytes4"
+                                            },
+                                            "typeName": {
+                                                "id": 9,
+                                                "name": "bytes4",
+                                                "nodeType": "ElementaryTypeName",
+                                                "src": "255:6:0",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_bytes4",
+                                                    "typeString": "bytes4"
+                                                }
+                                            },
+                                            "visibility": "internal"
+                                        }
+                                    ],
+                                    "src": "241:26:0"
+                                },
+                                "returnParameters": {
+                                    "id": 14,
+                                    "nodeType": "ParameterList",
+                                    "parameters": [
+                                        {
+                                            "constant": false,
+                                            "id": 13,
+                                            "mutability": "mutable",
+                                            "name": "",
+                                            "nodeType": "VariableDeclaration",
+                                            "scope": 73,
+                                            "src": "291:7:0",
+                                            "stateVariable": false,
+                                            "storageLocation": "default",
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_enum$_FeeSide_$6",
+                                                "typeString": "enum LibFeeSide.FeeSide"
+                                            },
+                                            "typeName": {
+                                                "id": 12,
+                                                "name": "FeeSide",
+                                                "nodeType": "UserDefinedTypeName",
+                                                "referencedDeclaration": 6,
+                                                "src": "291:7:0",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_enum$_FeeSide_$6",
+                                                    "typeString": "enum LibFeeSide.FeeSide"
+                                                }
+                                            },
+                                            "visibility": "internal"
+                                        }
+                                    ],
+                                    "src": "290:9:0"
+                                },
+                                "scope": 74,
+                                "src": "222:672:0",
+                                "stateMutability": "pure",
+                                "virtual": false,
+                                "visibility": "internal"
+                            }
+                        ],
+                        "scope": 75,
+                        "src": "159:737:0"
+                    }
+                ],
+                "src": "33:864:0"
+            },
+            "id": 0
+        },
+        "/Users/andrewyoung/projects/scatter/node_modules/@rarible/lib-asset/contracts/LibAsset.sol": {
+            "ast": {
+                "absolutePath": "/Users/andrewyoung/projects/scatter/node_modules/@rarible/lib-asset/contracts/LibAsset.sol",
+                "exportedSymbols": {
+                    "LibAsset": [
+                        187
+                    ]
+                },
+                "id": 188,
+                "license": "MIT",
+                "nodeType": "SourceUnit",
+                "nodes": [
+                    {
+                        "id": 76,
+                        "literals": [
+                            "solidity",
+                            "0.7",
+                            ".6"
+                        ],
+                        "nodeType": "PragmaDirective",
+                        "src": "33:22:1"
+                    },
+                    {
+                        "abstract": false,
+                        "baseContracts": [],
+                        "contractDependencies": [],
+                        "contractKind": "library",
+                        "fullyImplemented": true,
+                        "id": 187,
+                        "linearizedBaseContracts": [
+                            187
+                        ],
+                        "name": "LibAsset",
+                        "nodeType": "ContractDefinition",
+                        "nodes": [
+                            {
+                                "constant": true,
+                                "functionSelector": "b4797da2",
+                                "id": 84,
+                                "mutability": "constant",
+                                "name": "ETH_ASSET_CLASS",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 187,
+                                "src": "80:65:1",
+                                "stateVariable": true,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_bytes4",
+                                    "typeString": "bytes4"
+                                },
+                                "typeName": {
+                                    "id": 77,
+                                    "name": "bytes4",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "80:6:1",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes4",
+                                        "typeString": "bytes4"
+                                    }
+                                },
+                                "value": {
+                                    "arguments": [
+                                        {
+                                            "arguments": [
+                                                {
+                                                    "hexValue": "455448",
+                                                    "id": 81,
+                                                    "isConstant": false,
+                                                    "isLValue": false,
+                                                    "isPure": true,
+                                                    "kind": "string",
+                                                    "lValueRequested": false,
+                                                    "nodeType": "Literal",
+                                                    "src": "138:5:1",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_stringliteral_aaaebeba3810b1e6b70781f14b2d72c1cb89c0b2b320c43bb67ff79f562f5ff4",
+                                                        "typeString": "literal_string \"ETH\""
+                                                    },
+                                                    "value": "ETH"
+                                                }
+                                            ],
+                                            "expression": {
+                                                "argumentTypes": [
+                                                    {
+                                                        "typeIdentifier": "t_stringliteral_aaaebeba3810b1e6b70781f14b2d72c1cb89c0b2b320c43bb67ff79f562f5ff4",
+                                                        "typeString": "literal_string \"ETH\""
+                                                    }
+                                                ],
+                                                "id": 80,
+                                                "name": "keccak256",
+                                                "nodeType": "Identifier",
+                                                "overloadedDeclarations": [],
+                                                "referencedDeclaration": 4294967288,
+                                                "src": "128:9:1",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                                                    "typeString": "function (bytes memory) pure returns (bytes32)"
+                                                }
+                                            },
+                                            "id": 82,
+                                            "isConstant": false,
+                                            "isLValue": false,
+                                            "isPure": true,
+                                            "kind": "functionCall",
+                                            "lValueRequested": false,
+                                            "names": [],
+                                            "nodeType": "FunctionCall",
+                                            "src": "128:16:1",
+                                            "tryCall": false,
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_bytes32",
+                                                "typeString": "bytes32"
+                                            }
+                                        }
+                                    ],
+                                    "expression": {
+                                        "argumentTypes": [
+                                            {
+                                                "typeIdentifier": "t_bytes32",
+                                                "typeString": "bytes32"
+                                            }
+                                        ],
+                                        "id": 79,
+                                        "isConstant": false,
+                                        "isLValue": false,
+                                        "isPure": true,
+                                        "lValueRequested": false,
+                                        "nodeType": "ElementaryTypeNameExpression",
+                                        "src": "121:6:1",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_type$_t_bytes4_$",
+                                            "typeString": "type(bytes4)"
+                                        },
+                                        "typeName": {
+                                            "id": 78,
+                                            "name": "bytes4",
+                                            "nodeType": "ElementaryTypeName",
+                                            "src": "121:6:1",
+                                            "typeDescriptions": {}
+                                        }
+                                    },
+                                    "id": 83,
+                                    "isConstant": false,
+                                    "isLValue": false,
+                                    "isPure": true,
+                                    "kind": "typeConversion",
+                                    "lValueRequested": false,
+                                    "names": [],
+                                    "nodeType": "FunctionCall",
+                                    "src": "121:24:1",
+                                    "tryCall": false,
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes4",
+                                        "typeString": "bytes4"
+                                    }
+                                },
+                                "visibility": "public"
+                            },
+                            {
+                                "constant": true,
+                                "functionSelector": "6cd2c30a",
+                                "id": 92,
+                                "mutability": "constant",
+                                "name": "ERC20_ASSET_CLASS",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 187,
+                                "src": "151:69:1",
+                                "stateVariable": true,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_bytes4",
+                                    "typeString": "bytes4"
+                                },
+                                "typeName": {
+                                    "id": 85,
+                                    "name": "bytes4",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "151:6:1",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes4",
+                                        "typeString": "bytes4"
+                                    }
+                                },
+                                "value": {
+                                    "arguments": [
+                                        {
+                                            "arguments": [
+                                                {
+                                                    "hexValue": "4552433230",
+                                                    "id": 89,
+                                                    "isConstant": false,
+                                                    "isLValue": false,
+                                                    "isPure": true,
+                                                    "kind": "string",
+                                                    "lValueRequested": false,
+                                                    "nodeType": "Literal",
+                                                    "src": "211:7:1",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_stringliteral_8ae85d849167ff996c04040c44924fd364217285e4cad818292c7ac37c0a345b",
+                                                        "typeString": "literal_string \"ERC20\""
+                                                    },
+                                                    "value": "ERC20"
+                                                }
+                                            ],
+                                            "expression": {
+                                                "argumentTypes": [
+                                                    {
+                                                        "typeIdentifier": "t_stringliteral_8ae85d849167ff996c04040c44924fd364217285e4cad818292c7ac37c0a345b",
+                                                        "typeString": "literal_string \"ERC20\""
+                                                    }
+                                                ],
+                                                "id": 88,
+                                                "name": "keccak256",
+                                                "nodeType": "Identifier",
+                                                "overloadedDeclarations": [],
+                                                "referencedDeclaration": 4294967288,
+                                                "src": "201:9:1",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                                                    "typeString": "function (bytes memory) pure returns (bytes32)"
+                                                }
+                                            },
+                                            "id": 90,
+                                            "isConstant": false,
+                                            "isLValue": false,
+                                            "isPure": true,
+                                            "kind": "functionCall",
+                                            "lValueRequested": false,
+                                            "names": [],
+                                            "nodeType": "FunctionCall",
+                                            "src": "201:18:1",
+                                            "tryCall": false,
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_bytes32",
+                                                "typeString": "bytes32"
+                                            }
+                                        }
+                                    ],
+                                    "expression": {
+                                        "argumentTypes": [
+                                            {
+                                                "typeIdentifier": "t_bytes32",
+                                                "typeString": "bytes32"
+                                            }
+                                        ],
+                                        "id": 87,
+                                        "isConstant": false,
+                                        "isLValue": false,
+                                        "isPure": true,
+                                        "lValueRequested": false,
+                                        "nodeType": "ElementaryTypeNameExpression",
+                                        "src": "194:6:1",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_type$_t_bytes4_$",
+                                            "typeString": "type(bytes4)"
+                                        },
+                                        "typeName": {
+                                            "id": 86,
+                                            "name": "bytes4",
+                                            "nodeType": "ElementaryTypeName",
+                                            "src": "194:6:1",
+                                            "typeDescriptions": {}
+                                        }
+                                    },
+                                    "id": 91,
+                                    "isConstant": false,
+                                    "isLValue": false,
+                                    "isPure": true,
+                                    "kind": "typeConversion",
+                                    "lValueRequested": false,
+                                    "names": [],
+                                    "nodeType": "FunctionCall",
+                                    "src": "194:26:1",
+                                    "tryCall": false,
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes4",
+                                        "typeString": "bytes4"
+                                    }
+                                },
+                                "visibility": "public"
+                            },
+                            {
+                                "constant": true,
+                                "functionSelector": "c214be59",
+                                "id": 100,
+                                "mutability": "constant",
+                                "name": "ERC721_ASSET_CLASS",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 187,
+                                "src": "226:71:1",
+                                "stateVariable": true,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_bytes4",
+                                    "typeString": "bytes4"
+                                },
+                                "typeName": {
+                                    "id": 93,
+                                    "name": "bytes4",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "226:6:1",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes4",
+                                        "typeString": "bytes4"
+                                    }
+                                },
+                                "value": {
+                                    "arguments": [
+                                        {
+                                            "arguments": [
+                                                {
+                                                    "hexValue": "455243373231",
+                                                    "id": 97,
+                                                    "isConstant": false,
+                                                    "isLValue": false,
+                                                    "isPure": true,
+                                                    "kind": "string",
+                                                    "lValueRequested": false,
+                                                    "nodeType": "Literal",
+                                                    "src": "287:8:1",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_stringliteral_73ad2146b3d3a286642c794379d750360a2d53a3459a11b3e5d6cc900f55f44a",
+                                                        "typeString": "literal_string \"ERC721\""
+                                                    },
+                                                    "value": "ERC721"
+                                                }
+                                            ],
+                                            "expression": {
+                                                "argumentTypes": [
+                                                    {
+                                                        "typeIdentifier": "t_stringliteral_73ad2146b3d3a286642c794379d750360a2d53a3459a11b3e5d6cc900f55f44a",
+                                                        "typeString": "literal_string \"ERC721\""
+                                                    }
+                                                ],
+                                                "id": 96,
+                                                "name": "keccak256",
+                                                "nodeType": "Identifier",
+                                                "overloadedDeclarations": [],
+                                                "referencedDeclaration": 4294967288,
+                                                "src": "277:9:1",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                                                    "typeString": "function (bytes memory) pure returns (bytes32)"
+                                                }
+                                            },
+                                            "id": 98,
+                                            "isConstant": false,
+                                            "isLValue": false,
+                                            "isPure": true,
+                                            "kind": "functionCall",
+                                            "lValueRequested": false,
+                                            "names": [],
+                                            "nodeType": "FunctionCall",
+                                            "src": "277:19:1",
+                                            "tryCall": false,
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_bytes32",
+                                                "typeString": "bytes32"
+                                            }
+                                        }
+                                    ],
+                                    "expression": {
+                                        "argumentTypes": [
+                                            {
+                                                "typeIdentifier": "t_bytes32",
+                                                "typeString": "bytes32"
+                                            }
+                                        ],
+                                        "id": 95,
+                                        "isConstant": false,
+                                        "isLValue": false,
+                                        "isPure": true,
+                                        "lValueRequested": false,
+                                        "nodeType": "ElementaryTypeNameExpression",
+                                        "src": "270:6:1",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_type$_t_bytes4_$",
+                                            "typeString": "type(bytes4)"
+                                        },
+                                        "typeName": {
+                                            "id": 94,
+                                            "name": "bytes4",
+                                            "nodeType": "ElementaryTypeName",
+                                            "src": "270:6:1",
+                                            "typeDescriptions": {}
+                                        }
+                                    },
+                                    "id": 99,
+                                    "isConstant": false,
+                                    "isLValue": false,
+                                    "isPure": true,
+                                    "kind": "typeConversion",
+                                    "lValueRequested": false,
+                                    "names": [],
+                                    "nodeType": "FunctionCall",
+                                    "src": "270:27:1",
+                                    "tryCall": false,
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes4",
+                                        "typeString": "bytes4"
+                                    }
+                                },
+                                "visibility": "public"
+                            },
+                            {
+                                "constant": true,
+                                "functionSelector": "405bf275",
+                                "id": 108,
+                                "mutability": "constant",
+                                "name": "ERC1155_ASSET_CLASS",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 187,
+                                "src": "303:73:1",
+                                "stateVariable": true,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_bytes4",
+                                    "typeString": "bytes4"
+                                },
+                                "typeName": {
+                                    "id": 101,
+                                    "name": "bytes4",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "303:6:1",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes4",
+                                        "typeString": "bytes4"
+                                    }
+                                },
+                                "value": {
+                                    "arguments": [
+                                        {
+                                            "arguments": [
+                                                {
+                                                    "hexValue": "45524331313535",
+                                                    "id": 105,
+                                                    "isConstant": false,
+                                                    "isLValue": false,
+                                                    "isPure": true,
+                                                    "kind": "string",
+                                                    "lValueRequested": false,
+                                                    "nodeType": "Literal",
+                                                    "src": "365:9:1",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_stringliteral_973bb64086f173ec8099b7ed3d43da984f4a332e4417a08bc6a286e6402b0586",
+                                                        "typeString": "literal_string \"ERC1155\""
+                                                    },
+                                                    "value": "ERC1155"
+                                                }
+                                            ],
+                                            "expression": {
+                                                "argumentTypes": [
+                                                    {
+                                                        "typeIdentifier": "t_stringliteral_973bb64086f173ec8099b7ed3d43da984f4a332e4417a08bc6a286e6402b0586",
+                                                        "typeString": "literal_string \"ERC1155\""
+                                                    }
+                                                ],
+                                                "id": 104,
+                                                "name": "keccak256",
+                                                "nodeType": "Identifier",
+                                                "overloadedDeclarations": [],
+                                                "referencedDeclaration": 4294967288,
+                                                "src": "355:9:1",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                                                    "typeString": "function (bytes memory) pure returns (bytes32)"
+                                                }
+                                            },
+                                            "id": 106,
+                                            "isConstant": false,
+                                            "isLValue": false,
+                                            "isPure": true,
+                                            "kind": "functionCall",
+                                            "lValueRequested": false,
+                                            "names": [],
+                                            "nodeType": "FunctionCall",
+                                            "src": "355:20:1",
+                                            "tryCall": false,
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_bytes32",
+                                                "typeString": "bytes32"
+                                            }
+                                        }
+                                    ],
+                                    "expression": {
+                                        "argumentTypes": [
+                                            {
+                                                "typeIdentifier": "t_bytes32",
+                                                "typeString": "bytes32"
+                                            }
+                                        ],
+                                        "id": 103,
+                                        "isConstant": false,
+                                        "isLValue": false,
+                                        "isPure": true,
+                                        "lValueRequested": false,
+                                        "nodeType": "ElementaryTypeNameExpression",
+                                        "src": "348:6:1",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_type$_t_bytes4_$",
+                                            "typeString": "type(bytes4)"
+                                        },
+                                        "typeName": {
+                                            "id": 102,
+                                            "name": "bytes4",
+                                            "nodeType": "ElementaryTypeName",
+                                            "src": "348:6:1",
+                                            "typeDescriptions": {}
+                                        }
+                                    },
+                                    "id": 107,
+                                    "isConstant": false,
+                                    "isLValue": false,
+                                    "isPure": true,
+                                    "kind": "typeConversion",
+                                    "lValueRequested": false,
+                                    "names": [],
+                                    "nodeType": "FunctionCall",
+                                    "src": "348:28:1",
+                                    "tryCall": false,
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes4",
+                                        "typeString": "bytes4"
+                                    }
+                                },
+                                "visibility": "public"
+                            },
+                            {
+                                "constant": true,
+                                "functionSelector": "697b2365",
+                                "id": 116,
+                                "mutability": "constant",
+                                "name": "COLLECTION",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 187,
+                                "src": "382:67:1",
+                                "stateVariable": true,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_bytes4",
+                                    "typeString": "bytes4"
+                                },
+                                "typeName": {
+                                    "id": 109,
+                                    "name": "bytes4",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "382:6:1",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes4",
+                                        "typeString": "bytes4"
+                                    }
+                                },
+                                "value": {
+                                    "arguments": [
+                                        {
+                                            "arguments": [
+                                                {
+                                                    "hexValue": "434f4c4c454354494f4e",
+                                                    "id": 113,
+                                                    "isConstant": false,
+                                                    "isLValue": false,
+                                                    "isPure": true,
+                                                    "kind": "string",
+                                                    "lValueRequested": false,
+                                                    "nodeType": "Literal",
+                                                    "src": "435:12:1",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_stringliteral_f63c282591b950c64511498574d1cdfa76078b63dbcad6d06139d12d140b61cb",
+                                                        "typeString": "literal_string \"COLLECTION\""
+                                                    },
+                                                    "value": "COLLECTION"
+                                                }
+                                            ],
+                                            "expression": {
+                                                "argumentTypes": [
+                                                    {
+                                                        "typeIdentifier": "t_stringliteral_f63c282591b950c64511498574d1cdfa76078b63dbcad6d06139d12d140b61cb",
+                                                        "typeString": "literal_string \"COLLECTION\""
+                                                    }
+                                                ],
+                                                "id": 112,
+                                                "name": "keccak256",
+                                                "nodeType": "Identifier",
+                                                "overloadedDeclarations": [],
+                                                "referencedDeclaration": 4294967288,
+                                                "src": "425:9:1",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                                                    "typeString": "function (bytes memory) pure returns (bytes32)"
+                                                }
+                                            },
+                                            "id": 114,
+                                            "isConstant": false,
+                                            "isLValue": false,
+                                            "isPure": true,
+                                            "kind": "functionCall",
+                                            "lValueRequested": false,
+                                            "names": [],
+                                            "nodeType": "FunctionCall",
+                                            "src": "425:23:1",
+                                            "tryCall": false,
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_bytes32",
+                                                "typeString": "bytes32"
+                                            }
+                                        }
+                                    ],
+                                    "expression": {
+                                        "argumentTypes": [
+                                            {
+                                                "typeIdentifier": "t_bytes32",
+                                                "typeString": "bytes32"
+                                            }
+                                        ],
+                                        "id": 111,
+                                        "isConstant": false,
+                                        "isLValue": false,
+                                        "isPure": true,
+                                        "lValueRequested": false,
+                                        "nodeType": "ElementaryTypeNameExpression",
+                                        "src": "418:6:1",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_type$_t_bytes4_$",
+                                            "typeString": "type(bytes4)"
+                                        },
+                                        "typeName": {
+                                            "id": 110,
+                                            "name": "bytes4",
+                                            "nodeType": "ElementaryTypeName",
+                                            "src": "418:6:1",
+                                            "typeDescriptions": {}
+                                        }
+                                    },
+                                    "id": 115,
+                                    "isConstant": false,
+                                    "isLValue": false,
+                                    "isPure": true,
+                                    "kind": "typeConversion",
+                                    "lValueRequested": false,
+                                    "names": [],
+                                    "nodeType": "FunctionCall",
+                                    "src": "418:31:1",
+                                    "tryCall": false,
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes4",
+                                        "typeString": "bytes4"
+                                    }
+                                },
+                                "visibility": "public"
+                            },
+                            {
+                                "constant": true,
+                                "functionSelector": "1d328136",
+                                "id": 124,
+                                "mutability": "constant",
+                                "name": "CRYPTO_PUNKS",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 187,
+                                "src": "455:71:1",
+                                "stateVariable": true,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_bytes4",
+                                    "typeString": "bytes4"
+                                },
+                                "typeName": {
+                                    "id": 117,
+                                    "name": "bytes4",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "455:6:1",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes4",
+                                        "typeString": "bytes4"
+                                    }
+                                },
+                                "value": {
+                                    "arguments": [
+                                        {
+                                            "arguments": [
+                                                {
+                                                    "hexValue": "43525950544f5f50554e4b53",
+                                                    "id": 121,
+                                                    "isConstant": false,
+                                                    "isLValue": false,
+                                                    "isPure": true,
+                                                    "kind": "string",
+                                                    "lValueRequested": false,
+                                                    "nodeType": "Literal",
+                                                    "src": "510:14:1",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_stringliteral_3e6b89d41ae6cce5def8a4064ada8dba77d057c7a0113741d26b5e4eccdd2a7e",
+                                                        "typeString": "literal_string \"CRYPTO_PUNKS\""
+                                                    },
+                                                    "value": "CRYPTO_PUNKS"
+                                                }
+                                            ],
+                                            "expression": {
+                                                "argumentTypes": [
+                                                    {
+                                                        "typeIdentifier": "t_stringliteral_3e6b89d41ae6cce5def8a4064ada8dba77d057c7a0113741d26b5e4eccdd2a7e",
+                                                        "typeString": "literal_string \"CRYPTO_PUNKS\""
+                                                    }
+                                                ],
+                                                "id": 120,
+                                                "name": "keccak256",
+                                                "nodeType": "Identifier",
+                                                "overloadedDeclarations": [],
+                                                "referencedDeclaration": 4294967288,
+                                                "src": "500:9:1",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                                                    "typeString": "function (bytes memory) pure returns (bytes32)"
+                                                }
+                                            },
+                                            "id": 122,
+                                            "isConstant": false,
+                                            "isLValue": false,
+                                            "isPure": true,
+                                            "kind": "functionCall",
+                                            "lValueRequested": false,
+                                            "names": [],
+                                            "nodeType": "FunctionCall",
+                                            "src": "500:25:1",
+                                            "tryCall": false,
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_bytes32",
+                                                "typeString": "bytes32"
+                                            }
+                                        }
+                                    ],
+                                    "expression": {
+                                        "argumentTypes": [
+                                            {
+                                                "typeIdentifier": "t_bytes32",
+                                                "typeString": "bytes32"
+                                            }
+                                        ],
+                                        "id": 119,
+                                        "isConstant": false,
+                                        "isLValue": false,
+                                        "isPure": true,
+                                        "lValueRequested": false,
+                                        "nodeType": "ElementaryTypeNameExpression",
+                                        "src": "493:6:1",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_type$_t_bytes4_$",
+                                            "typeString": "type(bytes4)"
+                                        },
+                                        "typeName": {
+                                            "id": 118,
+                                            "name": "bytes4",
+                                            "nodeType": "ElementaryTypeName",
+                                            "src": "493:6:1",
+                                            "typeDescriptions": {}
+                                        }
+                                    },
+                                    "id": 123,
+                                    "isConstant": false,
+                                    "isLValue": false,
+                                    "isPure": true,
+                                    "kind": "typeConversion",
+                                    "lValueRequested": false,
+                                    "names": [],
+                                    "nodeType": "FunctionCall",
+                                    "src": "493:33:1",
+                                    "tryCall": false,
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes4",
+                                        "typeString": "bytes4"
+                                    }
+                                },
+                                "visibility": "public"
+                            },
+                            {
+                                "constant": true,
+                                "id": 129,
+                                "mutability": "constant",
+                                "name": "ASSET_TYPE_TYPEHASH",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 187,
+                                "src": "533:105:1",
+                                "stateVariable": true,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_bytes32",
+                                    "typeString": "bytes32"
+                                },
+                                "typeName": {
+                                    "id": 125,
+                                    "name": "bytes32",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "533:7:1",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes32",
+                                        "typeString": "bytes32"
+                                    }
+                                },
+                                "value": {
+                                    "arguments": [
+                                        {
+                                            "hexValue": "41737365745479706528627974657334206173736574436c6173732c6279746573206461746129",
+                                            "id": 127,
+                                            "isConstant": false,
+                                            "isLValue": false,
+                                            "isPure": true,
+                                            "kind": "string",
+                                            "lValueRequested": false,
+                                            "nodeType": "Literal",
+                                            "src": "591:41:1",
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_stringliteral_452a0dc408cb0d27ffc3b3caff933a5208040a53a9dbecd8d89cad2c0d40e00c",
+                                                "typeString": "literal_string \"AssetType(bytes4 assetClass,bytes data)\""
+                                            },
+                                            "value": "AssetType(bytes4 assetClass,bytes data)"
+                                        }
+                                    ],
+                                    "expression": {
+                                        "argumentTypes": [
+                                            {
+                                                "typeIdentifier": "t_stringliteral_452a0dc408cb0d27ffc3b3caff933a5208040a53a9dbecd8d89cad2c0d40e00c",
+                                                "typeString": "literal_string \"AssetType(bytes4 assetClass,bytes data)\""
+                                            }
+                                        ],
+                                        "id": 126,
+                                        "name": "keccak256",
+                                        "nodeType": "Identifier",
+                                        "overloadedDeclarations": [],
+                                        "referencedDeclaration": 4294967288,
+                                        "src": "572:9:1",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                                            "typeString": "function (bytes memory) pure returns (bytes32)"
+                                        }
+                                    },
+                                    "id": 128,
+                                    "isConstant": false,
+                                    "isLValue": false,
+                                    "isPure": true,
+                                    "kind": "functionCall",
+                                    "lValueRequested": false,
+                                    "names": [],
+                                    "nodeType": "FunctionCall",
+                                    "src": "572:66:1",
+                                    "tryCall": false,
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes32",
+                                        "typeString": "bytes32"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "constant": true,
+                                "id": 134,
+                                "mutability": "constant",
+                                "name": "ASSET_TYPEHASH",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 187,
+                                "src": "645:140:1",
+                                "stateVariable": true,
+                                "storageLocation": "default",
+                                "typeDescriptions": {
+                                    "typeIdentifier": "t_bytes32",
+                                    "typeString": "bytes32"
+                                },
+                                "typeName": {
+                                    "id": 130,
+                                    "name": "bytes32",
+                                    "nodeType": "ElementaryTypeName",
+                                    "src": "645:7:1",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes32",
+                                        "typeString": "bytes32"
+                                    }
+                                },
+                                "value": {
+                                    "arguments": [
+                                        {
+                                            "hexValue": "417373657428417373657454797065206173736574547970652c75696e743235362076616c75652941737365745479706528627974657334206173736574436c6173732c6279746573206461746129",
+                                            "id": 132,
+                                            "isConstant": false,
+                                            "isLValue": false,
+                                            "isPure": true,
+                                            "kind": "string",
+                                            "lValueRequested": false,
+                                            "nodeType": "Literal",
+                                            "src": "698:81:1",
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_stringliteral_db6f72e915676cfc289da13bc4ece054fd17b1df6d77ffc4a60510718c236b08",
+                                                "typeString": "literal_string \"Asset(AssetType assetType,uint256 value)AssetType(bytes4 assetClass,bytes data)\""
+                                            },
+                                            "value": "Asset(AssetType assetType,uint256 value)AssetType(bytes4 assetClass,bytes data)"
+                                        }
+                                    ],
+                                    "expression": {
+                                        "argumentTypes": [
+                                            {
+                                                "typeIdentifier": "t_stringliteral_db6f72e915676cfc289da13bc4ece054fd17b1df6d77ffc4a60510718c236b08",
+                                                "typeString": "literal_string \"Asset(AssetType assetType,uint256 value)AssetType(bytes4 assetClass,bytes data)\""
+                                            }
+                                        ],
+                                        "id": 131,
+                                        "name": "keccak256",
+                                        "nodeType": "Identifier",
+                                        "overloadedDeclarations": [],
+                                        "referencedDeclaration": 4294967288,
+                                        "src": "679:9:1",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                                            "typeString": "function (bytes memory) pure returns (bytes32)"
+                                        }
+                                    },
+                                    "id": 133,
+                                    "isConstant": false,
+                                    "isLValue": false,
+                                    "isPure": true,
+                                    "kind": "functionCall",
+                                    "lValueRequested": false,
+                                    "names": [],
+                                    "nodeType": "FunctionCall",
+                                    "src": "679:106:1",
+                                    "tryCall": false,
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_bytes32",
+                                        "typeString": "bytes32"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "canonicalName": "LibAsset.AssetType",
+                                "id": 139,
+                                "members": [
+                                    {
+                                        "constant": false,
+                                        "id": 136,
+                                        "mutability": "mutable",
+                                        "name": "assetClass",
+                                        "nodeType": "VariableDeclaration",
+                                        "scope": 139,
+                                        "src": "819:17:1",
+                                        "stateVariable": false,
+                                        "storageLocation": "default",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_bytes4",
+                                            "typeString": "bytes4"
+                                        },
+                                        "typeName": {
+                                            "id": 135,
+                                            "name": "bytes4",
+                                            "nodeType": "ElementaryTypeName",
+                                            "src": "819:6:1",
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_bytes4",
+                                                "typeString": "bytes4"
+                                            }
+                                        },
+                                        "visibility": "internal"
+                                    },
+                                    {
+                                        "constant": false,
+                                        "id": 138,
+                                        "mutability": "mutable",
+                                        "name": "data",
+                                        "nodeType": "VariableDeclaration",
+                                        "scope": 139,
+                                        "src": "846:10:1",
+                                        "stateVariable": false,
+                                        "storageLocation": "default",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_bytes_storage_ptr",
+                                            "typeString": "bytes"
+                                        },
+                                        "typeName": {
+                                            "id": 137,
+                                            "name": "bytes",
+                                            "nodeType": "ElementaryTypeName",
+                                            "src": "846:5:1",
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_bytes_storage_ptr",
+                                                "typeString": "bytes"
+                                            }
+                                        },
+                                        "visibility": "internal"
+                                    }
+                                ],
+                                "name": "AssetType",
+                                "nodeType": "StructDefinition",
+                                "scope": 187,
+                                "src": "792:71:1",
+                                "visibility": "public"
+                            },
+                            {
+                                "canonicalName": "LibAsset.Asset",
+                                "id": 144,
+                                "members": [
+                                    {
+                                        "constant": false,
+                                        "id": 141,
+                                        "mutability": "mutable",
+                                        "name": "assetType",
+                                        "nodeType": "VariableDeclaration",
+                                        "scope": 144,
+                                        "src": "892:19:1",
+                                        "stateVariable": false,
+                                        "storageLocation": "default",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_struct$_AssetType_$139_storage_ptr",
+                                            "typeString": "struct LibAsset.AssetType"
+                                        },
+                                        "typeName": {
+                                            "id": 140,
+                                            "name": "AssetType",
+                                            "nodeType": "UserDefinedTypeName",
+                                            "referencedDeclaration": 139,
+                                            "src": "892:9:1",
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_struct$_AssetType_$139_storage_ptr",
+                                                "typeString": "struct LibAsset.AssetType"
+                                            }
+                                        },
+                                        "visibility": "internal"
+                                    },
+                                    {
+                                        "constant": false,
+                                        "id": 143,
+                                        "mutability": "mutable",
+                                        "name": "value",
+                                        "nodeType": "VariableDeclaration",
+                                        "scope": 144,
+                                        "src": "921:10:1",
+                                        "stateVariable": false,
+                                        "storageLocation": "default",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_uint256",
+                                            "typeString": "uint256"
+                                        },
+                                        "typeName": {
+                                            "id": 142,
+                                            "name": "uint",
+                                            "nodeType": "ElementaryTypeName",
+                                            "src": "921:4:1",
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_uint256",
+                                                "typeString": "uint256"
+                                            }
+                                        },
+                                        "visibility": "internal"
+                                    }
+                                ],
+                                "name": "Asset",
+                                "nodeType": "StructDefinition",
+                                "scope": 187,
+                                "src": "869:69:1",
+                                "visibility": "public"
+                            },
+                            {
+                                "body": {
+                                    "id": 164,
+                                    "nodeType": "Block",
+                                    "src": "1018:177:1",
+                                    "statements": [
+                                        {
+                                            "expression": {
+                                                "arguments": [
+                                                    {
+                                                        "arguments": [
+                                                            {
+                                                                "id": 154,
+                                                                "name": "ASSET_TYPE_TYPEHASH",
+                                                                "nodeType": "Identifier",
+                                                                "overloadedDeclarations": [],
+                                                                "referencedDeclaration": 129,
+                                                                "src": "1073:19:1",
+                                                                "typeDescriptions": {
+                                                                    "typeIdentifier": "t_bytes32",
+                                                                    "typeString": "bytes32"
+                                                                }
+                                                            },
+                                                            {
+                                                                "expression": {
+                                                                    "id": 155,
+                                                                    "name": "assetType",
+                                                                    "nodeType": "Identifier",
+                                                                    "overloadedDeclarations": [],
+                                                                    "referencedDeclaration": 146,
+                                                                    "src": "1110:9:1",
+                                                                    "typeDescriptions": {
+                                                                        "typeIdentifier": "t_struct$_AssetType_$139_memory_ptr",
+                                                                        "typeString": "struct LibAsset.AssetType memory"
+                                                                    }
+                                                                },
+                                                                "id": 156,
+                                                                "isConstant": false,
+                                                                "isLValue": true,
+                                                                "isPure": false,
+                                                                "lValueRequested": false,
+                                                                "memberName": "assetClass",
+                                                                "nodeType": "MemberAccess",
+                                                                "referencedDeclaration": 136,
+                                                                "src": "1110:20:1",
+                                                                "typeDescriptions": {
+                                                                    "typeIdentifier": "t_bytes4",
+                                                                    "typeString": "bytes4"
+                                                                }
+                                                            },
+                                                            {
+                                                                "arguments": [
+                                                                    {
+                                                                        "expression": {
+                                                                            "id": 158,
+                                                                            "name": "assetType",
+                                                                            "nodeType": "Identifier",
+                                                                            "overloadedDeclarations": [],
+                                                                            "referencedDeclaration": 146,
+                                                                            "src": "1158:9:1",
+                                                                            "typeDescriptions": {
+                                                                                "typeIdentifier": "t_struct$_AssetType_$139_memory_ptr",
+                                                                                "typeString": "struct LibAsset.AssetType memory"
+                                                                            }
+                                                                        },
+                                                                        "id": 159,
+                                                                        "isConstant": false,
+                                                                        "isLValue": true,
+                                                                        "isPure": false,
+                                                                        "lValueRequested": false,
+                                                                        "memberName": "data",
+                                                                        "nodeType": "MemberAccess",
+                                                                        "referencedDeclaration": 138,
+                                                                        "src": "1158:14:1",
+                                                                        "typeDescriptions": {
+                                                                            "typeIdentifier": "t_bytes_memory_ptr",
+                                                                            "typeString": "bytes memory"
+                                                                        }
+                                                                    }
+                                                                ],
+                                                                "expression": {
+                                                                    "argumentTypes": [
+                                                                        {
+                                                                            "typeIdentifier": "t_bytes_memory_ptr",
+                                                                            "typeString": "bytes memory"
+                                                                        }
+                                                                    ],
+                                                                    "id": 157,
+                                                                    "name": "keccak256",
+                                                                    "nodeType": "Identifier",
+                                                                    "overloadedDeclarations": [],
+                                                                    "referencedDeclaration": 4294967288,
+                                                                    "src": "1148:9:1",
+                                                                    "typeDescriptions": {
+                                                                        "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                                                                        "typeString": "function (bytes memory) pure returns (bytes32)"
+                                                                    }
+                                                                },
+                                                                "id": 160,
+                                                                "isConstant": false,
+                                                                "isLValue": false,
+                                                                "isPure": false,
+                                                                "kind": "functionCall",
+                                                                "lValueRequested": false,
+                                                                "names": [],
+                                                                "nodeType": "FunctionCall",
+                                                                "src": "1148:25:1",
+                                                                "tryCall": false,
+                                                                "typeDescriptions": {
+                                                                    "typeIdentifier": "t_bytes32",
+                                                                    "typeString": "bytes32"
+                                                                }
+                                                            }
+                                                        ],
+                                                        "expression": {
+                                                            "argumentTypes": [
+                                                                {
+                                                                    "typeIdentifier": "t_bytes32",
+                                                                    "typeString": "bytes32"
+                                                                },
+                                                                {
+                                                                    "typeIdentifier": "t_bytes4",
+                                                                    "typeString": "bytes4"
+                                                                },
+                                                                {
+                                                                    "typeIdentifier": "t_bytes32",
+                                                                    "typeString": "bytes32"
+                                                                }
+                                                            ],
+                                                            "expression": {
+                                                                "id": 152,
+                                                                "name": "abi",
+                                                                "nodeType": "Identifier",
+                                                                "overloadedDeclarations": [],
+                                                                "referencedDeclaration": 4294967295,
+                                                                "src": "1045:3:1",
+                                                                "typeDescriptions": {
+                                                                    "typeIdentifier": "t_magic_abi",
+                                                                    "typeString": "abi"
+                                                                }
+                                                            },
+                                                            "id": 153,
+                                                            "isConstant": false,
+                                                            "isLValue": false,
+                                                            "isPure": true,
+                                                            "lValueRequested": false,
+                                                            "memberName": "encode",
+                                                            "nodeType": "MemberAccess",
+                                                            "src": "1045:10:1",
+                                                            "typeDescriptions": {
+                                                                "typeIdentifier": "t_function_abiencode_pure$__$returns$_t_bytes_memory_ptr_$",
+                                                                "typeString": "function () pure returns (bytes memory)"
+                                                            }
+                                                        },
+                                                        "id": 161,
+                                                        "isConstant": false,
+                                                        "isLValue": false,
+                                                        "isPure": false,
+                                                        "kind": "functionCall",
+                                                        "lValueRequested": false,
+                                                        "names": [],
+                                                        "nodeType": "FunctionCall",
+                                                        "src": "1045:142:1",
+                                                        "tryCall": false,
+                                                        "typeDescriptions": {
+                                                            "typeIdentifier": "t_bytes_memory_ptr",
+                                                            "typeString": "bytes memory"
+                                                        }
+                                                    }
+                                                ],
+                                                "expression": {
+                                                    "argumentTypes": [
+                                                        {
+                                                            "typeIdentifier": "t_bytes_memory_ptr",
+                                                            "typeString": "bytes memory"
+                                                        }
+                                                    ],
+                                                    "id": 151,
+                                                    "name": "keccak256",
+                                                    "nodeType": "Identifier",
+                                                    "overloadedDeclarations": [],
+                                                    "referencedDeclaration": 4294967288,
+                                                    "src": "1035:9:1",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                                                        "typeString": "function (bytes memory) pure returns (bytes32)"
+                                                    }
+                                                },
+                                                "id": 162,
+                                                "isConstant": false,
+                                                "isLValue": false,
+                                                "isPure": false,
+                                                "kind": "functionCall",
+                                                "lValueRequested": false,
+                                                "names": [],
+                                                "nodeType": "FunctionCall",
+                                                "src": "1035:153:1",
+                                                "tryCall": false,
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_bytes32",
+                                                    "typeString": "bytes32"
+                                                }
+                                            },
+                                            "functionReturnParameters": 150,
+                                            "id": 163,
+                                            "nodeType": "Return",
+                                            "src": "1028:160:1"
+                                        }
+                                    ]
+                                },
+                                "id": 165,
+                                "implemented": true,
+                                "kind": "function",
+                                "modifiers": [],
+                                "name": "hash",
+                                "nodeType": "FunctionDefinition",
+                                "parameters": {
+                                    "id": 147,
+                                    "nodeType": "ParameterList",
+                                    "parameters": [
+                                        {
+                                            "constant": false,
+                                            "id": 146,
+                                            "mutability": "mutable",
+                                            "name": "assetType",
+                                            "nodeType": "VariableDeclaration",
+                                            "scope": 165,
+                                            "src": "958:26:1",
+                                            "stateVariable": false,
+                                            "storageLocation": "memory",
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_struct$_AssetType_$139_memory_ptr",
+                                                "typeString": "struct LibAsset.AssetType"
+                                            },
+                                            "typeName": {
+                                                "id": 145,
+                                                "name": "AssetType",
+                                                "nodeType": "UserDefinedTypeName",
+                                                "referencedDeclaration": 139,
+                                                "src": "958:9:1",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_struct$_AssetType_$139_storage_ptr",
+                                                    "typeString": "struct LibAsset.AssetType"
+                                                }
+                                            },
+                                            "visibility": "internal"
+                                        }
+                                    ],
+                                    "src": "957:28:1"
+                                },
+                                "returnParameters": {
+                                    "id": 150,
+                                    "nodeType": "ParameterList",
+                                    "parameters": [
+                                        {
+                                            "constant": false,
+                                            "id": 149,
+                                            "mutability": "mutable",
+                                            "name": "",
+                                            "nodeType": "VariableDeclaration",
+                                            "scope": 165,
+                                            "src": "1009:7:1",
+                                            "stateVariable": false,
+                                            "storageLocation": "default",
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_bytes32",
+                                                "typeString": "bytes32"
+                                            },
+                                            "typeName": {
+                                                "id": 148,
+                                                "name": "bytes32",
+                                                "nodeType": "ElementaryTypeName",
+                                                "src": "1009:7:1",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_bytes32",
+                                                    "typeString": "bytes32"
+                                                }
+                                            },
+                                            "visibility": "internal"
+                                        }
+                                    ],
+                                    "src": "1008:9:1"
+                                },
+                                "scope": 187,
+                                "src": "944:251:1",
+                                "stateMutability": "pure",
+                                "virtual": false,
+                                "visibility": "internal"
+                            },
+                            {
+                                "body": {
+                                    "id": 185,
+                                    "nodeType": "Block",
+                                    "src": "1267:159:1",
+                                    "statements": [
+                                        {
+                                            "expression": {
+                                                "arguments": [
+                                                    {
+                                                        "arguments": [
+                                                            {
+                                                                "id": 175,
+                                                                "name": "ASSET_TYPEHASH",
+                                                                "nodeType": "Identifier",
+                                                                "overloadedDeclarations": [],
+                                                                "referencedDeclaration": 134,
+                                                                "src": "1322:14:1",
+                                                                "typeDescriptions": {
+                                                                    "typeIdentifier": "t_bytes32",
+                                                                    "typeString": "bytes32"
+                                                                }
+                                                            },
+                                                            {
+                                                                "arguments": [
+                                                                    {
+                                                                        "expression": {
+                                                                            "id": 177,
+                                                                            "name": "asset",
+                                                                            "nodeType": "Identifier",
+                                                                            "overloadedDeclarations": [],
+                                                                            "referencedDeclaration": 167,
+                                                                            "src": "1359:5:1",
+                                                                            "typeDescriptions": {
+                                                                                "typeIdentifier": "t_struct$_Asset_$144_memory_ptr",
+                                                                                "typeString": "struct LibAsset.Asset memory"
+                                                                            }
+                                                                        },
+                                                                        "id": 178,
+                                                                        "isConstant": false,
+                                                                        "isLValue": true,
+                                                                        "isPure": false,
+                                                                        "lValueRequested": false,
+                                                                        "memberName": "assetType",
+                                                                        "nodeType": "MemberAccess",
+                                                                        "referencedDeclaration": 141,
+                                                                        "src": "1359:15:1",
+                                                                        "typeDescriptions": {
+                                                                            "typeIdentifier": "t_struct$_AssetType_$139_memory_ptr",
+                                                                            "typeString": "struct LibAsset.AssetType memory"
+                                                                        }
+                                                                    }
+                                                                ],
+                                                                "expression": {
+                                                                    "argumentTypes": [
+                                                                        {
+                                                                            "typeIdentifier": "t_struct$_AssetType_$139_memory_ptr",
+                                                                            "typeString": "struct LibAsset.AssetType memory"
+                                                                        }
+                                                                    ],
+                                                                    "id": 176,
+                                                                    "name": "hash",
+                                                                    "nodeType": "Identifier",
+                                                                    "overloadedDeclarations": [
+                                                                        165,
+                                                                        186
+                                                                    ],
+                                                                    "referencedDeclaration": 165,
+                                                                    "src": "1354:4:1",
+                                                                    "typeDescriptions": {
+                                                                        "typeIdentifier": "t_function_internal_pure$_t_struct$_AssetType_$139_memory_ptr_$returns$_t_bytes32_$",
+                                                                        "typeString": "function (struct LibAsset.AssetType memory) pure returns (bytes32)"
+                                                                    }
+                                                                },
+                                                                "id": 179,
+                                                                "isConstant": false,
+                                                                "isLValue": false,
+                                                                "isPure": false,
+                                                                "kind": "functionCall",
+                                                                "lValueRequested": false,
+                                                                "names": [],
+                                                                "nodeType": "FunctionCall",
+                                                                "src": "1354:21:1",
+                                                                "tryCall": false,
+                                                                "typeDescriptions": {
+                                                                    "typeIdentifier": "t_bytes32",
+                                                                    "typeString": "bytes32"
+                                                                }
+                                                            },
+                                                            {
+                                                                "expression": {
+                                                                    "id": 180,
+                                                                    "name": "asset",
+                                                                    "nodeType": "Identifier",
+                                                                    "overloadedDeclarations": [],
+                                                                    "referencedDeclaration": 167,
+                                                                    "src": "1393:5:1",
+                                                                    "typeDescriptions": {
+                                                                        "typeIdentifier": "t_struct$_Asset_$144_memory_ptr",
+                                                                        "typeString": "struct LibAsset.Asset memory"
+                                                                    }
+                                                                },
+                                                                "id": 181,
+                                                                "isConstant": false,
+                                                                "isLValue": true,
+                                                                "isPure": false,
+                                                                "lValueRequested": false,
+                                                                "memberName": "value",
+                                                                "nodeType": "MemberAccess",
+                                                                "referencedDeclaration": 143,
+                                                                "src": "1393:11:1",
+                                                                "typeDescriptions": {
+                                                                    "typeIdentifier": "t_uint256",
+                                                                    "typeString": "uint256"
+                                                                }
+                                                            }
+                                                        ],
+                                                        "expression": {
+                                                            "argumentTypes": [
+                                                                {
+                                                                    "typeIdentifier": "t_bytes32",
+                                                                    "typeString": "bytes32"
+                                                                },
+                                                                {
+                                                                    "typeIdentifier": "t_bytes32",
+                                                                    "typeString": "bytes32"
+                                                                },
+                                                                {
+                                                                    "typeIdentifier": "t_uint256",
+                                                                    "typeString": "uint256"
+                                                                }
+                                                            ],
+                                                            "expression": {
+                                                                "id": 173,
+                                                                "name": "abi",
+                                                                "nodeType": "Identifier",
+                                                                "overloadedDeclarations": [],
+                                                                "referencedDeclaration": 4294967295,
+                                                                "src": "1294:3:1",
+                                                                "typeDescriptions": {
+                                                                    "typeIdentifier": "t_magic_abi",
+                                                                    "typeString": "abi"
+                                                                }
+                                                            },
+                                                            "id": 174,
+                                                            "isConstant": false,
+                                                            "isLValue": false,
+                                                            "isPure": true,
+                                                            "lValueRequested": false,
+                                                            "memberName": "encode",
+                                                            "nodeType": "MemberAccess",
+                                                            "src": "1294:10:1",
+                                                            "typeDescriptions": {
+                                                                "typeIdentifier": "t_function_abiencode_pure$__$returns$_t_bytes_memory_ptr_$",
+                                                                "typeString": "function () pure returns (bytes memory)"
+                                                            }
+                                                        },
+                                                        "id": 182,
+                                                        "isConstant": false,
+                                                        "isLValue": false,
+                                                        "isPure": false,
+                                                        "kind": "functionCall",
+                                                        "lValueRequested": false,
+                                                        "names": [],
+                                                        "nodeType": "FunctionCall",
+                                                        "src": "1294:124:1",
+                                                        "tryCall": false,
+                                                        "typeDescriptions": {
+                                                            "typeIdentifier": "t_bytes_memory_ptr",
+                                                            "typeString": "bytes memory"
+                                                        }
+                                                    }
+                                                ],
+                                                "expression": {
+                                                    "argumentTypes": [
+                                                        {
+                                                            "typeIdentifier": "t_bytes_memory_ptr",
+                                                            "typeString": "bytes memory"
+                                                        }
+                                                    ],
+                                                    "id": 172,
+                                                    "name": "keccak256",
+                                                    "nodeType": "Identifier",
+                                                    "overloadedDeclarations": [],
+                                                    "referencedDeclaration": 4294967288,
+                                                    "src": "1284:9:1",
+                                                    "typeDescriptions": {
+                                                        "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                                                        "typeString": "function (bytes memory) pure returns (bytes32)"
+                                                    }
+                                                },
+                                                "id": 183,
+                                                "isConstant": false,
+                                                "isLValue": false,
+                                                "isPure": false,
+                                                "kind": "functionCall",
+                                                "lValueRequested": false,
+                                                "names": [],
+                                                "nodeType": "FunctionCall",
+                                                "src": "1284:135:1",
+                                                "tryCall": false,
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_bytes32",
+                                                    "typeString": "bytes32"
+                                                }
+                                            },
+                                            "functionReturnParameters": 171,
+                                            "id": 184,
+                                            "nodeType": "Return",
+                                            "src": "1277:142:1"
+                                        }
+                                    ]
+                                },
+                                "id": 186,
+                                "implemented": true,
+                                "kind": "function",
+                                "modifiers": [],
+                                "name": "hash",
+                                "nodeType": "FunctionDefinition",
+                                "parameters": {
+                                    "id": 168,
+                                    "nodeType": "ParameterList",
+                                    "parameters": [
+                                        {
+                                            "constant": false,
+                                            "id": 167,
+                                            "mutability": "mutable",
+                                            "name": "asset",
+                                            "nodeType": "VariableDeclaration",
+                                            "scope": 186,
+                                            "src": "1215:18:1",
+                                            "stateVariable": false,
+                                            "storageLocation": "memory",
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_struct$_Asset_$144_memory_ptr",
+                                                "typeString": "struct LibAsset.Asset"
+                                            },
+                                            "typeName": {
+                                                "id": 166,
+                                                "name": "Asset",
+                                                "nodeType": "UserDefinedTypeName",
+                                                "referencedDeclaration": 144,
+                                                "src": "1215:5:1",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_struct$_Asset_$144_storage_ptr",
+                                                    "typeString": "struct LibAsset.Asset"
+                                                }
+                                            },
+                                            "visibility": "internal"
+                                        }
+                                    ],
+                                    "src": "1214:20:1"
+                                },
+                                "returnParameters": {
+                                    "id": 171,
+                                    "nodeType": "ParameterList",
+                                    "parameters": [
+                                        {
+                                            "constant": false,
+                                            "id": 170,
+                                            "mutability": "mutable",
+                                            "name": "",
+                                            "nodeType": "VariableDeclaration",
+                                            "scope": 186,
+                                            "src": "1258:7:1",
+                                            "stateVariable": false,
+                                            "storageLocation": "default",
+                                            "typeDescriptions": {
+                                                "typeIdentifier": "t_bytes32",
+                                                "typeString": "bytes32"
+                                            },
+                                            "typeName": {
+                                                "id": 169,
+                                                "name": "bytes32",
+                                                "nodeType": "ElementaryTypeName",
+                                                "src": "1258:7:1",
+                                                "typeDescriptions": {
+                                                    "typeIdentifier": "t_bytes32",
+                                                    "typeString": "bytes32"
+                                                }
+                                            },
+                                            "visibility": "internal"
+                                        }
+                                    ],
+                                    "src": "1257:9:1"
+                                },
+                                "scope": 187,
+                                "src": "1201:225:1",
+                                "stateMutability": "pure",
+                                "virtual": false,
+                                "visibility": "internal"
+                            }
+                        ],
+                        "scope": 188,
+                        "src": "57:1372:1"
+                    }
+                ],
+                "src": "33:1397:1"
+            },
+            "id": 1
+        }
+    }
+}
