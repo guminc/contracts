@@ -7,7 +7,7 @@ import "./ERC721A.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract NFT is ERC721A, Ownable {
+contract Flurks is ERC721A, Ownable {
   using SafeMath for uint256;
 
   bool public paused = true;
@@ -21,7 +21,7 @@ contract NFT is ERC721A, Ownable {
   uint256 private constant maxNfts = 5000;
   uint256 private maxBatchSize = 20;
 
-  constructor(string memory name_, string memory symbol_) ERC721A(name_, symbol_) {}
+  constructor() ERC721A("Flurks", "FLURK") {}
 
   function mint(uint256 quantity) external payable {
     require(
@@ -63,7 +63,7 @@ contract NFT is ERC721A, Ownable {
   function lockURI(string memory password) public onlyOwner {
     require(
       keccak256(abi.encodePacked(password)) == keccak256(abi.encodePacked("forever")),
-      "You need to explicitly pass the string 'forever'"
+      'You need to explicitly pass the string "forever"'
     );
 
     uriUnlocked = false;

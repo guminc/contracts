@@ -7,6 +7,22 @@ import "./ERC721A.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
+import "hardhat/console.sol";
+
+contract NFTContractFactory {
+  NFT[] contracts;
+
+  function createNFTContract(string memory _name, string memory _symbol)
+    external
+    returns (address nftAddress)
+  {
+    NFT nftContract = new NFT(_name, _symbol);
+    contracts.push(nftContract);
+    console.log(address(nftContract));
+    nftAddress = address(nftContract);
+  }
+}
+
 contract NFT is ERC721A, Ownable {
   using SafeMath for uint256;
 
