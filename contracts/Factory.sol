@@ -11,6 +11,7 @@ import "hardhat/console.sol";
 
 contract NFTContractFactory {
   NFT[] contracts;
+  mapping(address => address) userToContract;
 
   function createNFTContract(string memory _name, string memory _symbol)
     external
@@ -20,6 +21,8 @@ contract NFTContractFactory {
     contracts.push(nftContract);
     console.log(address(nftContract));
     nftAddress = address(nftContract);
+
+    userToContract[msg.sender] = nftAddress;
   }
 }
 

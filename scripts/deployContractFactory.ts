@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers, run } from "hardhat";
 
 async function main() {
   const NFTContractFactory = await ethers.getContractFactory("NFTContractFactory");
@@ -8,6 +8,11 @@ async function main() {
   await nftContractFactory.deployed();
 
   console.log("Contract Factory deployed to:", nftContractFactory.address);
+
+  await run("verify:verify", {
+    address: nftContractFactory.address,
+    constructorArguments: [],
+  });
 }
 
 main()
