@@ -1,18 +1,18 @@
-import { ethers } from "hardhat";
+import { ethers, run } from "hardhat";
 
 async function main() {
   const HelloWorld = await ethers.getContractFactory("HelloWorld");
 
-  const helloWorld = await HelloWorld.deploy();
+  const helloWorld = await HelloWorld.deploy("Mookie");
 
   await helloWorld.deployed();
 
   console.log("Contract deployed to:", helloWorld.address);
 
-  // await run("verify:verify", {
-  //   address: nftContractFactory.address,
-  //   constructorArguments: [],
-  // });
+  await run("verify:verify", {
+    address: helloWorld.address,
+    constructorArguments: ["Mookie"],
+  });
 }
 
 main()

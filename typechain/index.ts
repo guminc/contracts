@@ -15,6 +15,7 @@ export type { NFT } from "./NFT";
 export type { NFTContractFactory } from "./NFTContractFactory";
 export type { Flurks } from "./Flurks";
 export type { HelloWorld } from "./HelloWorld";
+export type { ScatterNFT } from "./ScatterNFT";
 
 export { Ownable__factory } from "./factories/Ownable__factory";
 export { IERC721Enumerable__factory } from "./factories/IERC721Enumerable__factory";
@@ -30,3 +31,4 @@ export { NFT__factory } from "./factories/NFT__factory";
 export { NFTContractFactory__factory } from "./factories/NFTContractFactory__factory";
 export { Flurks__factory } from "./factories/Flurks__factory";
 export { HelloWorld__factory } from "./factories/HelloWorld__factory";
+export { ScatterNFT__factory } from "./factories/ScatterNFT__factory";

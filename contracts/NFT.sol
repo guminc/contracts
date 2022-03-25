@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Creator: Flurks by Stonetoss
+// Creator: Scatter v0.0.1
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -7,7 +7,7 @@ import "./ERC721A.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract NFT is ERC721A, Ownable {
+contract ScatterNFT is ERC721A, Ownable {
   using SafeMath for uint256;
 
   bool public paused = true;
@@ -17,8 +17,8 @@ contract NFT is ERC721A, Ownable {
   string private _baseURIPrefix;
   string public notRevealedUri = "ipfs://QmNsrxoVdgkBbHH7qemsoHYvoxgW8wQ2KTwE5G1LdLXEJW/";
 
-  uint256 private tokenPrice = 0.05 ether;
-  uint256 private constant maxNfts = 5000;
+  uint256 private tokenPrice = 0.14 ether;
+  uint256 private constant MAX_NFTS = 5000;
   uint256 private maxBatchSize = 20;
 
   constructor(string memory name_, string memory symbol_) ERC721A(name_, symbol_) {}
@@ -31,7 +31,7 @@ contract NFT is ERC721A, Ownable {
     require(!paused, "ERC721A: Minting currently disabled");
     require(quantity <= maxBatchSize, "ERC721A: quantity to mint too high");
     require(
-      _currentIndex.add(quantity) <= maxNfts,
+      _currentIndex.add(quantity) <= MAX_NFTS,
       "The number you're trying to buy exceeds the remaining supply!"
     );
 
