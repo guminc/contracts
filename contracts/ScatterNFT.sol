@@ -1,5 +1,17 @@
 // SPDX-License-Identifier: MIT
-// Creator: Scatter v0.0.1
+// Creator: Scatter v0.0.2
+//        ___           ___           ___           ___           ___           ___           ___
+//       /\  \         /\  \         /\  \         /\  \         /\  \         /\  \         /\  \
+//      /::\  \       /::\  \       /::\  \        \:\  \        \:\  \       /::\  \       /::\  \
+//     /:/\ \  \     /:/\:\  \     /:/\:\  \        \:\  \        \:\  \     /:/\:\  \     /:/\:\  \
+//    _\:\~\ \  \   /:/  \:\  \   /::\~\:\  \       /::\  \       /::\  \   /::\~\:\  \   /::\~\:\  \
+//   /\ \:\ \ \__\ /:/__/ \:\__\ /:/\:\ \:\__\     /:/\:\__\     /:/\:\__\ /:/\:\ \:\__\ /:/\:\ \:\__\
+//   \:\ \:\ \/__/ \:\  \  \/__/ \/__\:\/:/  /    /:/  \/__/    /:/  \/__/ \:\~\:\ \/__/ \/_|::\/:/  /
+//    \:\ \:\__\    \:\  \            \::/  /    /:/  /        /:/  /       \:\ \:\__\      |:|::/  /
+//     \:\/:/  /     \:\  \           /:/  /     \/__/         \/__/         \:\ \/__/      |:|\/__/
+//      \::/  /       \:\__\         /:/  /                                   \:\__\        |:|  |
+//       \/__/         \/__/         \/__/                                     \/__/         \|__|
+
 pragma solidity ^0.8.4;
 
 import "./ERC721A.sol";
@@ -18,19 +30,23 @@ contract ScatterNFT is ERC721A, Ownable {
   string public unrevealedUri;
 
   uint256 public tokenPrice;
-  uint256 public maxNfts;
-  uint256 public maxBatchSize = 20;
+  uint256 public maxSupply;
+  uint256 public maxBatchSize;
+  string public PROVENANCE;
+  bool public provenanceHashUnlocked = true;
 
   constructor(
     string memory name_,
     string memory symbol_,
     string memory unrevealedUri_,
     uint256 tokenPrice_,
-    uint256 maxNfts_
+    uint256 maxSupply_,
+    uint256 maxBatchSize_
   ) ERC721A(name_, symbol_) {
-    tokenPrice = tokenPrice_;
-    maxNfts = maxNfts_;
     unrevealedUri = unrevealedUri_;
+    tokenPrice = tokenPrice_;
+    maxSupply = maxSupply_;
+    maxBatchSize = maxBatchSize_;
   }
 
   function mint(uint256 quantity) external payable {
@@ -41,7 +57,7 @@ contract ScatterNFT is ERC721A, Ownable {
     require(!paused, "ERC721A: Minting currently disabled");
     require(quantity <= maxBatchSize, "ERC721A: quantity to mint too high");
     require(
-      _currentIndex.add(quantity) <= maxNfts,
+      _currentIndex.add(quantity) <= maxSupply,
       "The number you're trying to buy exceeds the remaining supply!"
     );
 
@@ -70,6 +86,11 @@ contract ScatterNFT is ERC721A, Ownable {
     revealed = true;
   }
 
+  function _startTokenId() internal view virtual override returns (uint256) {
+    return 1;
+  }
+
+  /// @notice the password is "forever"
   function lockURI(string memory password) public onlyOwner {
     require(
       keccak256(abi.encodePacked(password)) == keccak256(abi.encodePacked("forever")),
@@ -92,14 +113,31 @@ contract ScatterNFT is ERC721A, Ownable {
     return _baseURIPrefix;
   }
 
+  /// @notice Set BAYC-style provenance once it's calculated
+  function setProvenanceHash(string memory provenanceHash) public onlyOwner {
+    require(provenanceHashUnlocked, "The provenance hash has been locked forever.");
+
+    PROVENANCE = provenanceHash;
+  }
+
+  /// @notice the password is "forever"
+  function lockProvenanceHash(string memory password) public onlyOwner {
+    require(
+      keccak256(abi.encodePacked(password)) == keccak256(abi.encodePacked("forever")),
+      "You need to explicitly pass the string 'forever'"
+    );
+
+    provenanceHashUnlocked = false;
+  }
+
   function withdraw() public onlyOwner {
-      uint256 balance = address(this).balance;
-      uint256 cut = balance.mul(0.02);
-      uint256 remainder = balance.sub(cut);
+    uint256 balance = address(this).balance;
+    uint256 cut = balance.div(50);
+    uint256 remainder = balance.sub(cut);
 
-      address private constant scatter = 0x60A59d7003345843BE285c15c7C78B62b61e0d7c;
+    address scatter = 0x60A59d7003345843BE285c15c7C78B62b61e0d7c;
 
-      payable(scatter).transfer(cut);
-      payable(owner()).transfer(remainder);
-  }  
+    payable(scatter).transfer(cut);
+    payable(owner()).transfer(remainder);
+  }
 }

@@ -14,7 +14,8 @@ async function main() {
     "POOKIE",
     "ipfs://QmNsrxoVdgkBbHH7qemsoHYvoxgW8wQ2KTwE5G1LdLXEJW/",
     ethers.BigNumber.from("10000000000000000"),
-    ethers.BigNumber.from("5000")
+    5000,
+    20
   );
 
   console.log({ res });
