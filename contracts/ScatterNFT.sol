@@ -2,8 +2,8 @@
 // Creator: Scatter v0.0.1
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ERC721A.sol";
+import "./Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
@@ -15,13 +15,23 @@ contract ScatterNFT is ERC721A, Ownable {
 
   bool public uriUnlocked = true;
   string private _baseURIPrefix;
-  string public notRevealedUri = "ipfs://QmNsrxoVdgkBbHH7qemsoHYvoxgW8wQ2KTwE5G1LdLXEJW/";
+  string public unrevealedUri;
 
-  uint256 private tokenPrice = 0.14 ether;
-  uint256 private constant MAX_NFTS = 5000;
-  uint256 private maxBatchSize = 20;
+  uint256 public tokenPrice;
+  uint256 public maxNfts;
+  uint256 public maxBatchSize = 20;
 
-  constructor(string memory name_, string memory symbol_) ERC721A(name_, symbol_) {}
+  constructor(
+    string memory name_,
+    string memory symbol_,
+    string memory unrevealedUri_,
+    uint256 tokenPrice_,
+    uint256 maxNfts_
+  ) ERC721A(name_, symbol_) {
+    tokenPrice = tokenPrice_;
+    maxNfts = maxNfts_;
+    unrevealedUri = unrevealedUri_;
+  }
 
   function mint(uint256 quantity) external payable {
     require(
@@ -31,7 +41,7 @@ contract ScatterNFT is ERC721A, Ownable {
     require(!paused, "ERC721A: Minting currently disabled");
     require(quantity <= maxBatchSize, "ERC721A: quantity to mint too high");
     require(
-      _currentIndex.add(quantity) <= MAX_NFTS,
+      _currentIndex.add(quantity) <= maxNfts,
       "The number you're trying to buy exceeds the remaining supply!"
     );
 
@@ -42,7 +52,7 @@ contract ScatterNFT is ERC721A, Ownable {
     if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
     if (revealed == false) {
-      return string(abi.encodePacked(notRevealedUri, Strings.toString(tokenId)));
+      return string(abi.encodePacked(unrevealedUri, Strings.toString(tokenId)));
     }
 
     string memory baseURI = _baseURI();
@@ -69,8 +79,8 @@ contract ScatterNFT is ERC721A, Ownable {
     uriUnlocked = false;
   }
 
-  function setNotRevealedURI(string memory _notRevealedURI) public onlyOwner {
-    notRevealedUri = _notRevealedURI;
+  function setUnrevealedURI(string memory _unrevealedURI) public onlyOwner {
+    unrevealedUri = _unrevealedURI;
   }
 
   function setBaseURI(string memory baseURIPrefix) public onlyOwner {
@@ -81,4 +91,15 @@ contract ScatterNFT is ERC721A, Ownable {
   function _baseURI() internal view virtual override returns (string memory) {
     return _baseURIPrefix;
   }
+
+  function withdraw() public onlyOwner {
+      uint256 balance = address(this).balance;
+      uint256 cut = balance.mul(0.02);
+      uint256 remainder = balance.sub(cut);
+
+      address private constant scatter = 0x60A59d7003345843BE285c15c7C78B62b61e0d7c;
+
+      payable(scatter).transfer(cut);
+      payable(owner()).transfer(remainder);
+  }  
 }
