@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 // const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function main() {
-  const factoryAddress = "0x7E3E71E5C1ab135Bb5ab6bfca1be2f97daFbF2dd";
+  const factoryAddress = "0xFEAa0BF60869201c7509Af3524a2E0C8F0Aa3074";
 
   const NFTContractFactory = await ethers.getContractFactory("NFTContractFactory");
 

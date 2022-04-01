@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: MIT
-// Creator: Scatter
+// Creator: Scatter.art
 pragma solidity ^0.8.4;
 
 import "./ScatterNFT.sol";
 
 contract NFTContractFactory {
-  ScatterNFT[] private contracts;
   mapping(address => address) public userToContract;
+
+  /**
+   * @dev Emitted when an NFT Contract is deployed
+   */
+  event Deploy(address indexed from, string name, address indexed contractAddress);
 
   function createNFTContract(
     string memory _name,
@@ -24,8 +28,10 @@ contract NFTContractFactory {
       _maxSupply,
       _maxBatchSize
     );
-    contracts.push(nftContract);
+
     nftAddress = address(nftContract);
+
+    emit Deploy(msg.sender, _name, nftAddress);
 
     userToContract[msg.sender] = nftAddress;
   }
