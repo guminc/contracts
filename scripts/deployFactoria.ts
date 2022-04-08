@@ -12,7 +12,11 @@ async function main() {
   // await factory.deployed();
 
   // const factory = await upgrades.deployProxy(Factory, []);
-  const factory = await upgrades.deployProxy(Factory, [], { initializer: "initialize" });
+  const factory = await upgrades.deployProxy(
+    Factory,
+    ["0x5FbDB2315678afecb367f032d93F642f64180aa3"],
+    { initializer: "initialize" }
+  );
 
   await factory.deployed();
 

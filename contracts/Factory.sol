@@ -3,42 +3,37 @@ pragma solidity ^0.8.4;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "./F0.sol";
+import "./Archetype.sol";
 
 contract Factory is OwnableUpgradeable {
   event CollectionAdded(address indexed sender, address indexed receiver, address collection);
-  address public f0;
+  address public archetype;
 
-  function initialize() public initializer {
+  function initialize(address archetype_) public initializer {
     console.log("Factory is initializing");
 
-    f0 = address(new F0());
+    archetype = archetype_;
     __Ownable_init();
 
-    console.log("f0 implementation is");
-    console.log(f0);
+    console.log("archetype implementation is");
+    console.log(archetype);
   }
 
-  /********************************************************************************
-   *
-   * Create a collection with "name", "symbol" and "config",
-   * and send it to "_receiver"
-   *
-   ********************************************************************************/
-  function genesis(
+  /// @notice config is a struct in the shape of {string placeholder; string base; uint64 supply; bool permanent;}
+  function createCollection(
     address _receiver,
     string memory name,
     string memory symbol,
-    F0.Config calldata config
+    Archetype.Config calldata config
   ) external payable returns (address) {
-    console.log("f0 implementation");
-    console.log(f0);
+    console.log("archetype implementation");
+    console.log(archetype);
 
     console.log("cloning the implementation");
-    address clone = ClonesUpgradeable.clone(f0);
+    address clone = ClonesUpgradeable.clone(archetype);
 
-    console.log("passing the clone to F0 constructor");
-    F0 token = F0(clone);
+    console.log("passing the clone to Archetype constructor");
+    Archetype token = Archetype(clone);
 
     console.log("calling initialize function with args");
     token.initialize(name, symbol, config);
@@ -54,26 +49,7 @@ contract Factory is OwnableUpgradeable {
     return clone;
   }
 
-  /********************************************************************************
-   *
-   * Pin collection to home page
-   * only can be called by the collection owner
-   *
-   * when transferring ownership, the following needs to happen in this exact order:
-   * 1. factory.addCollection() should be called first,
-   * 2. call token.transferOwnership() called next
-   *
-   * Because once the ownership is transferred, only the owner can add to dashboard
-   *
-   * If the sender forgets to call factory.addCollection(),
-   * the receiver needs to go to the collection page and call addCollection()
-   * themselves to add to their dashboard
-   *
-   ********************************************************************************/
-  function addCollection(address _receiver, address _collection) external {
-    F0 token = F0(_collection);
-    address _collectionOwner = token.owner();
-    require(_msgSender() == _collectionOwner, "2");
-    emit CollectionAdded(_msgSender(), _receiver, _collection);
+  function setArchetype(address archetype_) public onlyOwner {
+    archetype = archetype_;
   }
 }
