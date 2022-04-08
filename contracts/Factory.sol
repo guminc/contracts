@@ -1,17 +1,22 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.4;
-//import 'hardhat/console.sol';
+import "hardhat/console.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./F0.sol";
 
 contract Factory is OwnableUpgradeable {
   event CollectionAdded(address indexed sender, address indexed receiver, address collection);
-  address public immutable implementation;
+  address public f0;
 
-  constructor() {
-    implementation = address(new F0());
+  function initialize() public initializer {
+    console.log("Factory is initializing");
+
+    f0 = address(new F0());
     __Ownable_init();
+
+    console.log("f0 implementation is");
+    console.log(f0);
   }
 
   /********************************************************************************
@@ -26,9 +31,20 @@ contract Factory is OwnableUpgradeable {
     string memory symbol,
     F0.Config calldata config
   ) external payable returns (address) {
-    address clone = ClonesUpgradeable.clone(implementation);
+    console.log("f0 implementation");
+    console.log(f0);
+
+    console.log("cloning the implementation");
+    address clone = ClonesUpgradeable.clone(f0);
+
+    console.log("passing the clone to F0 constructor");
     F0 token = F0(clone);
+
+    console.log("calling initialize function with args");
     token.initialize(name, symbol, config);
+
+    console.log("transferring ownership");
+
     token.transferOwnership(_receiver);
     if (msg.value > 0) {
       (bool sent, ) = payable(_receiver).call{ value: msg.value }("");

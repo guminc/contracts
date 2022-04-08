@@ -57,6 +57,7 @@ contract ERC721Upgradeable is
    * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
    */
   function __ERC721_init(string memory name_, string memory symbol_) internal initializer {
+    console.log("ERC721 is initializing");
     __Context_init_unchained();
     __ERC165_init_unchained();
     __ERC721_init_unchained(name_, symbol_);
