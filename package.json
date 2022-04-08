@@ -20,6 +20,7 @@
   "dependencies": {
     "@daonomic/tests-common": "0.2.2",
     "@openzeppelin/contracts": "4.5.0",
+    "@openzeppelin/contracts-upgradeable": "4.5.2",
     "@rarible/exchange-interfaces": "0.4.0",
     "@rarible/lazy-mint": "0.5.5",
     "@rarible/meta-tx": "0.1.2",
