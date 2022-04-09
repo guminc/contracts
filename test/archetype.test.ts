@@ -1,6 +1,8 @@
 import { ethers, upgrades } from "hardhat";
 
 import { expect } from "chai";
+import { Archetype__factory, Archetype as IArchetype, Factory__factory } from "../typechain";
+import { Contract } from "@ethersproject/contracts";
 
 const DEFAULT_NAME = "Pookie";
 const DEFAULT_SYMBOL = "POOKIE";
@@ -12,26 +14,71 @@ const DEFAULT_CONFIG = {
 };
 
 describe("Factory", function () {
-  it("should deploy and allow me to create a collection", async function () {
-    const Archetype = await ethers.getContractFactory("Archetype");
+  let Archetype: Archetype__factory;
+  let archetype: IArchetype;
+  let Factory: Factory__factory;
+  let factory: Contract;
+
+  before(async function () {
+    Archetype = await ethers.getContractFactory("Archetype");
 
     // const archetype = await upgrades.deployProxy(Archetype, []);
 
-    const archetype = await Archetype.deploy();
+    archetype = await Archetype.deploy();
 
     await archetype.deployed();
 
-    const Factory = await ethers.getContractFactory("Factory");
+    Factory = await ethers.getContractFactory("Factory");
 
-    const factory = await upgrades.deployProxy(Factory, [archetype.address], {
+    factory = await upgrades.deployProxy(Factory, [archetype.address], {
       initializer: "initialize",
     });
 
     await factory.deployed();
 
     console.log({ factoryAddress: factory.address, archetypeAddress: archetype.address });
+  });
 
-    // const factoryAddress = factory.address;
+  it("should create a collection", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    console.log({ accountZero: accountZero.address });
+
+    const newCollection = await factory.createCollection(
+      accountOne.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+
+    // console.dir({ events: result.events });
+    const newCollectionAddress = result.events[0].address || "";
+
+    const NFT = await ethers.getContractFactory("Archetype");
+
+    const nft = NFT.attach(newCollectionAddress);
+
+    const symbol = await nft.symbol();
+    const owner = await nft.owner();
+    // const mintRes = await nft.mint();
+
+    expect(symbol).to.equal(DEFAULT_SYMBOL);
+    expect(owner).to.equal(accountOne.address);
+  });
+
+  it("should initialize once and continue to work after initialized", async function () {
+    const res = await archetype.initialize("Flookie", DEFAULT_SYMBOL, DEFAULT_CONFIG);
+    const awaitRes = await res.wait();
+
+    console.log({ awaitRes });
+
+    expect(await archetype.name()).to.equal("Flookie");
+
+    await expect(archetype.initialize("Wookie", DEFAULT_SYMBOL, DEFAULT_CONFIG)).to.be.revertedWith(
+      "Initializable: contract is already initialized"
+    );
 
     const [accountZero, accountOne] = await ethers.getSigners();
 
@@ -59,7 +106,6 @@ describe("Factory", function () {
 
     expect(symbol).to.equal(DEFAULT_SYMBOL);
     expect(owner).to.equal(accountOne.address);
-    // expect(await hardhatToken.totalSupply()).to.equal(ownerBalance);
   });
 });
 
