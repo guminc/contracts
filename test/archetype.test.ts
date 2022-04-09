@@ -107,6 +107,104 @@ describe("Factory", function () {
     expect(symbol).to.equal(DEFAULT_SYMBOL);
     expect(owner).to.equal(accountOne.address);
   });
+
+  it("should let you change the archetype implementation", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    console.log({ accountZero: accountZero.address });
+
+    const newCollection = await factory.createCollection(
+      accountOne.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+
+    // console.dir({ events: result.events });
+    const newCollectionAddress = result.events[0].address || "";
+
+    const NFT = await ethers.getContractFactory("Archetype");
+
+    const nft = NFT.attach(newCollectionAddress);
+
+    // console.log({ nft });
+
+    const symbol = await nft.symbol();
+    const owner = await nft.owner();
+    // const mintRes = await nft.mint();
+
+    expect(symbol).to.equal(DEFAULT_SYMBOL);
+    expect(owner).to.equal(accountOne.address);
+
+    const NewArchetype = await ethers.getContractFactory("Archetype");
+
+    // const archetype = await upgrades.deployProxy(Archetype, []);
+
+    const newArchetype = await NewArchetype.deploy();
+
+    await newArchetype.deployed();
+
+    await factory.setArchetype(newArchetype.address);
+    // console.log({ res });
+
+    const myArchetype = await factory.archetype();
+
+    expect(myArchetype).to.equal(newArchetype.address);
+
+    const anotherCollection = await factory.createCollection(
+      accountOne.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result1 = await anotherCollection.wait();
+
+    // console.dir({ events: result.events });
+    const anotherollectionAddress = result1.events[0].address || "";
+
+    const nft1 = NFT.attach(anotherollectionAddress);
+
+    // console.log({ nft });
+
+    const symbol1 = await nft1.symbol();
+    const owner1 = await nft1.owner();
+
+    expect(symbol1).to.equal(DEFAULT_SYMBOL);
+    expect(owner1).to.equal(accountOne.address);
+  });
+
+  xit("should mint an nft", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    console.log({ accountZero: accountZero.address });
+
+    const newCollection = await factory.createCollection(
+      accountOne.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+
+    // console.dir({ events: result.events });
+    const newCollectionAddress = result.events[0].address || "";
+
+    const NFT = await ethers.getContractFactory("Archetype");
+
+    const nft = NFT.attach(newCollectionAddress);
+
+    console.log({ nft });
+
+    // const mintRes = await nft.mint(1);
+    // const mintRes = await nft.mint();
+
+    // expect(mintRes).to.equal(DEFAULT_SYMBOL);
+    // expect(owner).to.equal(accountOne.address);
+  });
 });
 
 // const _accounts = [
