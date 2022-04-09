@@ -2,38 +2,51 @@ import { ethers, upgrades } from "hardhat";
 
 import { expect } from "chai";
 
+const DEFAULT_NAME = "Pookie";
+const DEFAULT_SYMBOL = "POOKIE";
+const DEFAULT_CONFIG = {
+  placeholder: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
+  base: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
+  supply: 5000,
+  permanent: false,
+};
+
 describe("Factory", function () {
   it("should deploy and allow me to create a collection", async function () {
+    const Archetype = await ethers.getContractFactory("Archetype");
+
+    // const archetype = await upgrades.deployProxy(Archetype, []);
+
+    const archetype = await Archetype.deploy();
+
+    await archetype.deployed();
+
     const Factory = await ethers.getContractFactory("Factory");
 
-    const factory = await upgrades.deployProxy(
-      Factory,
-      ["0x5FbDB2315678afecb367f032d93F642f64180aa3"],
-      { initializer: "initialize" }
-    );
+    const factory = await upgrades.deployProxy(Factory, [archetype.address], {
+      initializer: "initialize",
+    });
 
     await factory.deployed();
 
+    console.log({ factoryAddress: factory.address, archetypeAddress: archetype.address });
+
     // const factoryAddress = factory.address;
 
-    const [_owner, accountOne] = await ethers.getSigners();
+    const [accountZero, accountOne] = await ethers.getSigners();
 
-    const DEFAULT_SYMBOL = "POOKIE";
+    console.log({ accountZero: accountZero.address });
+
     const newCollection = await factory.createCollection(
       accountOne.address,
-      "Pookie",
+      DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      {
-        placeholder: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
-        base: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
-        supply: 5000,
-        permanent: false,
-      }
+      DEFAULT_CONFIG
     );
 
     const result = await newCollection.wait();
 
-    console.dir({ events: result.events });
+    // console.dir({ events: result.events });
     const newCollectionAddress = result.events[0].address || "";
 
     const NFT = await ethers.getContractFactory("Archetype");
