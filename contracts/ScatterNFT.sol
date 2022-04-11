@@ -16,10 +16,11 @@ pragma solidity ^0.8.4;
 
 import "./ERC721A.sol";
 import "./Ownable.sol";
+import "./CustomInitializable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract ScatterNFT is ERC721A, Ownable {
+contract ScatterNFT is CustomInitializable, ERC721A, Ownable {
   using SafeMath for uint256;
 
   bool public paused = true;
@@ -27,13 +28,31 @@ contract ScatterNFT is ERC721A, Ownable {
 
   bool public uriUnlocked = true;
   string private _baseURIPrefix;
-  string public unrevealedUri;
 
-  uint256 public tokenPrice;
-  uint256 public maxSupply;
-  uint256 public maxBatchSize;
-  string public PROVENANCE;
+  string public provenance;
   bool public provenanceHashUnlocked = true;
+  Config public config;
+
+  struct Config {
+    uint256 maxSupply;
+    uint256 maxBatchSize;
+    string unrevealedUri;
+    uint256 tokenPrice;
+  }
+
+  function initialize(
+    string memory name,
+    string memory symbol,
+    Config calldata config_
+  ) external initializer {
+    console.log("Archetype is initializing");
+    __ERC721_init(name, symbol);
+    config = config_;
+
+    console.log("Initializing ownable upgradeable");
+    __Ownable_init();
+    setConfig(_config);
+  }
 
   constructor(
     string memory name_,
@@ -117,7 +136,7 @@ contract ScatterNFT is ERC721A, Ownable {
   function setProvenanceHash(string memory provenanceHash) public onlyOwner {
     require(provenanceHashUnlocked, "The provenance hash has been locked forever.");
 
-    PROVENANCE = provenanceHash;
+    provenance = provenanceHash;
   }
 
   /// @notice the password is "forever"

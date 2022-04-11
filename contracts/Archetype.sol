@@ -184,12 +184,28 @@ contract Archetype is Initializable, ERC721Upgradeable, OwnableUpgradeable {
     require(i.start <= block.timestamp, "9");
     require(minted[_msgSender()][auth.key] + _count <= i.limit, "10");
     require(n + _count - 1 <= config.supply, "11");
+
     for (uint256 k = 0; k < _count; k++) {
       _safeMint(_msgSender(), n + k);
     }
     nextId = n + _count;
     minted[_msgSender()][auth.key] += _count;
   }
+
+  // function mint(Auth calldata auth, uint256 _count) external payable {
+  //   uint256 n = nextId;
+  //   Invite memory i = invite[auth.key];
+  //   require(verify(auth, _msgSender()), "7");
+  //   require(i.price * _count == msg.value, "8");
+  //   require(i.start <= block.timestamp, "9");
+  //   require(minted[_msgSender()][auth.key] + _count <= i.limit, "10");
+  //   require(n + _count - 1 <= config.supply, "11");
+  //   for (uint256 k = 0; k < _count; k++) {
+  //     _safeMint(_msgSender(), n + k);
+  //   }
+  //   nextId = n + _count;
+  //   minted[_msgSender()][auth.key] += _count;
+  // }
 
   function gift(address _receiver, uint256 _count) external onlyOwner {
     // first time: nextId is 0 => n is 1
