@@ -16,11 +16,11 @@ pragma solidity ^0.8.4;
 
 import "./ERC721A.sol";
 import "./Ownable.sol";
-import "./CustomInitializable.sol";
+import "./InitializableCustom.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract ScatterNFT is CustomInitializable, ERC721A, Ownable {
+contract ScatterNFT is InitializableCustom, ERC721A, Ownable {
   using SafeMath for uint256;
 
   bool public paused = true;

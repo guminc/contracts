@@ -69,6 +69,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Archetype__factory>;
     getContractFactory(
+      name: "ArchetypeBackup",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ArchetypeBackup__factory>;
+    getContractFactory(
+      name: "ERC721AUpgradeable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC721AUpgradeable__factory>;
+    getContractFactory(
       name: "ERC721A",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC721A__factory>;
@@ -93,10 +101,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Factory__factory>;
     getContractFactory(
-      name: "NFTContractFactory",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.NFTContractFactory__factory>;
-    getContractFactory(
       name: "Flurks",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Flurks__factory>;
@@ -109,9 +113,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Ownable__factory>;
     getContractFactory(
-      name: "ScatterNFT",
+      name: "OwnableUpgradeable",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ScatterNFT__factory>;
+    ): Promise<Contracts.OwnableUpgradeable__factory>;
 
     getContractAt(
       name: "OwnableUpgradeable",
@@ -184,6 +188,16 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.Archetype>;
     getContractAt(
+      name: "ArchetypeBackup",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ArchetypeBackup>;
+    getContractAt(
+      name: "ERC721AUpgradeable",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC721AUpgradeable>;
+    getContractAt(
       name: "ERC721A",
       address: string,
       signer?: ethers.Signer
@@ -214,11 +228,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.Factory>;
     getContractAt(
-      name: "NFTContractFactory",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.NFTContractFactory>;
-    getContractAt(
       name: "Flurks",
       address: string,
       signer?: ethers.Signer
@@ -234,10 +243,10 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.Ownable>;
     getContractAt(
-      name: "ScatterNFT",
+      name: "OwnableUpgradeable",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.ScatterNFT>;
+    ): Promise<Contracts.OwnableUpgradeable>;
 
     // default types
     getContractFactory(

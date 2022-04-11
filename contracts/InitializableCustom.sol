@@ -4,7 +4,9 @@
 pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
-import "@openzeppelin/contracts/proxy/utils/Address.sol";
+
+// import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 
 /**
  * @dev This is a base contract to aid in writing upgradeable contracts, or any kind of contract that will be deployed
@@ -33,7 +35,7 @@ import "@openzeppelin/contracts/proxy/utils/Address.sol";
  * ```
  * ====
  */
-abstract contract CustomInitializable {
+abstract contract InitializableCustom {
   /**
    * @dev Indicates that the contract has been initialized.
    */
@@ -47,14 +49,14 @@ abstract contract CustomInitializable {
   /**
    * @dev Modifier to protect an initializer function from being invoked twice.
    */
-  modifier initializer() {
+  modifier initializerCustom() {
     // If the contract is initializing we ignore whether _initialized is set in order to support multiple
     // inheritance patterns, but we only do this in the context of a constructor, because in other contexts the
     // contract may have been reentered.
     console.log(_initializing, _initialized);
 
     console.log("is constructor");
-    console.log(_isConstructor());
+    // console.log(_isConstructorCustom());
 
     require(!_initialized, "Initializable: contract is already initialized");
     // require(_initializing ? _isConstructor() : !_initialized, "Initializable: contract is already initialized");
@@ -82,12 +84,12 @@ abstract contract CustomInitializable {
    * @dev Modifier to protect an initialization function so that it can only be invoked by functions with the
    * {initializer} modifier, directly or indirectly.
    */
-  modifier onlyInitializing() {
+  modifier onlyInitializingCustom() {
     require(_initializing, "Initializable: contract is not initializing");
     _;
   }
 
-  function _isConstructor() private view returns (bool) {
+  function _isConstructorCustom() private view returns (bool) {
     return !AddressUpgradeable.isContract(address(this));
   }
 }
