@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { OwnableUpgradeable } from "./OwnableUpgradeable";
+export type { PausableUpgradeable } from "./PausableUpgradeable";
 export type { IERC721MetadataUpgradeable } from "./IERC721MetadataUpgradeable";
 export type { IERC721ReceiverUpgradeable } from "./IERC721ReceiverUpgradeable";
 export type { IERC721Upgradeable } from "./IERC721Upgradeable";
@@ -18,6 +19,8 @@ export type { Archetype } from "./Archetype";
 export type { ArchetypeBackup } from "./ArchetypeBackup";
 export type { ERC721AUpgradeable } from "./ERC721AUpgradeable";
 export type { ERC721A } from "./ERC721A";
+export type { ERC721APausable } from "./ERC721APausable";
+export type { ERC721AQueryable } from "./ERC721AQueryable";
 export type { ERC721ABurnable } from "./ERC721ABurnable";
 export type { ERC721AOwnersExplicit } from "./ERC721AOwnersExplicit";
 export type { F0 } from "./F0";
@@ -27,6 +30,7 @@ export type { Flurks } from "./Flurks";
 export type { HelloWorld } from "./HelloWorld";
 
 export { OwnableUpgradeable__factory } from "./factories/OwnableUpgradeable__factory";
+export { PausableUpgradeable__factory } from "./factories/PausableUpgradeable__factory";
 export { IERC721MetadataUpgradeable__factory } from "./factories/IERC721MetadataUpgradeable__factory";
 export { IERC721ReceiverUpgradeable__factory } from "./factories/IERC721ReceiverUpgradeable__factory";
 export { IERC721Upgradeable__factory } from "./factories/IERC721Upgradeable__factory";
@@ -43,6 +47,8 @@ export { Archetype__factory } from "./factories/Archetype__factory";
 export { ArchetypeBackup__factory } from "./factories/ArchetypeBackup__factory";
 export { ERC721AUpgradeable__factory } from "./factories/ERC721AUpgradeable__factory";
 export { ERC721A__factory } from "./factories/ERC721A__factory";
+export { ERC721APausable__factory } from "./factories/ERC721APausable__factory";
+export { ERC721AQueryable__factory } from "./factories/ERC721AQueryable__factory";
 export { ERC721ABurnable__factory } from "./factories/ERC721ABurnable__factory";
 export { ERC721AOwnersExplicit__factory } from "./factories/ERC721AOwnersExplicit__factory";
 export { F0__factory } from "./factories/F0__factory";

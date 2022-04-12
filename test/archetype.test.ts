@@ -250,7 +250,7 @@ describe("Factory", function () {
 
     await nft.connect(owner).pause(false);
 
-    await nft.mint(1, { value: ethers.utils.parseEther("0.08") });
+    await nft.mint(1, { key: "", proof: [""] }, { value: ethers.utils.parseEther("0.08") });
 
     expect(await nft.balanceOf(accountZero.address)).to.equal(1);
   });

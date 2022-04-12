@@ -16,32 +16,47 @@ pragma solidity ^0.8.4;
 
 import "hardhat/console.sol";
 import "./ERC721A-Upgradeable.sol";
+import "./ERC721AQueryable.sol";
 // import "./OwnableUpgradeable.sol";
 // import "./InitializableCustom.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
+error MintNotYetStarted(uint256 block, uint64 start);
+error WalletUnauthorizedToMint(address wallet, bytes32 authKey);
 error InsufficientEthSent(uint256 sent, uint256 required);
 error MintingCurrentlyPaused();
-// error MaxBatchSizeExceeded(uint256 numRequested, uint256 maxBatchSize);
 error MaxSupplyExceeded(uint256 numRequested, uint256 numAvailable);
 
-contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
+// error MaxBatchSizeExceeded(uint256 numRequested, uint256 maxBatchSize);
+
+contract Archetype is
+  Initializable,
+  ERC721AUpgradeable,
+  PausableUpgradeable,
+  ERC721AQueryable,
+  OwnableUpgradeable
+{
   using SafeMath for uint256;
 
   event Invited(bytes32 indexed key, bytes32 indexed cid);
 
   mapping(bytes32 => Invite) public invite;
 
-  bool public paused;
   bool public revealed;
   bool public uriUnlocked;
   string public provenance;
   bool public provenanceHashUnlocked;
 
   Config public config;
+
+  struct Auth {
+    bytes32 key;
+    bytes32[] proof;
+  }
 
   struct Config {
     uint256 maxSupply;
@@ -71,28 +86,38 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     console.log("Archetype is initializing");
     __ERC721A_init(name, symbol);
     config = config_;
-
-    console.log("Initializing ownable upgradeable");
+    console.log("Initializing Pausable upgradeable");
+    __Pausable_init();
+    console.log("Initializing Ownable upgradeable");
     __Ownable_init();
-    paused = true;
     revealed = false;
     uriUnlocked = true;
     provenanceHashUnlocked = true;
   }
 
-  function mint(uint256 quantity) external payable {
-    //to-do: get cost from invite list
-    uint256 cost = 1000000000000;
+  function mint(uint256 quantity, Auth calldata auth) external payable {
+    Invite memory i = invite[auth.key];
+
+    if (paused()) {
+      revert MintingCurrentlyPaused();
+    }
+
+    if (!verify(auth, _msgSender())) {
+      revert WalletUnauthorizedToMint({ wallet: _msgSender(), authKey: auth.key });
+    }
+
+    uint256 cost = i.price * quantity;
 
     if (msg.value < cost) {
       revert InsufficientEthSent({ sent: msg.value, required: cost });
     }
-    console.log("paused");
-    console.log(paused);
 
-    if (paused) {
-      revert MintingCurrentlyPaused();
+    if (block.timestamp < i.start) {
+      revert MintNotYetStarted({ block: block.timestamp, start: i.start });
     }
+
+    // require(minted[_msgSender()][auth.key] + _count <= i.limit, "10");
+
     // if (quantity > config.maxBatchSize) {
     //   revert MaxBatchSizeExceeded({ numRequested: quantity, maxBatchSize: config.maxBatchSize });
     // }
@@ -120,7 +145,11 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   }
 
   function pause(bool _state) public onlyOwner {
-    paused = _state;
+    if (_state) {
+      _pause();
+    } else {
+      _unpause();
+    }
   }
 
   function reveal() public onlyOwner {
@@ -195,5 +224,28 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     // if (nextId == 0) nextId = 1; // delay nextId setting until the first invite is made.
     invite[_key] = _invite;
     emit Invited(_key, _cid);
+  }
+
+  function verify(Auth calldata auth, address account) internal pure returns (bool) {
+    if (auth.key == "") return true;
+    bytes32 computedHash = keccak256(abi.encodePacked(account));
+    for (uint256 i = 0; i < auth.proof.length; i++) {
+      bytes32 proofElement = auth.proof[i];
+      if (computedHash <= proofElement) {
+        computedHash = keccak256(abi.encodePacked(computedHash, proofElement));
+      } else {
+        computedHash = keccak256(abi.encodePacked(proofElement, computedHash));
+      }
+    }
+    return computedHash == auth.key;
+  }
+
+  function _beforeTokenTransfers(
+    address from,
+    address to,
+    uint256 startTokenId,
+    uint256 quantity
+  ) internal virtual override {
+    super._beforeTokenTransfers(from, to, startTokenId, quantity);
   }
 }

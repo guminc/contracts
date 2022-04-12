@@ -17,6 +17,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.OwnableUpgradeable__factory>;
     getContractFactory(
+      name: "PausableUpgradeable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PausableUpgradeable__factory>;
+    getContractFactory(
       name: "IERC721MetadataUpgradeable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC721MetadataUpgradeable__factory>;
@@ -81,6 +85,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC721A__factory>;
     getContractFactory(
+      name: "ERC721APausable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC721APausable__factory>;
+    getContractFactory(
+      name: "ERC721AQueryable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC721AQueryable__factory>;
+    getContractFactory(
       name: "ERC721ABurnable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC721ABurnable__factory>;
@@ -122,6 +134,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.OwnableUpgradeable>;
+    getContractAt(
+      name: "PausableUpgradeable",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PausableUpgradeable>;
     getContractAt(
       name: "IERC721MetadataUpgradeable",
       address: string,
@@ -202,6 +219,16 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ERC721A>;
+    getContractAt(
+      name: "ERC721APausable",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC721APausable>;
+    getContractAt(
+      name: "ERC721AQueryable",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC721AQueryable>;
     getContractAt(
       name: "ERC721ABurnable",
       address: string,
