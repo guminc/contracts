@@ -16,13 +16,18 @@ pragma solidity ^0.8.4;
 
 import "./ERC721A-Upgradeable.sol";
 // import "./OwnableUpgradeable.sol";
-import "./InitializableCustom.sol";
-
+// import "./InitializableCustom.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract Archetype is InitializableCustom, ERC721AUpgradeable, OwnableUpgradeable {
+error InsufficientEthSent(uint256 sent, uint256 required);
+error MintingCurrentlyPaused();
+error MaxBatchSizeExceeded(uint256 numRequested, uint256 maxBatchSize);
+error MaxSupplyExceeded(uint256 numRequested, uint256 numAvailable);
+
+contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   using SafeMath for uint256;
 
   bool public paused = true;
@@ -46,7 +51,7 @@ contract Archetype is InitializableCustom, ERC721AUpgradeable, OwnableUpgradeabl
     string memory name,
     string memory symbol,
     Config calldata config_
-  ) external initializerCustom {
+  ) external initializer {
     console.log("Archetype is initializing");
     __ERC721A_init(name, symbol);
     config = config_;
@@ -56,16 +61,23 @@ contract Archetype is InitializableCustom, ERC721AUpgradeable, OwnableUpgradeabl
   }
 
   function mint(uint256 quantity) external payable {
-    require(
-      config.tokenPrice.mul(quantity) <= msg.value,
-      "You didn't include enough ETH with your transaction"
-    );
-    require(!paused, "ERC721A: Minting currently disabled");
-    require(quantity <= config.maxBatchSize, "ERC721A: quantity to mint too high");
-    require(
-      _currentIndex.add(quantity) <= config.maxSupply,
-      "The number you're trying to buy exceeds the remaining supply!"
-    );
+    uint256 cost = config.tokenPrice.mul(quantity);
+
+    if (cost >= msg.value) {
+      revert InsufficientEthSent({ sent: msg.value, required: cost });
+    }
+    if (paused) {
+      revert MintingCurrentlyPaused();
+    }
+    if (quantity > config.maxBatchSize) {
+      revert MaxBatchSizeExceeded({ numRequested: quantity, maxBatchSize: config.maxBatchSize });
+    }
+    if (_currentIndex.add(quantity) > config.maxSupply) {
+      revert MaxSupplyExceeded({
+        numRequested: quantity,
+        numAvailable: config.maxSupply - _currentIndex
+      });
+    }
 
     _safeMint(msg.sender, quantity);
   }

@@ -7,10 +7,10 @@ import { Contract } from "@ethersproject/contracts";
 const DEFAULT_NAME = "Pookie";
 const DEFAULT_SYMBOL = "POOKIE";
 const DEFAULT_CONFIG = {
-  placeholder: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
-  base: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
-  supply: 5000,
-  permanent: false,
+  tokenPrice: ethers.utils.parseEther("0.08"),
+  unrevealedUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
+  maxSupply: 5000,
+  maxBatchSize: 20,
 };
 
 describe("Factory", function () {
@@ -70,9 +70,9 @@ describe("Factory", function () {
 
   it("should initialize once and continue to work after initialized", async function () {
     const res = await archetype.initialize("Flookie", DEFAULT_SYMBOL, DEFAULT_CONFIG);
-    const awaitRes = await res.wait();
+    await res.wait();
 
-    console.log({ awaitRes });
+    // console.log({ awaitRes });
 
     expect(await archetype.name()).to.equal("Flookie");
 
@@ -176,7 +176,7 @@ describe("Factory", function () {
     expect(owner1).to.equal(accountOne.address);
   });
 
-  xit("should mint an nft", async function () {
+  it("should mint an nft", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();
 
     console.log({ accountZero: accountZero.address });
@@ -199,10 +199,11 @@ describe("Factory", function () {
 
     console.log({ nft });
 
-    // const mintRes = await nft.mint(1);
+    const mintRes = await nft.mint(1, { value: ethers.utils.parseEther("0.08") });
+    console.log({ mintRes });
     // const mintRes = await nft.mint();
 
-    // expect(mintRes).to.equal(DEFAULT_SYMBOL);
+    expect(await nft.balanceOf(accountZero.address)).to.equal(1); // expect(mintRes).to.equal(DEFAULT_SYMBOL);
     // expect(owner).to.equal(accountOne.address);
   });
 });
