@@ -16,35 +16,27 @@ pragma solidity ^0.8.4;
 
 import "hardhat/console.sol";
 import "./ERC721A-Upgradeable.sol";
-import "./ERC721AQueryable.sol";
-// import "./OwnableUpgradeable.sol";
-// import "./InitializableCustom.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
 error MintNotYetStarted(uint256 block, uint64 start);
 error WalletUnauthorizedToMint(address wallet, bytes32 authKey);
 error InsufficientEthSent(uint256 sent, uint256 required);
-error MintingCurrentlyPaused();
 error MaxSupplyExceeded(uint256 numRequested, uint256 numAvailable);
+// error NumberOfMintsExceeded(uint64 limit);
+// error NumberOfMintsExceeded(uint256 totalAfterMint, uint64 limit);
+// error NumberOfMintsExceeded(uint256 totalRequested);
+error NumberOfMintsExceeded();
 
-// error MaxBatchSizeExceeded(uint256 numRequested, uint256 maxBatchSize);
+error MaxBatchSizeExceeded(uint256 numRequested, uint256 maxBatchSize);
 
-contract Archetype is
-  Initializable,
-  ERC721AUpgradeable,
-  PausableUpgradeable,
-  ERC721AQueryable,
-  OwnableUpgradeable
-{
-  using SafeMath for uint256;
-
+contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   event Invited(bytes32 indexed key, bytes32 indexed cid);
 
-  mapping(bytes32 => Invite) public invite;
+  mapping(bytes32 => Invite) public invites;
+  mapping(address => mapping(bytes32 => uint256)) private minted;
 
   bool public revealed;
   bool public uriUnlocked;
@@ -62,7 +54,7 @@ contract Archetype is
     uint256 maxSupply;
     string unrevealedUri;
     string baseUri;
-    // uint256 maxBatchSize;
+    uint256 maxBatchSize;
     // uint256 tokenPrice;
   }
 
@@ -86,25 +78,23 @@ contract Archetype is
     console.log("Archetype is initializing");
     __ERC721A_init(name, symbol);
     config = config_;
-    console.log("Initializing Pausable upgradeable");
-    __Pausable_init();
-    console.log("Initializing Ownable upgradeable");
+
+    console.log("Initializing ownable upgradeable");
     __Ownable_init();
     revealed = false;
     uriUnlocked = true;
     provenanceHashUnlocked = true;
   }
 
-  function mint(uint256 quantity, Auth calldata auth) external payable {
-    Invite memory i = invite[auth.key];
-
-    if (paused()) {
-      revert MintingCurrentlyPaused();
-    }
+  function mint(Auth calldata auth, uint256 quantity) external payable {
+    Invite memory i = invites[auth.key];
 
     if (!verify(auth, _msgSender())) {
       revert WalletUnauthorizedToMint({ wallet: _msgSender(), authKey: auth.key });
     }
+
+    console.log("i.price");
+    console.log(i.price);
 
     uint256 cost = i.price * quantity;
 
@@ -116,12 +106,24 @@ contract Archetype is
       revert MintNotYetStarted({ block: block.timestamp, start: i.start });
     }
 
-    // require(minted[_msgSender()][auth.key] + _count <= i.limit, "10");
+    uint256 totalAfterMint = minted[_msgSender()][auth.key] + quantity;
 
-    // if (quantity > config.maxBatchSize) {
-    //   revert MaxBatchSizeExceeded({ numRequested: quantity, maxBatchSize: config.maxBatchSize });
-    // }
-    if (_currentIndex.add(quantity) > config.maxSupply) {
+    console.log("totalAfterMint");
+    console.log(totalAfterMint);
+
+    if (totalAfterMint > i.limit) {
+      // revert NumberOfMintsExceeded({ totalAfterMint: totalAfterMint, limit: i.limit });
+      revert NumberOfMintsExceeded();
+    }
+
+    console.log("checking maxBatchSize");
+    console.log(config.maxBatchSize);
+
+    if (quantity > config.maxBatchSize) {
+      revert MaxBatchSizeExceeded({ numRequested: quantity, maxBatchSize: config.maxBatchSize });
+    }
+
+    if ((_currentIndex + quantity) > config.maxSupply) {
       revert MaxSupplyExceeded({
         numRequested: quantity,
         numAvailable: config.maxSupply - _currentIndex
@@ -129,6 +131,7 @@ contract Archetype is
     }
 
     _safeMint(msg.sender, quantity);
+    minted[_msgSender()][auth.key] += quantity;
   }
 
   function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
@@ -142,14 +145,6 @@ contract Archetype is
       bytes(config.baseUri).length != 0
         ? string(abi.encodePacked(config.baseUri, Strings.toString(tokenId)))
         : "";
-  }
-
-  function pause(bool _state) public onlyOwner {
-    if (_state) {
-      _pause();
-    } else {
-      _unpause();
-    }
   }
 
   function reveal() public onlyOwner {
@@ -198,8 +193,8 @@ contract Archetype is
 
   function withdraw() public onlyOwner {
     uint256 balance = address(this).balance;
-    uint256 cut = balance.div(50);
-    uint256 remainder = balance.sub(cut);
+    uint256 cut = balance / 50;
+    uint256 remainder = balance - cut;
 
     address scatter = 0x60A59d7003345843BE285c15c7C78B62b61e0d7c;
 
@@ -211,7 +206,7 @@ contract Archetype is
     // if (nextId == 0) nextId = 1; // delay nextId setting until the first invite is made.
     for (uint256 i = 0; i < invitelist.length; i++) {
       Invitelist calldata list = invitelist[i];
-      invite[list.key] = list.invite;
+      invites[list.key] = list.invite;
       emit Invited(list.key, list.cid);
     }
   }
@@ -222,12 +217,18 @@ contract Archetype is
     Invite calldata _invite
   ) external onlyOwner {
     // if (nextId == 0) nextId = 1; // delay nextId setting until the first invite is made.
-    invite[_key] = _invite;
+    invites[_key] = _invite;
     emit Invited(_key, _cid);
   }
 
-  function verify(Auth calldata auth, address account) internal pure returns (bool) {
+  function verify(Auth calldata auth, address account) internal view returns (bool) {
+    console.log("auth key");
+    console.logBytes32(auth.key);
+
     if (auth.key == "") return true;
+
+    console.log("verifying, auth key was not empty ");
+
     bytes32 computedHash = keccak256(abi.encodePacked(account));
     for (uint256 i = 0; i < auth.proof.length; i++) {
       bytes32 proofElement = auth.proof[i];
@@ -238,14 +239,5 @@ contract Archetype is
       }
     }
     return computedHash == auth.key;
-  }
-
-  function _beforeTokenTransfers(
-    address from,
-    address to,
-    uint256 startTokenId,
-    uint256 quantity
-  ) internal virtual override {
-    super._beforeTokenTransfers(from, to, startTokenId, quantity);
   }
 }
