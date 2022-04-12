@@ -203,6 +203,57 @@ describe("Factory", function () {
 
     expect(await nft.balanceOf(accountZero.address)).to.equal(0);
   });
+
+  it("should fail if owner method called by non-owner", async function () {
+    const [_, accountOne] = await ethers.getSigners();
+
+    // console.log({ accountZero: accountZero.address });
+
+    const newCollection = await factory.createCollection(
+      accountOne.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+
+    const newCollectionAddress = result.events[0].address || "";
+
+    const NFT = await ethers.getContractFactory("Archetype");
+
+    const nft = NFT.attach(newCollectionAddress);
+
+    await expect(nft.pause(false)).to.be.revertedWith("Ownable: caller is not the owner");
+  });
+
+  it("should mint if unpaused", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    const owner = accountOne;
+    // console.log({ accountZero: accountZero.address });
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+
+    const newCollectionAddress = result.events[0].address || "";
+
+    const NFT = await ethers.getContractFactory("Archetype");
+
+    const nft = NFT.attach(newCollectionAddress);
+
+    await nft.connect(owner).pause(false);
+
+    await nft.mint(1, { value: ethers.utils.parseEther("0.08") });
+
+    expect(await nft.balanceOf(accountZero.address)).to.equal(1);
+  });
 });
 
 // const _accounts = [
