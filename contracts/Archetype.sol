@@ -14,6 +14,7 @@
 
 pragma solidity ^0.8.4;
 
+import "hardhat/console.sol";
 import "./ERC721A-Upgradeable.sol";
 // import "./OwnableUpgradeable.sol";
 // import "./InitializableCustom.sol";
@@ -24,27 +25,42 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 error InsufficientEthSent(uint256 sent, uint256 required);
 error MintingCurrentlyPaused();
-error MaxBatchSizeExceeded(uint256 numRequested, uint256 maxBatchSize);
+// error MaxBatchSizeExceeded(uint256 numRequested, uint256 maxBatchSize);
 error MaxSupplyExceeded(uint256 numRequested, uint256 numAvailable);
 
 contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   using SafeMath for uint256;
 
-  bool public paused = true;
-  bool public revealed = false;
+  event Invited(bytes32 indexed key, bytes32 indexed cid);
 
-  bool public uriUnlocked = true;
-  string private _baseURIPrefix;
+  mapping(bytes32 => Invite) public invite;
 
+  bool public paused;
+  bool public revealed;
+  bool public uriUnlocked;
   string public provenance;
-  bool public provenanceHashUnlocked = true;
+  bool public provenanceHashUnlocked;
+
   Config public config;
 
   struct Config {
     uint256 maxSupply;
-    uint256 maxBatchSize;
     string unrevealedUri;
-    uint256 tokenPrice;
+    string baseUri;
+    // uint256 maxBatchSize;
+    // uint256 tokenPrice;
+  }
+
+  struct Invite {
+    uint128 price;
+    uint64 start;
+    uint64 limit;
+  }
+
+  struct Invitelist {
+    bytes32 key;
+    bytes32 cid;
+    Invite invite;
   }
 
   function initialize(
@@ -58,20 +74,28 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
     console.log("Initializing ownable upgradeable");
     __Ownable_init();
+    paused = true;
+    revealed = false;
+    uriUnlocked = true;
+    provenanceHashUnlocked = true;
   }
 
   function mint(uint256 quantity) external payable {
-    uint256 cost = config.tokenPrice.mul(quantity);
+    //to-do: get cost from invite list
+    uint256 cost = 1000000000000;
 
-    if (cost >= msg.value) {
+    if (msg.value < cost) {
       revert InsufficientEthSent({ sent: msg.value, required: cost });
     }
+    console.log("paused");
+    console.log(paused);
+
     if (paused) {
       revert MintingCurrentlyPaused();
     }
-    if (quantity > config.maxBatchSize) {
-      revert MaxBatchSizeExceeded({ numRequested: quantity, maxBatchSize: config.maxBatchSize });
-    }
+    // if (quantity > config.maxBatchSize) {
+    //   revert MaxBatchSizeExceeded({ numRequested: quantity, maxBatchSize: config.maxBatchSize });
+    // }
     if (_currentIndex.add(quantity) > config.maxSupply) {
       revert MaxSupplyExceeded({
         numRequested: quantity,
@@ -89,10 +113,9 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
       return string(abi.encodePacked(config.unrevealedUri, Strings.toString(tokenId)));
     }
 
-    string memory baseURI = _baseURI();
     return
-      bytes(baseURI).length != 0
-        ? string(abi.encodePacked(baseURI, Strings.toString(tokenId)))
+      bytes(config.baseUri).length != 0
+        ? string(abi.encodePacked(config.baseUri, Strings.toString(tokenId)))
         : "";
   }
 
@@ -122,13 +145,9 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     config.unrevealedUri = _unrevealedURI;
   }
 
-  function setBaseURI(string memory baseURIPrefix) public onlyOwner {
+  function setBaseURI(string memory baseUri_) public onlyOwner {
     require(uriUnlocked, "The token URI has been locked forever.");
-    _baseURIPrefix = baseURIPrefix;
-  }
-
-  function _baseURI() internal view virtual override returns (string memory) {
-    return _baseURIPrefix;
+    config.baseUri = baseUri_;
   }
 
   /// @notice Set BAYC-style provenance once it's calculated
@@ -157,5 +176,24 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
     payable(scatter).transfer(cut);
     payable(owner()).transfer(remainder);
+  }
+
+  function setInvites(Invitelist[] calldata invitelist) external onlyOwner {
+    // if (nextId == 0) nextId = 1; // delay nextId setting until the first invite is made.
+    for (uint256 i = 0; i < invitelist.length; i++) {
+      Invitelist calldata list = invitelist[i];
+      invite[list.key] = list.invite;
+      emit Invited(list.key, list.cid);
+    }
+  }
+
+  function setInvite(
+    bytes32 _key,
+    bytes32 _cid,
+    Invite calldata _invite
+  ) external onlyOwner {
+    // if (nextId == 0) nextId = 1; // delay nextId setting until the first invite is made.
+    invite[_key] = _invite;
+    emit Invited(_key, _cid);
   }
 }

@@ -3,6 +3,7 @@
 
 pragma solidity ^0.8.4;
 
+import "hardhat/console.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/IERC721MetadataUpgradeable.sol";
@@ -394,6 +395,7 @@ contract ERC721AUpgradeable is
     bytes memory _data,
     bool safe
   ) internal {
+    console.log("I am mintingggggg");
     uint256 startTokenId = _currentIndex;
     if (to == address(0)) revert MintToZeroAddress();
     if (quantity == 0) revert MintZeroQuantity();

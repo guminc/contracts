@@ -1,8 +1,16 @@
-import { ethers, run, upgrades } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function main() {
+  const Archetype = await ethers.getContractFactory("Archetype");
+
+  const archetype = await Archetype.deploy();
+
+  await archetype.deployed();
+
+  console.log("Archetype deployed to:", archetype.address);
+
   const Factory = await ethers.getContractFactory("Factory");
 
   // const factory = await Factory.attach("0x0165878A594ca255338adfa4d48449f69242Eb8F");
@@ -12,11 +20,9 @@ async function main() {
   // await factory.deployed();
 
   // const factory = await upgrades.deployProxy(Factory, []);
-  const factory = await upgrades.deployProxy(
-    Factory,
-    ["0x5FbDB2315678afecb367f032d93F642f64180aa3"],
-    { initializer: "initialize" }
-  );
+  const factory = await upgrades.deployProxy(Factory, [archetype.address], {
+    initializer: "initialize",
+  });
 
   await factory.deployed();
 
