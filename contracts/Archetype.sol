@@ -21,9 +21,13 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-error MintNotYetStarted(uint256 block, uint64 start);
-error WalletUnauthorizedToMint(address wallet, bytes32 authKey);
-error InsufficientEthSent(uint256 sent, uint256 required);
+// error MintNotYetStarted(uint256 block, uint64 start);
+error MintNotYetStarted();
+// error WalletUnauthorizedToMint(address wallet, bytes32 authKey);
+error WalletUnauthorizedToMint();
+// error InsufficientEthSent(uint256 sent, uint256 required);
+error InsufficientEthSent();
+error ExcessiveEthSent();
 error MaxSupplyExceeded(uint256 numRequested, uint256 numAvailable);
 error NumberOfMintsExceeded();
 error MintingPaused();
@@ -92,20 +96,17 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     }
 
     if (!verify(auth, _msgSender())) {
-      revert WalletUnauthorizedToMint({ wallet: _msgSender(), authKey: auth.key });
+      // revert WalletUnauthorizedToMint({ wallet: _msgSender(), authKey: auth.key });
+      revert WalletUnauthorizedToMint();
     }
 
     console.log("i.price");
     console.log(i.price);
 
-    uint256 cost = i.price * quantity;
-
-    if (msg.value < cost) {
-      revert InsufficientEthSent({ sent: msg.value, required: cost });
-    }
-
     if (block.timestamp < i.start) {
-      revert MintNotYetStarted({ block: block.timestamp, start: i.start });
+      console.log("we are too early");
+      // revert MintNotYetStarted({ block: block.timestamp, start: i.start });
+      revert MintNotYetStarted();
     }
 
     uint256 totalAfterMint = minted[_msgSender()][auth.key] + quantity;
@@ -130,6 +131,16 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
         numRequested: quantity,
         numAvailable: config.maxSupply - _currentIndex
       });
+    }
+
+    uint256 cost = i.price * quantity;
+    if (msg.value < cost) {
+      // revert InsufficientEthSent({ sent: msg.value, required: cost });
+      revert InsufficientEthSent();
+    }
+
+    if (msg.value > cost) {
+      revert ExcessiveEthSent();
     }
 
     _safeMint(msg.sender, quantity);

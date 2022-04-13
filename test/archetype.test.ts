@@ -236,8 +236,8 @@ describe("Factory", function () {
     expect(await nft.balanceOf(accountZero.address)).to.equal(1);
   });
 
-  it("should mint if user is on valid list", async function () {
-    const [accountZero, accountOne] = await ethers.getSigners();
+  it("should mint if user is on valid list, throw appropriate errors otherwise", async function () {
+    const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
 
     const owner = accountOne;
     // console.log({ accountZero: accountZero.address });
@@ -258,31 +258,86 @@ describe("Factory", function () {
     const nft = NFT.attach(newCollectionAddress);
 
     const addresses = [accountZero.address, accountOne.address];
+    // const addresses = [...Array(5000).keys()].map(() => accountZero.address);
 
     const invitelist = new Invitelist(addresses);
 
     const root = invitelist.root();
     const proof = invitelist.proof(accountZero.address);
 
-    const verify = invitelist.verify(accountZero.address, proof);
+    const price = ethers.utils.parseEther("0.08");
 
-    console.log({ root, proof, verify });
+    const today = new Date();
+    const tomorrow = today.setDate(today.getDate() + 1);
 
-    await nft.connect(owner).setInvite(root, {
-      price: ethers.utils.parseEther("0.08"),
-      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-      limit: 10,
-    });
+    console.log({ toda: Math.floor(Date.now() / 1000) });
+    console.log({ tomo: Math.floor(tomorrow / 1000) });
 
-    const invites = await nft.invites(root);
+    await nft.connect(owner).setInvites([
+      {
+        key: ethers.constants.HashZero,
+        invite: {
+          price: ethers.utils.parseEther("0.1"),
+          start: ethers.BigNumber.from(Math.floor(tomorrow / 1000)),
+          limit: 1000,
+        },
+      },
+      {
+        key: root,
+        invite: {
+          price: price,
+          start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+          limit: 10,
+        },
+      },
+    ]);
 
-    console.log({ invites });
+    const invitePrivate = await nft.invites(root);
+    const invitePublic = await nft.invites(ethers.constants.HashZero);
+
+    console.log({ invitePrivate, invitePublic });
+
+    // whitelisted wallet
+    await expect(
+      nft.mint({ key: root, proof: proof }, 1, {
+        value: ethers.utils.parseEther("0.07"),
+      })
+    ).to.be.revertedWith("InsufficientEthSent");
+
+    await expect(
+      nft.mint({ key: root, proof: proof }, 1, {
+        value: ethers.utils.parseEther("0.09"),
+      })
+    ).to.be.revertedWith("ExcessiveEthSent");
 
     await nft.mint({ key: root, proof: proof }, 1, {
-      value: ethers.utils.parseEther("0.08"),
+      value: price,
     });
 
-    expect(await nft.balanceOf(accountZero.address)).to.equal(1);
+    await nft.mint({ key: root, proof: proof }, 5, {
+      value: price.mul(5),
+    });
+
+    expect(await nft.balanceOf(accountZero.address)).to.equal(6);
+
+    const proofTwo = invitelist.proof(accountTwo.address);
+
+    // non-whitelisted wallet
+    // private mint rejection
+    await expect(
+      nft.connect(accountTwo).mint({ key: root, proof: proofTwo }, 2, {
+        value: price.mul(2),
+      })
+    ).to.be.revertedWith("WalletUnauthorizedToMint");
+
+    // public mint rejection
+    await expect(
+      nft.connect(accountTwo).mint({ key: ethers.constants.HashZero, proof: [] }, 2, {
+        value: price.mul(2),
+      })
+    ).to.be.revertedWith("MintNotYetStarted");
+
+    expect(await nft.balanceOf(accountTwo.address)).to.equal(0);
   });
 
   it("should fail to mint if public limit is 0", async function () {

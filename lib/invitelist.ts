@@ -21,7 +21,7 @@ export default class Invitelist {
     return this.tree.getHexRoot();
   }
 
-  proof(address: string): any[] {
+  proof(address: string): string[] {
     return this.tree.getHexProof(this.hash(address));
   }
 
