@@ -63,6 +63,8 @@
     "hardhat": "2.9.3",
     "hardhat-gas-reporter": "1.0.8",
     "invitelist": "0.0.2",
+    "keccak256": "1.0.6",
+    "merkletreejs": "0.2.31",
     "prettier": "2.5.1",
     "prettier-plugin-solidity": "1.0.0-beta.19",
     "solhint": "3.3.6",
@@ -71,5 +73,6 @@
     "typechain": "7.0.1",
     "typescript": "4.5.4",
     "web3": "1.7.1"
-  }
+  },
+  "files": []
 }

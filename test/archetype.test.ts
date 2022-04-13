@@ -3,6 +3,7 @@ import { ethers, upgrades } from "hardhat";
 import { expect } from "chai";
 import { Archetype__factory, Archetype as IArchetype, Factory__factory } from "../typechain";
 import { Contract } from "@ethersproject/contracts";
+import Invitelist from "../lib/invitelist";
 
 const DEFAULT_NAME = "Pookie";
 const DEFAULT_SYMBOL = "POOKIE";
@@ -174,43 +175,6 @@ describe("Factory", function () {
     expect(owner1).to.equal(accountOne.address);
   });
 
-  // it("should fail to mint if mint is paused", async function () {
-  //   const [accountZero, accountOne] = await ethers.getSigners();
-
-  //   console.log({ accountZero: accountZero.address });
-
-  //   const newCollection = await factory.createCollection(
-  //     accountOne.address,
-  //     DEFAULT_NAME,
-  //     DEFAULT_SYMBOL,
-  //     DEFAULT_CONFIG
-  //   );
-
-  //   const result = await newCollection.wait();
-
-  //   const newCollectionAddress = result.events[0].address || "";
-
-  //   const NFT = await ethers.getContractFactory("Archetype");
-
-  //   const nft = NFT.attach(newCollectionAddress);
-
-  //   await nft.mint(
-  //     1,
-  //     { key: ethers.constants.HashZero, proof: [] },
-  //     { value: ethers.utils.parseEther("0.08") }
-  //   );
-
-  //   await expect(
-  //     nft.mint(
-  //       { key: ethers.constants.HashZero, proof: [] },
-  //       1,
-  //       { value: ethers.utils.parseEther("0.08") }
-  //     )
-  //   ).to.be.revertedWith("MintingCurrentlyPaused");
-
-  //   expect(await nft.balanceOf(accountZero.address)).to.equal(0);
-  // });
-
   it("should fail if owner method called by non-owner", async function () {
     const [_, accountOne] = await ethers.getSigners();
 
@@ -255,7 +219,7 @@ describe("Factory", function () {
 
     const nft = NFT.attach(newCollectionAddress);
 
-    await nft.connect(owner).setInvite(ethers.constants.HashZero, ethers.constants.HashZero, {
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, {
       price: ethers.utils.parseEther("0.08"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
@@ -266,6 +230,55 @@ describe("Factory", function () {
     console.log({ invites });
 
     await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, {
+      value: ethers.utils.parseEther("0.08"),
+    });
+
+    expect(await nft.balanceOf(accountZero.address)).to.equal(1);
+  });
+
+  it("should mint if user is on valid list", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    const owner = accountOne;
+    // console.log({ accountZero: accountZero.address });
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+
+    const newCollectionAddress = result.events[0].address || "";
+
+    const NFT = await ethers.getContractFactory("Archetype");
+
+    const nft = NFT.attach(newCollectionAddress);
+
+    const addresses = [accountZero.address, accountOne.address];
+
+    const invitelist = new Invitelist(addresses);
+
+    const root = invitelist.root();
+    const proof = invitelist.proof(accountZero.address);
+
+    const verify = invitelist.verify(accountZero.address, proof);
+
+    console.log({ root, proof, verify });
+
+    await nft.connect(owner).setInvite(root, {
+      price: ethers.utils.parseEther("0.08"),
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 10,
+    });
+
+    const invites = await nft.invites(root);
+
+    console.log({ invites });
+
+    await nft.mint({ key: root, proof: proof }, 1, {
       value: ethers.utils.parseEther("0.08"),
     });
 
@@ -302,7 +315,7 @@ describe("Factory", function () {
       nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, {
         value: ethers.utils.parseEther("0.08"),
       })
-    ).to.be.revertedWith("NumberOfMintsExceeded");
+    ).to.be.revertedWith("MintingPaused");
   });
 });
 

@@ -25,15 +25,14 @@ error MintNotYetStarted(uint256 block, uint64 start);
 error WalletUnauthorizedToMint(address wallet, bytes32 authKey);
 error InsufficientEthSent(uint256 sent, uint256 required);
 error MaxSupplyExceeded(uint256 numRequested, uint256 numAvailable);
-// error NumberOfMintsExceeded(uint64 limit);
-// error NumberOfMintsExceeded(uint256 totalAfterMint, uint64 limit);
-// error NumberOfMintsExceeded(uint256 totalRequested);
 error NumberOfMintsExceeded();
+error MintingPaused();
 
 error MaxBatchSizeExceeded(uint256 numRequested, uint256 maxBatchSize);
 
 contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
-  event Invited(bytes32 indexed key, bytes32 indexed cid);
+  // event Invited(bytes32 indexed key, bytes32 indexed cid);
+  event Invited(bytes32 indexed key);
 
   mapping(bytes32 => Invite) public invites;
   mapping(address => mapping(bytes32 => uint256)) private minted;
@@ -55,7 +54,6 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     string unrevealedUri;
     string baseUri;
     uint256 maxBatchSize;
-    // uint256 tokenPrice;
   }
 
   struct Invite {
@@ -66,7 +64,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
   struct Invitelist {
     bytes32 key;
-    bytes32 cid;
+    // bytes32 cid;
     Invite invite;
   }
 
@@ -88,6 +86,10 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
   function mint(Auth calldata auth, uint256 quantity) external payable {
     Invite memory i = invites[auth.key];
+
+    if (i.limit == 0) {
+      revert MintingPaused();
+    }
 
     if (!verify(auth, _msgSender())) {
       revert WalletUnauthorizedToMint({ wallet: _msgSender(), authKey: auth.key });
@@ -207,18 +209,20 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     for (uint256 i = 0; i < invitelist.length; i++) {
       Invitelist calldata list = invitelist[i];
       invites[list.key] = list.invite;
-      emit Invited(list.key, list.cid);
+      emit Invited(list.key);
+      // emit Invited(list.key, list.cid);
     }
   }
 
   function setInvite(
     bytes32 _key,
-    bytes32 _cid,
+    // bytes32 _cid,
     Invite calldata _invite
   ) external onlyOwner {
     // if (nextId == 0) nextId = 1; // delay nextId setting until the first invite is made.
     invites[_key] = _invite;
-    emit Invited(_key, _cid);
+    // emit Invited(_key, _cid);
+    emit Invited(_key);
   }
 
   function verify(Auth calldata auth, address account) internal view returns (bool) {
