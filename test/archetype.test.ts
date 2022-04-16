@@ -42,9 +42,7 @@ describe("Factory", function () {
   });
 
   it("should create a collection", async function () {
-    const [accountZero, accountOne] = await ethers.getSigners();
-
-    console.log({ accountZero: accountZero.address });
+    const [_, accountOne] = await ethers.getSigners();
 
     const newCollection = await factory.createCollection(
       accountOne.address,
@@ -55,7 +53,6 @@ describe("Factory", function () {
 
     const result = await newCollection.wait();
 
-    // console.dir({ events: result.events });
     const newCollectionAddress = result.events[0].address || "";
 
     const NFT = await ethers.getContractFactory("Archetype");
@@ -73,17 +70,13 @@ describe("Factory", function () {
     const res = await archetype.initialize("Flookie", DEFAULT_SYMBOL, DEFAULT_CONFIG);
     await res.wait();
 
-    // console.log({ awaitRes });
-
     expect(await archetype.name()).to.equal("Flookie");
 
     await expect(archetype.initialize("Wookie", DEFAULT_SYMBOL, DEFAULT_CONFIG)).to.be.revertedWith(
       "Initializable: contract is already initialized"
     );
 
-    const [accountZero, accountOne] = await ethers.getSigners();
-
-    console.log({ accountZero: accountZero.address });
+    const [_, accountOne] = await ethers.getSigners();
 
     const newCollection = await factory.createCollection(
       accountOne.address,
@@ -94,7 +87,6 @@ describe("Factory", function () {
 
     const result = await newCollection.wait();
 
-    // console.dir({ events: result.events });
     const newCollectionAddress = result.events[0].address || "";
 
     const NFT = await ethers.getContractFactory("Archetype");
@@ -109,9 +101,7 @@ describe("Factory", function () {
   });
 
   it("should let you change the archetype implementation", async function () {
-    const [accountZero, accountOne] = await ethers.getSigners();
-
-    console.log({ accountZero: accountZero.address });
+    const [_, accountOne] = await ethers.getSigners();
 
     const newCollection = await factory.createCollection(
       accountOne.address,
@@ -122,14 +112,11 @@ describe("Factory", function () {
 
     const result = await newCollection.wait();
 
-    // console.dir({ events: result.events });
     const newCollectionAddress = result.events[0].address || "";
 
     const NFT = await ethers.getContractFactory("Archetype");
 
     const nft = NFT.attach(newCollectionAddress);
-
-    // console.log({ nft });
 
     const symbol = await nft.symbol();
     const owner = await nft.owner();
@@ -146,7 +133,6 @@ describe("Factory", function () {
     await newArchetype.deployed();
 
     await factory.setArchetype(newArchetype.address);
-    // console.log({ res });
 
     const myArchetype = await factory.archetype();
 
@@ -161,12 +147,9 @@ describe("Factory", function () {
 
     const result1 = await anotherCollection.wait();
 
-    // console.dir({ events: result.events });
     const anotherollectionAddress = result1.events[0].address || "";
 
     const nft1 = NFT.attach(anotherollectionAddress);
-
-    // console.log({ nft });
 
     const symbol1 = await nft1.symbol();
     const owner1 = await nft1.owner();
@@ -177,8 +160,6 @@ describe("Factory", function () {
 
   it("should fail if owner method called by non-owner", async function () {
     const [_, accountOne] = await ethers.getSigners();
-
-    // console.log({ accountZero: accountZero.address });
 
     const newCollection = await factory.createCollection(
       accountOne.address,
@@ -202,7 +183,6 @@ describe("Factory", function () {
     const [accountZero, accountOne] = await ethers.getSigners();
 
     const owner = accountOne;
-    // console.log({ accountZero: accountZero.address });
 
     const newCollection = await factory.createCollection(
       owner.address,
@@ -225,9 +205,9 @@ describe("Factory", function () {
       limit: 300,
     });
 
-    const invites = await nft.invites(ethers.constants.HashZero);
+    // const invites = await nft.invites(ethers.constants.HashZero);
 
-    console.log({ invites });
+    // console.log({ invites });
 
     await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, {
       value: ethers.utils.parseEther("0.08"),
@@ -240,7 +220,6 @@ describe("Factory", function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
 
     const owner = accountOne;
-    // console.log({ accountZero: accountZero.address });
 
     const newCollection = await factory.createCollection(
       owner.address,

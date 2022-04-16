@@ -1,17 +1,4 @@
 // SPDX-License-Identifier: MIT
-// Creator: Scatter v0.0.2
-//        ___           ___           ___           ___           ___           ___           ___
-//       /\  \         /\  \         /\  \         /\  \         /\  \         /\  \         /\  \
-//      /::\  \       /::\  \       /::\  \        \:\  \        \:\  \       /::\  \       /::\  \
-//     /:/\ \  \     /:/\:\  \     /:/\:\  \        \:\  \        \:\  \     /:/\:\  \     /:/\:\  \
-//    _\:\~\ \  \   /:/  \:\  \   /::\~\:\  \       /::\  \       /::\  \   /::\~\:\  \   /::\~\:\  \
-//   /\ \:\ \ \__\ /:/__/ \:\__\ /:/\:\ \:\__\     /:/\:\__\     /:/\:\__\ /:/\:\ \:\__\ /:/\:\ \:\__\
-//   \:\ \:\ \/__/ \:\  \  \/__/ \/__\:\/:/  /    /:/  \/__/    /:/  \/__/ \:\~\:\ \/__/ \/_|::\/:/  /
-//    \:\ \:\__\    \:\  \            \::/  /    /:/  /        /:/  /       \:\ \:\__\      |:|::/  /
-//     \:\/:/  /     \:\  \           /:/  /     \/__/         \/__/         \:\ \/__/      |:|\/__/
-//      \::/  /       \:\__\         /:/  /                                   \:\__\        |:|  |
-//       \/__/         \/__/         \/__/                                     \/__/         \|__|
-
 pragma solidity ^0.8.4;
 
 import "hardhat/console.sol";
@@ -19,7 +6,6 @@ import "./ERC721A-Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 // error MintNotYetStarted(uint256 block, uint64 start);
 error MintNotYetStarted();
@@ -209,9 +195,9 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     uint256 cut = balance / 50;
     uint256 remainder = balance - cut;
 
-    address scatter = 0x60A59d7003345843BE285c15c7C78B62b61e0d7c;
+    address platform = 0x60A59d7003345843BE285c15c7C78B62b61e0d7c;
 
-    payable(scatter).transfer(cut);
+    payable(platform).transfer(cut);
     payable(owner()).transfer(remainder);
   }
 
@@ -236,6 +222,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     emit Invited(_key);
   }
 
+  // based on: https://github.com/miguelmota/merkletreejs-solidity/blob/master/contracts/MerkleProof.sol
   function verify(Auth calldata auth, address account) internal view returns (bool) {
     console.log("auth key");
     console.logBytes32(auth.key);

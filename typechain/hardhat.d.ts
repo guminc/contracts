@@ -17,10 +17,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.OwnableUpgradeable__factory>;
     getContractFactory(
-      name: "PausableUpgradeable",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PausableUpgradeable__factory>;
-    getContractFactory(
       name: "IERC721MetadataUpgradeable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC721MetadataUpgradeable__factory>;
@@ -44,10 +40,6 @@ declare module "hardhat/types/runtime" {
       name: "Ownable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Ownable__factory>;
-    getContractFactory(
-      name: "IERC721Enumerable",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC721Enumerable__factory>;
     getContractFactory(
       name: "IERC721Metadata",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -109,10 +101,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Factory__factory>;
     getContractFactory(
-      name: "Flurks",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Flurks__factory>;
-    getContractFactory(
       name: "HelloWorld",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.HelloWorld__factory>;
@@ -130,11 +118,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.OwnableUpgradeable>;
-    getContractAt(
-      name: "PausableUpgradeable",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PausableUpgradeable>;
     getContractAt(
       name: "IERC721MetadataUpgradeable",
       address: string,
@@ -165,11 +148,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Ownable>;
-    getContractAt(
-      name: "IERC721Enumerable",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC721Enumerable>;
     getContractAt(
       name: "IERC721Metadata",
       address: string,
@@ -245,11 +223,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Factory>;
-    getContractAt(
-      name: "Flurks",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Flurks>;
     getContractAt(
       name: "HelloWorld",
       address: string,

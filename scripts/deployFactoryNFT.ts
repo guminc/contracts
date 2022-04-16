@@ -1,29 +1,44 @@
-import { ethers } from "hardhat";
+import { ethers, run, upgrades } from "hardhat";
 
-// const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function main() {
-  const factoryAddress = "0xFEAa0BF60869201c7509Af3524a2E0C8F0Aa3074";
+  const Factory = await ethers.getContractFactory("Factory");
 
-  const NFTContractFactory = await ethers.getContractFactory("NFTContractFactory");
+  const factory = Factory.attach("0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9");
 
-  const nftContractFactory = NFTContractFactory.attach(factoryAddress);
+  // const factory = await Factory.deploy();
 
-  const res = await nftContractFactory.createNFTContract(
+  // await factory.deployed();
+
+  // const factory = await upgrades.deployProxy(Factory, [], { initializer: "initialize" });
+
+  // await factory.deployed();
+
+  console.log("Contract Factory deployed to:", factory.address);
+
+  const newContract = await factory.createCollection(
+    "0x8e8665bE566a0953bBEdACA5D6261F2F33113Ff1",
     "Pookie",
     "POOKIE",
-    "ipfs://QmNsrxoVdgkBbHH7qemsoHYvoxgW8wQ2KTwE5G1LdLXEJW/",
-    ethers.BigNumber.from("10000000000000000"),
-    5000,
-    20
+    {
+      placeholder: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
+      base: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
+      supply: 5000,
+      permanent: false,
+    }
   );
 
-  console.log({ res });
+  console.log({ newContract });
 
-  // await sleep(60 * 1000);
+  await sleep(1000 * 5);
+
+  const result = await newContract.wait();
+
+  console.dir({ logs: result.logs });
 
   // await run("verify:verify", {
-  //   address: nftContractFactory.address,
+  //   address: factory.address,
   //   constructorArguments: [],
   // });
 }
@@ -34,3 +49,13 @@ main()
     console.error(error);
     process.exit(1);
   });
+
+//   async function deployProxy(
+//   Contract: ethers.ContractFactory,
+//   args: unknown[] = [],
+//   opts: {
+//     initializer: string | false,
+//     unsafeAllow: ValidationError[],
+//     kind: 'uups' | 'transparent',
+//   } = {},
+// ): Promise<ethers.Contract>
