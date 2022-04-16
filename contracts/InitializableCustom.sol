@@ -3,8 +3,6 @@
 
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
-
 // import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 
@@ -53,10 +51,6 @@ abstract contract InitializableCustom {
     // If the contract is initializing we ignore whether _initialized is set in order to support multiple
     // inheritance patterns, but we only do this in the context of a constructor, because in other contexts the
     // contract may have been reentered.
-    console.log(_initializing, _initialized);
-
-    console.log("is constructor");
-    // console.log(_isConstructorCustom());
 
     require(!_initialized, "Initializable: contract is already initialized");
     // require(_initializing ? _isConstructor() : !_initialized, "Initializable: contract is already initialized");
@@ -66,18 +60,12 @@ abstract contract InitializableCustom {
       _initializing = true;
     }
 
-    console.log("before execution");
-    console.log(_initializing, _initialized);
-
     _;
 
     if (isTopLevelCall) {
       _initializing = false;
       _initialized = true;
     }
-
-    console.log("after execution");
-    console.log(_initializing, _initialized);
   }
 
   /**

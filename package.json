@@ -62,6 +62,7 @@
     "ethers": "5.6.0",
     "hardhat": "2.9.3",
     "hardhat-gas-reporter": "1.0.8",
+    "hardhat-log-remover": "2.0.2",
     "invitelist": "0.0.2",
     "keccak256": "1.0.6",
     "merkletreejs": "0.2.31",

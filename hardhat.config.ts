@@ -9,6 +9,8 @@ import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-truffle5";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
+require("hardhat-log-remover");
+
 const fs = require("fs");
 const privateKey = fs.readFileSync(".secret").toString().trim() || "01234567890123456789";
 

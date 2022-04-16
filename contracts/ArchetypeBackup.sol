@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.4;
-// import "hardhat/console.sol";
+//
 import "./F0ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -70,9 +70,7 @@ contract ArchetypeBackup is Initializable, ERC721Upgradeable, OwnableUpgradeable
     string memory symbol,
     Config calldata _config
   ) external initializer {
-    console.log("Archetype is initializing");
     __ERC721_init(name, symbol);
-    console.log("Initializing ownable upgradeable");
     __Ownable_init();
     setConfig(_config);
   }

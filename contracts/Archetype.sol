@@ -1,7 +1,18 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+//
+//        d8888                 888               888
+//       d88888                 888               888
+//      d88P888                 888               888
+//     d88P 888 888d888 .d8888b 88888b.   .d88b.  888888 888  888 88888b.   .d88b.
+//    d88P  888 888P"  d88P"    888 "88b d8P  Y8b 888    888  888 888 "88b d8P  Y8b
+//   d88P   888 888    888      888  888 88888888 888    888  888 888  888 88888888
+//  d8888888888 888    Y88b.    888  888 Y8b.     Y88b.  Y88b 888 888 d88P Y8b.
+// d88P     888 888     "Y8888P 888  888  "Y8888   "Y888  "Y88888 88888P"   "Y8888
+//                                                            888 888
+//                                                       Y8b d88P 888
+//                                                        "Y88P"  888
 
-import "hardhat/console.sol";
+pragma solidity ^0.8.4;
 import "./ERC721A-Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -58,11 +69,8 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     string memory symbol,
     Config calldata config_
   ) external initializer {
-    console.log("Archetype is initializing");
     __ERC721A_init(name, symbol);
     config = config_;
-
-    console.log("Initializing ownable upgradeable");
     __Ownable_init();
     revealed = false;
     uriUnlocked = true;
@@ -80,25 +88,15 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
       revert WalletUnauthorizedToMint();
     }
 
-    console.log("i.price");
-    console.log(i.price);
-
     if (block.timestamp < i.start) {
-      console.log("we are too early");
       revert MintNotYetStarted();
     }
 
     uint256 totalAfterMint = minted[_msgSender()][auth.key] + quantity;
 
-    console.log("totalAfterMint");
-    console.log(totalAfterMint);
-
     if (totalAfterMint > i.limit) {
       revert NumberOfMintsExceeded();
     }
-
-    console.log("checking maxBatchSize");
-    console.log(config.maxBatchSize);
 
     if (quantity > config.maxBatchSize) {
       revert MaxBatchSizeExceeded();
@@ -207,12 +205,8 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
   // based on: https://github.com/miguelmota/merkletreejs-solidity/blob/master/contracts/MerkleProof.sol
   function verify(Auth calldata auth, address account) internal view returns (bool) {
-    console.log("auth key");
-    console.logBytes32(auth.key);
 
     if (auth.key == "") return true;
-
-    console.log("verifying, auth key was not empty ");
 
     bytes32 computedHash = keccak256(abi.encodePacked(account));
     for (uint256 i = 0; i < auth.proof.length; i++) {

@@ -34,8 +34,6 @@ abstract contract OwnableUpgradeable is Initializable, ContextUpgradeable {
   }
 
   function __Ownable_init_unchained() internal onlyInitializing {
-    // console.log("msgSender()");
-    // console.log(_msgSender());
 
     _transferOwnership(_msgSender());
   }
