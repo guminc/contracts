@@ -3,14 +3,14 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import { Archetype__factory, Archetype as IArchetype } from "../typechain";
 
-const DEFAULT_NAME = "Pookie";
-const DEFAULT_SYMBOL = "POOKIE";
-const DEFAULT_CONFIG = {
-  tokenPrice: ethers.utils.parseEther("0.08"),
-  unrevealedUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
-  maxSupply: 5000,
-  maxBatchSize: 20,
-};
+// const DEFAULT_NAME = "Pookie";
+// const DEFAULT_SYMBOL = "POOKIE";
+// const DEFAULT_CONFIG = {
+//   tokenPrice: ethers.utils.parseEther("0.08"),
+//   unrevealedUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
+//   maxSupply: 5000,
+//   maxBatchSize: 20,
+// };
 
 describe("NFT", function () {
   // let Archetype: Archetype__factory;
@@ -25,24 +25,34 @@ describe("NFT", function () {
   });
 
   it("should mint an nft", async function () {
-    const [accountZero] = await ethers.getSigners();
+    // const [accountZero] = await ethers.getSigners();
 
-    console.log({ accountZero: accountZero.address });
+    // console.log({ accountZero: accountZero.address });
 
     // console.dir({ events: result.events });
-    const newCollectionAddress = "0x3b02ff1e626ed7a8fd6ec5299e2c54e1421b626b";
+    const newCollectionAddress = "0x43F6A56a2fc5c5b55eb893CF73efb13BEe0338ba";
 
     const NFT = await ethers.getContractFactory("Archetype");
 
     const nft = NFT.attach(newCollectionAddress);
+    // console.log({ nft });
 
-    console.log({ nft });
+    // const inviteRes = await nft.setInvite(ethers.constants.HashZero, {
+    //   price: ethers.utils.parseEther("0.015"),
+    //   start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+    //   limit: 3333,
+    // });
 
-    const mintRes = await nft.mint(1, { value: ethers.utils.parseEther("0.08") });
+    // console.log({ inviteRes });
+
+    const mintRes = await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 10, {
+      value: ethers.utils.parseEther("0.15"),
+    });
+
     console.log({ mintRes });
-    // const mintRes = await nft.mint();
+    await mintRes.wait();
 
-    expect(await nft.balanceOf(accountZero.address)).to.equal(1); // expect(mintRes).to.equal(DEFAULT_SYMBOL);
+    expect(await nft.balanceOf("0x60A59d7003345843BE285c15c7C78B62b61e0d7c")).to.equal(20); // expect(mintRes).to.equal(DEFAULT_SYMBOL);
     // expect(owner).to.equal(accountOne.address);
   });
 });

@@ -7,21 +7,17 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-// error MintNotYetStarted(uint256 block, uint64 start);
 error MintNotYetStarted();
-// error WalletUnauthorizedToMint(address wallet, bytes32 authKey);
 error WalletUnauthorizedToMint();
-// error InsufficientEthSent(uint256 sent, uint256 required);
 error InsufficientEthSent();
 error ExcessiveEthSent();
-error MaxSupplyExceeded(uint256 numRequested, uint256 numAvailable);
+error MaxSupplyExceeded();
 error NumberOfMintsExceeded();
 error MintingPaused();
 
-error MaxBatchSizeExceeded(uint256 numRequested, uint256 maxBatchSize);
+error MaxBatchSizeExceeded();
 
 contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
-  // event Invited(bytes32 indexed key, bytes32 indexed cid);
   event Invited(bytes32 indexed key);
 
   mapping(bytes32 => Invite) public invites;
@@ -54,7 +50,6 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
   struct Invitelist {
     bytes32 key;
-    // bytes32 cid;
     Invite invite;
   }
 
@@ -82,7 +77,6 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     }
 
     if (!verify(auth, _msgSender())) {
-      // revert WalletUnauthorizedToMint({ wallet: _msgSender(), authKey: auth.key });
       revert WalletUnauthorizedToMint();
     }
 
@@ -91,7 +85,6 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
     if (block.timestamp < i.start) {
       console.log("we are too early");
-      // revert MintNotYetStarted({ block: block.timestamp, start: i.start });
       revert MintNotYetStarted();
     }
 
@@ -101,7 +94,6 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     console.log(totalAfterMint);
 
     if (totalAfterMint > i.limit) {
-      // revert NumberOfMintsExceeded({ totalAfterMint: totalAfterMint, limit: i.limit });
       revert NumberOfMintsExceeded();
     }
 
@@ -109,19 +101,15 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     console.log(config.maxBatchSize);
 
     if (quantity > config.maxBatchSize) {
-      revert MaxBatchSizeExceeded({ numRequested: quantity, maxBatchSize: config.maxBatchSize });
+      revert MaxBatchSizeExceeded();
     }
 
     if ((_currentIndex + quantity) > config.maxSupply) {
-      revert MaxSupplyExceeded({
-        numRequested: quantity,
-        numAvailable: config.maxSupply - _currentIndex
-      });
+      revert MaxSupplyExceeded();
     }
 
     uint256 cost = i.price * quantity;
     if (msg.value < cost) {
-      // revert InsufficientEthSent({ sent: msg.value, required: cost });
       revert InsufficientEthSent();
     }
 
@@ -130,7 +118,10 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     }
 
     _safeMint(msg.sender, quantity);
-    minted[_msgSender()][auth.key] += quantity;
+
+    if (i.limit != config.maxSupply) {
+      minted[_msgSender()][auth.key] += quantity;
+    }
   }
 
   function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
@@ -202,23 +193,15 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   }
 
   function setInvites(Invitelist[] calldata invitelist) external onlyOwner {
-    // if (nextId == 0) nextId = 1; // delay nextId setting until the first invite is made.
     for (uint256 i = 0; i < invitelist.length; i++) {
       Invitelist calldata list = invitelist[i];
       invites[list.key] = list.invite;
       emit Invited(list.key);
-      // emit Invited(list.key, list.cid);
     }
   }
 
-  function setInvite(
-    bytes32 _key,
-    // bytes32 _cid,
-    Invite calldata _invite
-  ) external onlyOwner {
-    // if (nextId == 0) nextId = 1; // delay nextId setting until the first invite is made.
+  function setInvite(bytes32 _key, Invite calldata _invite) external onlyOwner {
     invites[_key] = _invite;
-    // emit Invited(_key, _cid);
     emit Invited(_key);
   }
 
