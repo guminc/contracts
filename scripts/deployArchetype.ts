@@ -1,6 +1,6 @@
-import { ethers } from "hardhat";
+import { ethers, run } from "hardhat";
 
-// const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function main() {
   const Archetype = await ethers.getContractFactory("Archetype");
@@ -11,10 +11,10 @@ async function main() {
 
   console.log("Archetype deployed to:", archetype.address);
 
-  // await sleep(60 * 1000);
+  // await sleep(180 * 1000);
 
   // await run("verify:verify", {
-  //   address: nftContractFactory.address,
+  //   address: archetype.address,
   //   constructorArguments: [],
   // });
 }

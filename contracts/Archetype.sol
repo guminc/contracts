@@ -181,7 +181,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
   function withdraw() public onlyOwner {
     uint256 balance = address(this).balance;
-    uint256 cut = balance / 50;
+    uint256 cut = balance / 20;
     uint256 remainder = balance - cut;
 
     address platform = 0x60A59d7003345843BE285c15c7C78B62b61e0d7c;
@@ -205,7 +205,6 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
   // based on: https://github.com/miguelmota/merkletreejs-solidity/blob/master/contracts/MerkleProof.sol
   function verify(Auth calldata auth, address account) internal view returns (bool) {
-
     if (auth.key == "") return true;
 
     bytes32 computedHash = keccak256(abi.encodePacked(account));
