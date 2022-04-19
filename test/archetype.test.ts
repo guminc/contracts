@@ -4,7 +4,6 @@ import { expect } from "chai";
 import { Archetype__factory, Archetype as IArchetype, Factory__factory } from "../typechain";
 import { Contract } from "@ethersproject/contracts";
 import Invitelist from "../lib/invitelist";
-import { BigNumber } from "ethers";
 
 const DEFAULT_NAME = "Pookie";
 const DEFAULT_SYMBOL = "POOKIE";
@@ -14,6 +13,8 @@ const DEFAULT_CONFIG = {
   baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
   maxSupply: 5000,
   maxBatchSize: 20,
+  platformCut: 5,
+  affiliateCut: 15,
 };
 
 describe("Factory", function () {

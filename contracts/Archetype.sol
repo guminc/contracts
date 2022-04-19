@@ -17,6 +17,7 @@ import "./ERC721A-Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "hardhat/console.sol";
 
 error MintNotYetStarted();
 error WalletUnauthorizedToMint();
@@ -25,7 +26,6 @@ error ExcessiveEthSent();
 error MaxSupplyExceeded();
 error NumberOfMintsExceeded();
 error MintingPaused();
-
 error MaxBatchSizeExceeded();
 
 contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
@@ -51,6 +51,8 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     string unrevealedUri;
     string baseUri;
     uint256 maxBatchSize;
+    uint256 affiliateCut;
+    uint256 platformCut;
   }
 
   struct Invite {
@@ -181,12 +183,27 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
   function withdraw() public onlyOwner {
     uint256 balance = address(this).balance;
-    uint256 cut = balance / 20;
-    uint256 remainder = balance - cut;
 
-    address platform = 0x60A59d7003345843BE285c15c7C78B62b61e0d7c;
+    uint256 platformCut = balance / (100 / config.platformCut);
 
-    payable(platform).transfer(cut);
+    console.log("platformCut");
+    console.log(platformCut);
+    // uint256 rem = uint256(100) / uint256(15);
+    // console.log(rem);
+
+    uint256 affiliateCut = balance / (100 / config.affiliateCut);
+
+    console.log("affiliateCut");
+    console.log(affiliateCut);
+
+    uint256 remainder = balance - platformCut - affiliateCut;
+
+    console.log("remainder");
+    console.log(remainder);
+
+    address platform = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
+
+    payable(platform).transfer(platformCut + affiliateCut);
     payable(owner()).transfer(remainder);
   }
 
