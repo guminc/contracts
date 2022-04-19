@@ -27,9 +27,11 @@ error MaxSupplyExceeded();
 error NumberOfMintsExceeded();
 error MintingPaused();
 error MaxBatchSizeExceeded();
+error SelfReferral();
 
 contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   event Invited(bytes32 indexed key);
+  event Referral(uint256 value, address affiliate);
 
   mapping(bytes32 => Invite) public invites;
   mapping(address => mapping(bytes32 => uint256)) private minted;
@@ -79,11 +81,19 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     provenanceHashUnlocked = true;
   }
 
-  function mint(Auth calldata auth, uint256 quantity) external payable {
+  function mint(
+    Auth calldata auth,
+    uint256 quantity,
+    address affiliate
+  ) external payable {
     Invite memory i = invites[auth.key];
 
     if (i.limit == 0) {
       revert MintingPaused();
+    }
+
+    if (msg.sender == affiliate) {
+      revert SelfReferral();
     }
 
     if (!verify(auth, _msgSender())) {
@@ -121,6 +131,9 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
     if (i.limit != config.maxSupply) {
       minted[_msgSender()][auth.key] += quantity;
+    }
+    if (affiliate != 0x0000000000000000000000000000000000000000) {
+      emit Referral(msg.value, affiliate);
     }
   }
 

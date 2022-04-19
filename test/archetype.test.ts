@@ -16,6 +16,7 @@ const DEFAULT_CONFIG = {
   platformCut: 500,
   affiliateCut: 1500,
 };
+const DEFAULT_AFFILIATE = "0x0000000000000000000000000000000000000000";
 
 describe("Factory", function () {
   let Archetype: Archetype__factory;
@@ -211,7 +212,7 @@ describe("Factory", function () {
 
     // console.log({ invites });
 
-    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, {
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, DEFAULT_AFFILIATE, {
       value: ethers.utils.parseEther("0.08"),
     });
 
@@ -280,22 +281,22 @@ describe("Factory", function () {
 
     // whitelisted wallet
     await expect(
-      nft.mint({ key: root, proof: proof }, 1, {
+      nft.mint({ key: root, proof: proof }, 1, DEFAULT_AFFILIATE, {
         value: ethers.utils.parseEther("0.07"),
       })
     ).to.be.revertedWith("InsufficientEthSent");
 
     await expect(
-      nft.mint({ key: root, proof: proof }, 1, {
+      nft.mint({ key: root, proof: proof }, 1, DEFAULT_AFFILIATE, {
         value: ethers.utils.parseEther("0.09"),
       })
     ).to.be.revertedWith("ExcessiveEthSent");
 
-    await nft.mint({ key: root, proof: proof }, 1, {
+    await nft.mint({ key: root, proof: proof }, 1, DEFAULT_AFFILIATE, {
       value: price,
     });
 
-    await nft.mint({ key: root, proof: proof }, 5, {
+    await nft.mint({ key: root, proof: proof }, 5, DEFAULT_AFFILIATE, {
       value: price.mul(5),
     });
 
@@ -306,16 +307,18 @@ describe("Factory", function () {
     // non-whitelisted wallet
     // private mint rejection
     await expect(
-      nft.connect(accountTwo).mint({ key: root, proof: proofTwo }, 2, {
+      nft.connect(accountTwo).mint({ key: root, proof: proofTwo }, 2, DEFAULT_AFFILIATE, {
         value: price.mul(2),
       })
     ).to.be.revertedWith("WalletUnauthorizedToMint");
 
     // public mint rejection
     await expect(
-      nft.connect(accountTwo).mint({ key: ethers.constants.HashZero, proof: [] }, 2, {
-        value: price.mul(2),
-      })
+      nft
+        .connect(accountTwo)
+        .mint({ key: ethers.constants.HashZero, proof: [] }, 2, DEFAULT_AFFILIATE, {
+          value: price.mul(2),
+        })
     ).to.be.revertedWith("MintNotYetStarted");
 
     expect(await nft.balanceOf(accountTwo.address)).to.equal(0);
@@ -342,7 +345,7 @@ describe("Factory", function () {
     const nft = NFT.attach(newCollectionAddress);
 
     await expect(
-      nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, {
+      nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, DEFAULT_AFFILIATE, {
         value: ethers.utils.parseEther("0.08"),
       })
     ).to.be.revertedWith("MintingPaused");
@@ -393,7 +396,7 @@ describe("Factory", function () {
     expect(invites.limit).to.equal(ethers.BigNumber.from(DEFAULT_CONFIG.maxSupply));
     // expect(invites).to.have.property("price", invite.price);
 
-    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 10, {
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 10, DEFAULT_AFFILIATE, {
       value: ethers.utils.parseEther("1.0"),
     });
 
