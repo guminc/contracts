@@ -1,9 +1,10 @@
-import { ethers, upgrades } from "hardhat";
+import { ethers, upgrades, waffle } from "hardhat";
 
 import { expect } from "chai";
 import { Archetype__factory, Archetype as IArchetype, Factory__factory } from "../typechain";
 import { Contract } from "@ethersproject/contracts";
 import Invitelist from "../lib/invitelist";
+import { BigNumber } from "ethers";
 
 const DEFAULT_NAME = "Pookie";
 const DEFAULT_SYMBOL = "POOKIE";
@@ -339,17 +340,77 @@ describe("Factory", function () {
 
     const nft = NFT.attach(newCollectionAddress);
 
-    // await nft.connect(owner).setPaused(false);
-
-    const invites = await nft.invites(ethers.constants.HashZero);
-
-    console.log({ invites });
-
     await expect(
       nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, {
         value: ethers.utils.parseEther("0.08"),
       })
     ).to.be.revertedWith("MintingPaused");
+  });
+
+  it("should withdraw right amounts", async function () {
+    const [accountZero, _, accountTwo] = await ethers.getSigners();
+
+    const provider = waffle.provider;
+    const balance = await provider.getBalance(accountZero.address);
+    const balanceTwo = await provider.getBalance(accountTwo.address);
+
+    console.log({ balance, balanceTwo });
+
+    const owner = accountTwo;
+
+    const ownerEthBalanceBefore = await provider.getBalance(owner.address);
+
+    console.log({ ownerEthBalanceBefore });
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+
+    const newCollectionAddress = result.events[0].address || "";
+
+    const NFT = await ethers.getContractFactory("Archetype");
+
+    const nft = NFT.attach(newCollectionAddress);
+
+    const invite = {
+      price: ethers.utils.parseEther("0.1"),
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: DEFAULT_CONFIG.maxSupply,
+    };
+
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, invite);
+
+    const invites = await nft.invites(ethers.constants.HashZero);
+
+    expect(invites.price).to.equal(ethers.utils.parseEther("0.1"));
+    expect(invites.start).to.equal(ethers.BigNumber.from(invite.start));
+    expect(invites.limit).to.equal(ethers.BigNumber.from(DEFAULT_CONFIG.maxSupply));
+    // expect(invites).to.have.property("price", invite.price);
+
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 10, {
+      value: ethers.utils.parseEther("1.0"),
+    });
+
+    const contractEthBalance = await provider.getBalance(newCollectionAddress);
+
+    expect(ethers.utils.formatEther(contractEthBalance.toString())).to.equal("1.0");
+    expect(await nft.balanceOf(accountZero.address)).to.equal(10);
+
+    await nft.connect(owner).withdraw();
+
+    const ownerEthBalanceAfter = await provider.getBalance(owner.address);
+
+    const difference = ownerEthBalanceAfter.sub(ownerEthBalanceBefore);
+
+    // round up to account for the nominal amount of gas used
+    const roundedDifference = Math.round(+ethers.utils.formatEther(difference) * 1000) / 1000;
+
+    expect(roundedDifference).to.equal(0.95);
   });
 });
 

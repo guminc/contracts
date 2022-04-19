@@ -204,7 +204,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   }
 
   // based on: https://github.com/miguelmota/merkletreejs-solidity/blob/master/contracts/MerkleProof.sol
-  function verify(Auth calldata auth, address account) internal view returns (bool) {
+  function verify(Auth calldata auth, address account) internal pure returns (bool) {
     if (auth.key == "") return true;
 
     bytes32 computedHash = keccak256(abi.encodePacked(account));
