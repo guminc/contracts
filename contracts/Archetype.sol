@@ -51,8 +51,8 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     string unrevealedUri;
     string baseUri;
     uint256 maxBatchSize;
-    uint256 affiliateCut;
-    uint256 platformCut;
+    uint32 affiliateCut;
+    uint32 platformCut;
   }
 
   struct Invite {
@@ -184,14 +184,13 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   function withdraw() public onlyOwner {
     uint256 balance = address(this).balance;
 
-    uint256 platformCut = balance / (100 / config.platformCut);
+    // cuts are calculated as basis points
+    uint256 platformCut = (balance * config.platformCut) / 10000;
 
     console.log("platformCut");
     console.log(platformCut);
-    // uint256 rem = uint256(100) / uint256(15);
-    // console.log(rem);
 
-    uint256 affiliateCut = balance / (100 / config.affiliateCut);
+    uint256 affiliateCut = (balance * config.affiliateCut) / 10000;
 
     console.log("affiliateCut");
     console.log(affiliateCut);

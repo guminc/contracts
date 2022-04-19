@@ -13,8 +13,8 @@ const DEFAULT_CONFIG = {
   baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
   maxSupply: 5000,
   maxBatchSize: 20,
-  platformCut: 5,
-  affiliateCut: 15,
+  platformCut: 500,
+  affiliateCut: 1500,
 };
 
 describe("Factory", function () {
@@ -411,7 +411,7 @@ describe("Factory", function () {
     // round up to account for the nominal amount of gas used
     const roundedDifference = Math.round(+ethers.utils.formatEther(difference) * 1000) / 1000;
 
-    expect(roundedDifference).to.equal(0.95);
+    expect(roundedDifference).to.equal(0.8);
   });
 });
 
