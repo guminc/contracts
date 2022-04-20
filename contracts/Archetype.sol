@@ -25,14 +25,27 @@ error ExcessiveEthSent();
 error MaxSupplyExceeded();
 error NumberOfMintsExceeded();
 error MintingPaused();
+error InvalidReferral();
 
 error MaxBatchSizeExceeded();
 
 contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   event Invited(bytes32 indexed key);
+  event Withdrawal(address indexed src, uint wad);
 
   mapping(bytes32 => Invite) public invites;
   mapping(address => mapping(bytes32 => uint256)) private minted;
+  mapping(address => uint128) public affiliateBalance;
+  OwnerBalance public ownerBalance;
+  struct OwnerBalance {
+    uint128 owner;
+    uint128 platform;
+  }
+
+  //address private constant PLATFORM = 0x60A59d7003345843BE285c15c7C78B62b61e0d7c; // REAL
+  address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
+  uint128 public constant PLATFORM_FEE = 200; // 2%
+  uint128 public constant AFFILIATE_FEE = 500; // 5%
 
   bool public revealed;
   bool public uriUnlocked;
@@ -77,8 +90,13 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     provenanceHashUnlocked = true;
   }
 
-  function mint(Auth calldata auth, uint256 quantity) external payable {
+  function mint(Auth calldata auth, uint256 quantity, address affiliate) external payable {
     Invite memory i = invites[auth.key];
+    
+    // verify affiliate
+    if(affiliate==PLATFORM || affiliate==owner()) {
+      revert InvalidReferral();
+    }
 
     if (i.limit == 0) {
       revert MintingPaused();
@@ -92,7 +110,13 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
       revert MintNotYetStarted();
     }
 
-    uint256 totalAfterMint = minted[_msgSender()][auth.key] + quantity;
+    uint256 totalAfterMint;
+    if (i.limit < config.maxSupply) {
+      totalAfterMint = minted[_msgSender()][auth.key] + quantity;
+    }
+    else {
+      totalAfterMint = quantity;
+    }
 
     if (totalAfterMint > i.limit) {
       revert NumberOfMintsExceeded();
@@ -117,9 +141,25 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
     _safeMint(msg.sender, quantity);
 
-    if (i.limit != config.maxSupply) {
+    if (i.limit < config.maxSupply) {
       minted[_msgSender()][auth.key] += quantity;
     }
+
+    uint128 value = uint128(msg.value);
+
+    uint128 affiliateCut;
+    if(affiliate != address(0)) {
+      affiliateCut = (value * AFFILIATE_FEE) / 10000;
+      affiliateBalance[affiliate] += affiliateCut;
+    }
+
+    OwnerBalance memory balance = ownerBalance;
+    uint128 platformCut = (value * PLATFORM_FEE) / 10000;
+    uint128 ownerCut = value - affiliateCut - platformCut;
+    ownerBalance = OwnerBalance({
+      owner: balance.owner + ownerCut,
+      platform: balance.platform + platformCut
+    });
   }
 
   function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
@@ -179,15 +219,44 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     provenanceHashUnlocked = false;
   }
 
-  function withdraw() public onlyOwner {
-    uint256 balance = address(this).balance;
-    uint256 cut = balance / 20;
-    uint256 remainder = balance - cut;
+  function withdraw(uint wad) public {
+    OwnerBalance memory balance = ownerBalance;
 
-    address platform = 0x60A59d7003345843BE285c15c7C78B62b61e0d7c;
+    uint256 maxPayout;
+    if(msg.sender == owner() || msg.sender == PLATFORM) {
+      if(msg.sender == owner()) {
+        maxPayout = balance.owner;
+      }
+      else {
+        maxPayout = balance.platform;
+      }
+    }
+    else {
+      maxPayout = affiliateBalance[msg.sender];
+    }
 
-    payable(platform).transfer(cut);
-    payable(owner()).transfer(remainder);
+    require(maxPayout >= wad, "withdraw balance too high");
+
+    if(msg.sender == owner() || msg.sender == PLATFORM) {
+      if(msg.sender == owner()) {
+        ownerBalance = OwnerBalance({
+          owner: balance.owner - uint128(wad),
+          platform: balance.platform
+        });
+      }
+      else {
+        ownerBalance = OwnerBalance({
+          owner: balance.owner,
+          platform: balance.platform - uint128(wad)
+        });
+      }
+    }
+    else {
+      affiliateBalance[msg.sender] -= uint128(wad);
+    }
+
+    payable(msg.sender).transfer(wad);
+    emit Withdrawal(msg.sender, wad);
   }
 
   function setInvites(Invitelist[] calldata invitelist) external onlyOwner {
