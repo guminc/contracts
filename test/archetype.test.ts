@@ -210,7 +210,7 @@ describe("Factory", function () {
 
     // console.log({ invites });
 
-    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, {
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
       value: ethers.utils.parseEther("0.08"),
     });
 
@@ -279,22 +279,22 @@ describe("Factory", function () {
 
     // whitelisted wallet
     await expect(
-      nft.mint({ key: root, proof: proof }, 1, ZERO, {
+      nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
         value: ethers.utils.parseEther("0.07"),
       })
     ).to.be.revertedWith("InsufficientEthSent");
 
     await expect(
-      nft.mint({ key: root, proof: proof }, 1, ZERO, {
+      nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
         value: ethers.utils.parseEther("0.09"),
       })
     ).to.be.revertedWith("ExcessiveEthSent");
 
-    await nft.mint({ key: root, proof: proof }, 1, ZERO, {
+    await nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
       value: price,
     });
 
-    await nft.mint({ key: root, proof: proof }, 5, ZERO, {
+    await nft.mint({ key: root, proof: proof }, 5, ZERO, "0x", {
       value: price.mul(5),
     });
 
@@ -305,14 +305,14 @@ describe("Factory", function () {
     // non-whitelisted wallet
     // private mint rejection
     await expect(
-      nft.connect(accountTwo).mint({ key: root, proof: proofTwo }, 2, ZERO, {
+      nft.connect(accountTwo).mint({ key: root, proof: proofTwo }, 2, ZERO, "0x", {
         value: price.mul(2),
       })
     ).to.be.revertedWith("WalletUnauthorizedToMint");
 
     // public mint rejection
     await expect(
-      nft.connect(accountTwo).mint({ key: ethers.constants.HashZero, proof: [] }, 2, ZERO, {
+      nft.connect(accountTwo).mint({ key: ethers.constants.HashZero, proof: [] }, 2, ZERO, "0x", {
         value: price.mul(2),
       })
     ).to.be.revertedWith("MintNotYetStarted");
@@ -347,13 +347,13 @@ describe("Factory", function () {
     console.log({ invites });
 
     await expect(
-      nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, {
+      nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
         value: ethers.utils.parseEther("0.08"),
       })
     ).to.be.revertedWith("MintingPaused");
   });
 
-  it("test withdraws (affiliate, owner, platform, invalid)", async function () {
+  it("test affiliate sig and withdrawals (valid, invalid)", async function () {
     const [accountZero, accountOne, accountTwo, accountThree] = await ethers.getSigners();
   
     const affiliate = accountZero;
@@ -380,12 +380,28 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
     });
+
+    // test invalid signature
+    const invalidReferrel = await accountThree.signMessage(
+      ethers.utils.arrayify(
+        ethers.utils.solidityKeccak256(['address'], [affiliate.address])
+      )
+    );
+    //console.log(invalidReferrel);
+
+    await expect(nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, affiliate.address, invalidReferrel,{
+      value: ethers.utils.parseEther("0.08"),
+    })).to.be.revertedWith("affiliate signature verification error");
+
+    // valid signatue (from platform)
+    const referrel = await platform.signMessage(
+      ethers.utils.arrayify(
+        ethers.utils.solidityKeccak256(['address'], [affiliate.address])
+      )
+    );
+    //console.log(referrel);
   
-    // const invites = await nft.invites(ethers.constants.HashZero);
-  
-    // console.log({ invites });
-  
-    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, affiliate.address, {
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, affiliate.address, referrel,{
       value: ethers.utils.parseEther("0.08"),
     });
 
@@ -414,7 +430,7 @@ describe("Factory", function () {
     expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.0744"))); 
 
     // mint again
-    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, affiliate.address, {
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, affiliate.address, referrel,{
       value: ethers.utils.parseEther("0.08"),
     });
 
