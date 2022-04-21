@@ -218,42 +218,32 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     provenanceHashUnlocked = false;
   }
 
-  function withdraw(uint wad) public {
-    OwnerBalance memory balance;
-    uint256 maxPayout;
-    if(msg.sender == owner() || msg.sender == PLATFORM) {
-      balance = ownerBalance;
-      if(msg.sender == owner()) {
-        maxPayout = balance.owner;
-      }
-      else {
-        maxPayout = balance.platform;
-      }
-    }
-    else {
-      maxPayout = affiliateBalance[msg.sender];
-    }
-
-    require(maxPayout >= wad, "withdraw balance too high");
+  function withdraw() public {
+    uint128 wad;
 
     if(msg.sender == owner() || msg.sender == PLATFORM) {
+      OwnerBalance memory balance = ownerBalance;
       if(msg.sender == owner()) {
+        wad = balance.owner;
         ownerBalance = OwnerBalance({
-          owner: balance.owner - uint128(wad),
+          owner: 0,
           platform: balance.platform
         });
       }
       else {
+        wad = balance.platform;
         ownerBalance = OwnerBalance({
           owner: balance.owner,
-          platform: balance.platform - uint128(wad)
+          platform: 0
         });
       }
     }
     else {
-      affiliateBalance[msg.sender] -= uint128(wad);
+      wad = affiliateBalance[msg.sender];
+      affiliateBalance[msg.sender] = 0;
     }
 
+    require(wad !=0 , "msg.sender balance is empty");
     payable(msg.sender).transfer(wad);
     emit Withdrawal(msg.sender, wad);
   }

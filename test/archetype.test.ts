@@ -409,21 +409,9 @@ describe("Factory", function () {
     await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.0016")); // 2%
     await expect((await nft.affiliateBalance(affiliate.address))).to.equal(ethers.utils.parseEther("0.004")); // 5%
 
-    await expect(
-      nft.connect(owner).withdraw(ethers.utils.parseEther("0.08"))
-    ).to.be.revertedWith("withdraw balance too high");
-
-    await expect(
-      nft.connect(platform).withdraw(ethers.utils.parseEther("0.002"))
-    ).to.be.revertedWith("withdraw balance too high");
-
-    await expect(
-      nft.connect(affiliate).withdraw(ethers.utils.parseEther("0.004001"))
-    ).to.be.revertedWith("withdraw balance too high");
-
     // withdraw owner balance
     let balance = (await ethers.provider.getBalance(owner.address));
-    await nft.connect(owner).withdraw(ethers.utils.parseEther("0.0744"));
+    await nft.connect(owner).withdraw();
     let diff = (await ethers.provider.getBalance(owner.address)).toBigInt() - balance.toBigInt();
     // withdrawal won't be exact due to gas payment, just check range.
     expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.0700"))); 
@@ -440,34 +428,39 @@ describe("Factory", function () {
 
     // withdraw owner balance again
     balance = (await ethers.provider.getBalance(owner.address));
-    await nft.connect(owner).withdraw(ethers.utils.parseEther("0.0744"));
+    await nft.connect(owner).withdraw();
     diff = (await ethers.provider.getBalance(owner.address)).toBigInt() - balance.toBigInt();
     expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.0700"))); // leave room for gas
     expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.0744"))); 
 
     // withdraw platform balance
     balance = (await ethers.provider.getBalance(platform.address));
-    await nft.connect(platform).withdraw(ethers.utils.parseEther("0.0025")) // partial withdraw
+    await nft.connect(platform).withdraw() // partial withdraw
     diff = (await ethers.provider.getBalance(platform.address)).toBigInt() - balance.toBigInt();
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.0015"))); 
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.0025")));
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.0020"))); 
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.0032")));
 
     // withdraw affiliate balance
     balance = (await ethers.provider.getBalance(affiliate.address));
-    await nft.connect(affiliate).withdraw(ethers.utils.parseEther("0.008"))
+    await nft.connect(affiliate).withdraw()
     diff = (await ethers.provider.getBalance(affiliate.address)).toBigInt() - balance.toBigInt();
     expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.007")));
     expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.008")));
 
+    // withdraw empty owner balance
+    await expect(
+      nft.connect(owner).withdraw()
+    ).to.be.revertedWith("msg.sender balance is empty");
+
     // withdraw empty affiliate balance
     await expect(
-      nft.connect(affiliate).withdraw(ethers.utils.parseEther("0.00001"))
-    ).to.be.revertedWith("withdraw balance too high");
+      nft.connect(affiliate).withdraw()
+    ).to.be.revertedWith("msg.sender balance is empty");
 
     // withdraw unused affiliate balance
     await expect(
-      nft.connect(accountThree).withdraw(ethers.utils.parseEther("0.00001"))
-    ).to.be.revertedWith("withdraw balance too high");
+      nft.connect(accountThree).withdraw()
+    ).to.be.revertedWith("msg.sender balance is empty");
 
   });
 });
