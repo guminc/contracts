@@ -19,6 +19,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
+error InvalidConfig();
 error MintNotYetStarted();
 error WalletUnauthorizedToMint();
 error InsufficientEthSent();
@@ -27,12 +28,15 @@ error MaxSupplyExceeded();
 error NumberOfMintsExceeded();
 error MintingPaused();
 error InvalidReferral();
-
+error InvalidSignature();
+error BalanceEmpty();
+error TransferFailed();
 error MaxBatchSizeExceeded();
 
 contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   event Invited(bytes32 indexed key);
-  event Withdrawal(address indexed src, uint wad);
+  event Referral(address indexed affiliate, uint128 wad);
+  event Withdrawal(address indexed src, uint128 wad);
 
   mapping(bytes32 => Invite) public invites;
   mapping(address => mapping(bytes32 => uint256)) private minted;
@@ -45,8 +49,6 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
   //address private constant PLATFORM = 0x60A59d7003345843BE285c15c7C78B62b61e0d7c; // REAL
   address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
-  uint128 public constant PLATFORM_FEE = 200; // 2%
-  uint128 public constant AFFILIATE_FEE = 500; // 5%
 
   bool public revealed;
   bool public uriUnlocked;
@@ -61,10 +63,13 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   }
 
   struct Config {
-    uint256 maxSupply;
     string unrevealedUri;
     string baseUri;
-    uint256 maxBatchSize;
+    address affiliateSigner;
+    uint32 maxSupply;
+    uint32 maxBatchSize;
+    uint32 affiliateCut;
+    uint32 platformCut;
   }
 
   struct Invite {
@@ -84,6 +89,10 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     Config calldata config_
   ) external initializer {
     __ERC721A_init(name, symbol);
+    // affiliateCut max is 50%, platformCut min is 2% and max is 50%
+    if(config_.affiliateCut > 5000 || config_.platformCut > 5000 || config_.platformCut < 200) {
+      revert InvalidConfig();
+    }
     config = config_;
     __Ownable_init();
     revealed = false;
@@ -95,10 +104,10 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     Invite memory i = invites[auth.key];
     
     if(affiliate != address(0)) {
-      if(affiliate==PLATFORM || affiliate==owner()) {
+      if(affiliate==PLATFORM || affiliate==owner() || affiliate==msg.sender) {
         revert InvalidReferral();
       }
-      validateAffiliate(affiliate, signature);
+      validateAffiliate(affiliate, signature, config.affiliateSigner);
     }
 
     if (i.limit == 0) {
@@ -146,18 +155,19 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
     uint128 value = uint128(msg.value);
 
-    uint128 affiliateCut;
+    uint128 affiliateWad;
     if(affiliate != address(0)) {
-      affiliateCut = (value * AFFILIATE_FEE) / 10000;
-      affiliateBalance[affiliate] += affiliateCut;
+      affiliateWad = (value * config.affiliateCut) / 10000;
+      affiliateBalance[affiliate] += affiliateWad;
+      emit Referral(affiliate, affiliateWad);
     }
 
     OwnerBalance memory balance = ownerBalance;
-    uint128 platformCut = (value * PLATFORM_FEE) / 10000;
-    uint128 ownerCut = value - affiliateCut - platformCut;
+    uint128 platformWad = (value * config.platformCut) / 10000;
+    uint128 ownerWad = value - affiliateWad - platformWad;
     ownerBalance = OwnerBalance({
-      owner: balance.owner + ownerCut,
-      platform: balance.platform + platformCut
+      owner: balance.owner + ownerWad,
+      platform: balance.platform + platformWad
     });
   }
 
@@ -243,8 +253,14 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
       affiliateBalance[msg.sender] = 0;
     }
 
-    require(wad !=0 , "msg.sender balance is empty");
-    payable(msg.sender).transfer(wad);
+
+    if(wad==0) {
+      revert BalanceEmpty();
+    }
+    (bool success, ) = msg.sender.call{value: wad}("");
+    if(!success) {
+      revert TransferFailed();
+    }
     emit Withdrawal(msg.sender, wad);
   }
 
@@ -277,11 +293,11 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     return computedHash == auth.key;
   }
 
-  function validateAffiliate(address affiliate, bytes memory signature) internal pure {
+  function validateAffiliate(address affiliate, bytes memory signature, address affiliateSigner) internal pure {
     bytes32 signedMessagehash = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(affiliate)));
     address signer = ECDSA.recover(signedMessagehash, signature);
-    if (signer != PLATFORM) {
-        revert("affiliate signature verification error");
+    if (signer != affiliateSigner) {
+        revert InvalidSignature();
     }
   }
 }
