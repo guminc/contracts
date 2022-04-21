@@ -68,8 +68,8 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     address affiliateSigner;
     uint32 maxSupply;
     uint32 maxBatchSize;
-    uint32 affiliateCut;
-    uint32 platformCut;
+    uint32 affiliateFee;
+    uint32 platformFee;
   }
 
   struct Invite {
@@ -89,8 +89,8 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     Config calldata config_
   ) external initializer {
     __ERC721A_init(name, symbol);
-    // affiliateCut max is 50%, platformCut min is 2% and max is 50%
-    if(config_.affiliateCut > 5000 || config_.platformCut > 5000 || config_.platformCut < 200) {
+    // affiliateFee max is 50%, platformFee min is 5% and max is 50%
+    if(config_.affiliateFee > 5000 || config_.platformFee > 5000 || config_.platformFee < 500) {
       revert InvalidConfig();
     }
     config = config_;
@@ -157,13 +157,13 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
     uint128 affiliateWad;
     if(affiliate != address(0)) {
-      affiliateWad = (value * config.affiliateCut) / 10000;
+      affiliateWad = (value * config.affiliateFee) / 10000;
       affiliateBalance[affiliate] += affiliateWad;
       emit Referral(affiliate, affiliateWad);
     }
 
     OwnerBalance memory balance = ownerBalance;
-    uint128 platformWad = (value * config.platformCut) / 10000;
+    uint128 platformWad = (value * config.platformFee) / 10000;
     uint128 ownerWad = value - affiliateWad - platformWad;
     ownerBalance = OwnerBalance({
       owner: balance.owner + ownerWad,
