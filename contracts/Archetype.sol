@@ -114,6 +114,13 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
       validateAffiliate(affiliate, signature, config.affiliateSigner);
     }
 
+    if (affiliate != address(0)) {
+      if (affiliate == PLATFORM || affiliate == owner() || affiliate == msg.sender) {
+        revert InvalidReferral();
+      }
+      validateAffiliate(affiliate, signature, config.affiliateSigner);
+    }
+
     if (i.limit == 0) {
       revert MintingPaused();
     }
