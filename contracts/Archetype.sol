@@ -155,7 +155,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
     uint128 value = uint128(msg.value);
 
-    uint128 affiliateWad;
+    uint128 affiliateWad = 0;
     if(affiliate != address(0)) {
       affiliateWad = (value * config.affiliateFee) / 10000;
       affiliateBalance[affiliate] += affiliateWad;
@@ -229,7 +229,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   }
 
   function withdraw() public {
-    uint128 wad;
+    uint128 wad = 0;
 
     if(msg.sender == owner() || msg.sender == PLATFORM) {
       OwnerBalance memory balance = ownerBalance;
