@@ -2,7 +2,7 @@
   "manifestVersion": "3.2",
   "admin": {
     "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-    "txHash": "0x021495d3a649e480ef48bad8bb1a991564c32fd3fb259541b29124811305c731"
+    "txHash": "0xf017407954e2188bf1ce97944528ca25ca47cb20272e5cd7fd46e3186fb21dc2"
   },
   "proxies": [
     {
@@ -997,7 +997,12 @@
     },
     {
       "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
-      "txHash": "0x33c58b8d4f114fdf346350cb297e2a8b1e5e3104428635c5bc7fc093ca6c0def",
+      "txHash": "0x3b0adf8b640fcfe64bfa19e05a9d910c82c897df29f4f11e0911239a6d934a1d",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xc5a5C42992dECbae36851359345FE25997F5C42d",
+      "txHash": "0x7cdeb090a01c88c00a4c6f8c54f649ef74f19d74aa6ff85e5fac1a3497306152",
       "kind": "transparent"
     }
   ],
@@ -3053,22 +3058,22 @@
         }
       }
     },
-    "ab2045886ac15495336df6e425e98c63e2bde09d473c292bb4329e3b518e6562": {
+    "785af011e295f6fee184b34f7ed8a59ccc6df987f6c4b3c91615ab6acebdf75e": {
       "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-      "txHash": "0xefd6baff1d69753f6555612449f93e34f82d1c3138838c6cf23af1536f6241b4",
+      "txHash": "0xa2a7a83c5829618109e573b5dc9ac5e38ddf452fe9917388ae62816643ff050f",
       "layout": {
         "storage": [
           {
             "contract": "Initializable",
             "label": "_initialized",
             "type": "t_bool",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:40"
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:38"
           },
           {
             "contract": "Initializable",
             "label": "_initializing",
             "type": "t_bool",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:45"
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:43"
           },
           {
             "contract": "ContextUpgradeable",
@@ -3086,13 +3091,13 @@
             "contract": "OwnableUpgradeable",
             "label": "__gap",
             "type": "t_array(t_uint256)49_storage",
-            "src": "contracts/OwnableUpgradeable.sol:93"
+            "src": "contracts/OwnableUpgradeable.sol:91"
           },
           {
             "contract": "Factory",
             "label": "archetype",
             "type": "t_address",
-            "src": "contracts/Factory.sol:11"
+            "src": "contracts/Factory.sol:22"
           }
         ],
         "types": {

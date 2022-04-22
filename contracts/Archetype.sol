@@ -47,8 +47,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     uint128 platform;
   }
 
-  //address private constant PLATFORM = 0x60A59d7003345843BE285c15c7C78B62b61e0d7c; // REAL
-  address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
+  address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
 
   bool public revealed;
   bool public uriUnlocked;
@@ -90,7 +89,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   ) external initializer {
     __ERC721A_init(name, symbol);
     // affiliateFee max is 50%, platformFee min is 5% and max is 50%
-    if(config_.affiliateFee > 5000 || config_.platformFee > 5000 || config_.platformFee < 500) {
+    if (config_.affiliateFee > 5000 || config_.platformFee > 5000 || config_.platformFee < 500) {
       revert InvalidConfig();
     }
     config = config_;
@@ -100,11 +99,16 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     provenanceHashUnlocked = true;
   }
 
-  function mint(Auth calldata auth, uint256 quantity, address affiliate, bytes calldata signature) external payable {
+  function mint(
+    Auth calldata auth,
+    uint256 quantity,
+    address affiliate,
+    bytes calldata signature
+  ) external payable {
     Invite memory i = invites[auth.key];
-    
-    if(affiliate != address(0)) {
-      if(affiliate==PLATFORM || affiliate==owner() || affiliate==msg.sender) {
+
+    if (affiliate != address(0)) {
+      if (affiliate == PLATFORM || affiliate == owner() || affiliate == msg.sender) {
         revert InvalidReferral();
       }
       validateAffiliate(affiliate, signature, config.affiliateSigner);
@@ -156,7 +160,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     uint128 value = uint128(msg.value);
 
     uint128 affiliateWad = 0;
-    if(affiliate != address(0)) {
+    if (affiliate != address(0)) {
       affiliateWad = (value * config.affiliateFee) / 10000;
       affiliateBalance[affiliate] += affiliateWad;
       emit Referral(affiliate, affiliateWad);
@@ -231,34 +235,25 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   function withdraw() public {
     uint128 wad = 0;
 
-    if(msg.sender == owner() || msg.sender == PLATFORM) {
+    if (msg.sender == owner() || msg.sender == PLATFORM) {
       OwnerBalance memory balance = ownerBalance;
-      if(msg.sender == owner()) {
+      if (msg.sender == owner()) {
         wad = balance.owner;
-        ownerBalance = OwnerBalance({
-          owner: 0,
-          platform: balance.platform
-        });
-      }
-      else {
+        ownerBalance = OwnerBalance({ owner: 0, platform: balance.platform });
+      } else {
         wad = balance.platform;
-        ownerBalance = OwnerBalance({
-          owner: balance.owner,
-          platform: 0
-        });
+        ownerBalance = OwnerBalance({ owner: balance.owner, platform: 0 });
       }
-    }
-    else {
+    } else {
       wad = affiliateBalance[msg.sender];
       affiliateBalance[msg.sender] = 0;
     }
 
-
-    if(wad==0) {
+    if (wad == 0) {
       revert BalanceEmpty();
     }
-    (bool success, ) = msg.sender.call{value: wad}("");
-    if(!success) {
+    (bool success, ) = msg.sender.call{ value: wad }("");
+    if (!success) {
       revert TransferFailed();
     }
     emit Withdrawal(msg.sender, wad);
@@ -293,11 +288,17 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     return computedHash == auth.key;
   }
 
-  function validateAffiliate(address affiliate, bytes memory signature, address affiliateSigner) internal pure {
-    bytes32 signedMessagehash = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(affiliate)));
+  function validateAffiliate(
+    address affiliate,
+    bytes memory signature,
+    address affiliateSigner
+  ) internal pure {
+    bytes32 signedMessagehash = ECDSA.toEthSignedMessageHash(
+      keccak256(abi.encodePacked(affiliate))
+    );
     address signer = ECDSA.recover(signedMessagehash, signature);
     if (signer != affiliateSigner) {
-        revert InvalidSignature();
+      revert InvalidSignature();
     }
   }
 }
