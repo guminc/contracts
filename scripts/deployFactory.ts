@@ -11,7 +11,7 @@ async function main() {
 
   // console.log("Archetype deployed to:", archetype.address);
 
-  const archetypeAddress = "0x7Db2cf29f87338d13156B55bb3AF70F482BfCAc4";
+  const archetypeAddress = "0x09635F643e140090A9A8Dcd712eD6285858ceBef";
 
   const Factory = await ethers.getContractFactory("Factory");
 
