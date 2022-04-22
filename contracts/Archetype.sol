@@ -47,6 +47,8 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     uint128 platform;
   }
 
+  // address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
+
   address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
 
   bool public revealed;
