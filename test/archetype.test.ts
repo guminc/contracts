@@ -7,13 +7,9 @@ import Invitelist from "../lib/invitelist";
 
 const DEFAULT_NAME = "Pookie";
 const DEFAULT_SYMBOL = "POOKIE";
-const DEFAULT_CONFIG = {
-  // tokenPrice: ethers.utils.parseEther("0.08"),
-  unrevealedUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
-  baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
-  maxSupply: 5000,
-  maxBatchSize: 20,
-};
+var AFFILIATE_SIGNER;
+var DEFAULT_CONFIG;
+const ZERO = "0x0000000000000000000000000000000000000000";
 
 describe("Factory", function () {
   let Archetype: Archetype__factory;
@@ -22,6 +18,18 @@ describe("Factory", function () {
   let factory: Contract;
 
   before(async function () {
+    AFFILIATE_SIGNER = (await ethers.getSigners())[4] //account[4]
+    DEFAULT_CONFIG = {
+      // tokenPrice: ethers.utils.parseEther("0.08"),
+      unrevealedUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
+      baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
+      affiliateSigner: AFFILIATE_SIGNER.address,
+      maxSupply: 5000,
+      maxBatchSize: 20,
+      affiliateFee: 1500,
+      platformFee: 500.
+    };
+
     Archetype = await ethers.getContractFactory("Archetype");
 
     // const archetype = await upgrades.deployProxy(Archetype, []);
@@ -209,7 +217,7 @@ describe("Factory", function () {
 
     // console.log({ invites });
 
-    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, {
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
       value: ethers.utils.parseEther("0.08"),
     });
 
@@ -278,22 +286,22 @@ describe("Factory", function () {
 
     // whitelisted wallet
     await expect(
-      nft.mint({ key: root, proof: proof }, 1, {
+      nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
         value: ethers.utils.parseEther("0.07"),
       })
     ).to.be.revertedWith("InsufficientEthSent");
 
     await expect(
-      nft.mint({ key: root, proof: proof }, 1, {
+      nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
         value: ethers.utils.parseEther("0.09"),
       })
     ).to.be.revertedWith("ExcessiveEthSent");
 
-    await nft.mint({ key: root, proof: proof }, 1, {
+    await nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
       value: price,
     });
 
-    await nft.mint({ key: root, proof: proof }, 5, {
+    await nft.mint({ key: root, proof: proof }, 5, ZERO, "0x", {
       value: price.mul(5),
     });
 
@@ -304,14 +312,14 @@ describe("Factory", function () {
     // non-whitelisted wallet
     // private mint rejection
     await expect(
-      nft.connect(accountTwo).mint({ key: root, proof: proofTwo }, 2, {
+      nft.connect(accountTwo).mint({ key: root, proof: proofTwo }, 2, ZERO, "0x", {
         value: price.mul(2),
       })
     ).to.be.revertedWith("WalletUnauthorizedToMint");
 
     // public mint rejection
     await expect(
-      nft.connect(accountTwo).mint({ key: ethers.constants.HashZero, proof: [] }, 2, {
+      nft.connect(accountTwo).mint({ key: ethers.constants.HashZero, proof: [] }, 2, ZERO, "0x", {
         value: price.mul(2),
       })
     ).to.be.revertedWith("MintNotYetStarted");
@@ -346,10 +354,127 @@ describe("Factory", function () {
     console.log({ invites });
 
     await expect(
-      nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, {
+      nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
         value: ethers.utils.parseEther("0.08"),
       })
     ).to.be.revertedWith("MintingPaused");
+  });
+
+  it("test affiliate sig and withdrawals (valid, invalid)", async function () {
+    const [accountZero, accountOne, accountTwo, accountThree] = await ethers.getSigners();
+  
+    const owner = accountOne;
+    const platform = accountTwo;
+    const affiliate = accountThree;
+  
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+  
+    const result = await newCollection.wait();
+  
+    const newCollectionAddress = result.events[0].address || "";
+  
+    const NFT = await ethers.getContractFactory("Archetype");
+  
+    const nft = NFT.attach(newCollectionAddress);
+  
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, {
+      price: ethers.utils.parseEther("0.08"),
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 300,
+    });
+
+    // test invalid signature
+    const invalidReferral = await accountZero.signMessage(
+      ethers.utils.arrayify(
+        ethers.utils.solidityKeccak256(['address'], [affiliate.address])
+      )
+    );
+    //console.log(invalidReferral);
+
+    await expect(nft.connect(accountZero).mint({ key: ethers.constants.HashZero, proof: [] }, 1, affiliate.address, invalidReferral,{
+      value: ethers.utils.parseEther("0.08"),
+    })).to.be.revertedWith("InvalidSignature()");
+
+    // valid signature (from affiliateSigner)
+    const referral = await AFFILIATE_SIGNER.signMessage(
+      ethers.utils.arrayify(
+        ethers.utils.solidityKeccak256(['address'], [affiliate.address])
+      )
+    );
+    //console.log(referral);
+  
+    await nft.connect(accountZero).mint({ key: ethers.constants.HashZero, proof: [] }, 1, affiliate.address, referral,{
+      value: ethers.utils.parseEther("0.08"),
+    });
+
+    await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.064")); // 80%
+    await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.004")); // 5%
+    await expect((await nft.affiliateBalance(affiliate.address))).to.equal(ethers.utils.parseEther("0.012")); // 15%
+
+    // todo: test withdraw failure
+    // let balance = (await ethers.provider.getBalance(owner.address));
+    // await nft.connect(owner).withdraw();
+    // let diff = (await ethers.provider.getBalance(owner.address)).toBigInt() - balance.toBigInt();
+    // expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0"))); 
+
+    // withdraw owner balance
+    let balance = (await ethers.provider.getBalance(owner.address));
+    await nft.connect(owner).withdraw();
+    let diff = (await ethers.provider.getBalance(owner.address)).toBigInt() - balance.toBigInt();
+    // withdrawal won't be exact due to gas payment, just check range.
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.062"))); 
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.064"))); 
+
+    // mint again
+    await nft.connect(accountZero).mint({ key: ethers.constants.HashZero, proof: [] }, 1, affiliate.address, referral,{
+      value: ethers.utils.parseEther("0.08"),
+    });
+
+    await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.064"));
+    await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.008"));  // 5% x 2 mints
+    await expect((await nft.affiliateBalance(affiliate.address))).to.equal(ethers.utils.parseEther("0.024")); // 15% x 2 mints
+
+    // withdraw owner balance again
+    balance = (await ethers.provider.getBalance(owner.address));
+    await nft.connect(owner).withdraw();
+    diff = (await ethers.provider.getBalance(owner.address)).toBigInt() - balance.toBigInt();
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.062"))); // leave room for gas
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.064"))); 
+
+    // withdraw platform balance
+    balance = (await ethers.provider.getBalance(platform.address));
+    await nft.connect(platform).withdraw() // partial withdraw
+    diff = (await ethers.provider.getBalance(platform.address)).toBigInt() - balance.toBigInt();
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.007"))); 
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.008")));
+
+    // withdraw affiliate balance
+    balance = (await ethers.provider.getBalance(affiliate.address));
+    await nft.connect(affiliate).withdraw()
+    diff = (await ethers.provider.getBalance(affiliate.address)).toBigInt() - balance.toBigInt();
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.020")));
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.024")));
+
+    // withdraw empty owner balance
+    await expect(
+      nft.connect(owner).withdraw()
+    ).to.be.revertedWith("BalanceEmpty()");
+
+    // withdraw empty affiliate balance
+    await expect(
+      nft.connect(affiliate).withdraw()
+    ).to.be.revertedWith("BalanceEmpty()");
+
+    // withdraw unused affiliate balance
+    await expect(
+      nft.connect(accountThree).withdraw()
+    ).to.be.revertedWith("BalanceEmpty()");
+
   });
 });
 

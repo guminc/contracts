@@ -17,7 +17,9 @@ import "./ERC721A-Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
+error InvalidConfig();
 error MintNotYetStarted();
 error WalletUnauthorizedToMint();
 error InsufficientEthSent();
@@ -25,14 +27,28 @@ error ExcessiveEthSent();
 error MaxSupplyExceeded();
 error NumberOfMintsExceeded();
 error MintingPaused();
-
+error InvalidReferral();
+error InvalidSignature();
+error BalanceEmpty();
+error TransferFailed();
 error MaxBatchSizeExceeded();
 
 contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   event Invited(bytes32 indexed key);
+  event Referral(address indexed affiliate, uint128 wad);
+  event Withdrawal(address indexed src, uint128 wad);
 
   mapping(bytes32 => Invite) public invites;
   mapping(address => mapping(bytes32 => uint256)) private minted;
+  mapping(address => uint128) public affiliateBalance;
+  OwnerBalance public ownerBalance;
+  struct OwnerBalance {
+    uint128 owner;
+    uint128 platform;
+  }
+
+  //address private constant PLATFORM = 0x60A59d7003345843BE285c15c7C78B62b61e0d7c; // REAL
+  address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
 
   bool public revealed;
   bool public uriUnlocked;
@@ -47,10 +63,13 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   }
 
   struct Config {
-    uint256 maxSupply;
     string unrevealedUri;
     string baseUri;
-    uint256 maxBatchSize;
+    address affiliateSigner;
+    uint32 maxSupply;
+    uint32 maxBatchSize;
+    uint32 affiliateFee;
+    uint32 platformFee;
   }
 
   struct Invite {
@@ -70,6 +89,10 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     Config calldata config_
   ) external initializer {
     __ERC721A_init(name, symbol);
+    // affiliateFee max is 50%, platformFee min is 5% and max is 50%
+    if(config_.affiliateFee > 5000 || config_.platformFee > 5000 || config_.platformFee < 500) {
+      revert InvalidConfig();
+    }
     config = config_;
     __Ownable_init();
     revealed = false;
@@ -77,8 +100,15 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     provenanceHashUnlocked = true;
   }
 
-  function mint(Auth calldata auth, uint256 quantity) external payable {
+  function mint(Auth calldata auth, uint256 quantity, address affiliate, bytes calldata signature) external payable {
     Invite memory i = invites[auth.key];
+    
+    if(affiliate != address(0)) {
+      if(affiliate==PLATFORM || affiliate==owner() || affiliate==msg.sender) {
+        revert InvalidReferral();
+      }
+      validateAffiliate(affiliate, signature, config.affiliateSigner);
+    }
 
     if (i.limit == 0) {
       revert MintingPaused();
@@ -92,10 +122,12 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
       revert MintNotYetStarted();
     }
 
-    uint256 totalAfterMint = minted[_msgSender()][auth.key] + quantity;
+    if (i.limit < config.maxSupply) {
+      uint256 totalAfterMint = minted[_msgSender()][auth.key] + quantity;
 
-    if (totalAfterMint > i.limit) {
-      revert NumberOfMintsExceeded();
+      if (totalAfterMint > i.limit) {
+        revert NumberOfMintsExceeded();
+      }
     }
 
     if (quantity > config.maxBatchSize) {
@@ -117,9 +149,26 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
     _safeMint(msg.sender, quantity);
 
-    if (i.limit != config.maxSupply) {
+    if (i.limit < config.maxSupply) {
       minted[_msgSender()][auth.key] += quantity;
     }
+
+    uint128 value = uint128(msg.value);
+
+    uint128 affiliateWad = 0;
+    if(affiliate != address(0)) {
+      affiliateWad = (value * config.affiliateFee) / 10000;
+      affiliateBalance[affiliate] += affiliateWad;
+      emit Referral(affiliate, affiliateWad);
+    }
+
+    OwnerBalance memory balance = ownerBalance;
+    uint128 platformWad = (value * config.platformFee) / 10000;
+    uint128 ownerWad = value - affiliateWad - platformWad;
+    ownerBalance = OwnerBalance({
+      owner: balance.owner + ownerWad,
+      platform: balance.platform + platformWad
+    });
   }
 
   function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
@@ -179,15 +228,40 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     provenanceHashUnlocked = false;
   }
 
-  function withdraw() public onlyOwner {
-    uint256 balance = address(this).balance;
-    uint256 cut = balance / 20;
-    uint256 remainder = balance - cut;
+  function withdraw() public {
+    uint128 wad = 0;
 
-    address platform = 0x60A59d7003345843BE285c15c7C78B62b61e0d7c;
+    if(msg.sender == owner() || msg.sender == PLATFORM) {
+      OwnerBalance memory balance = ownerBalance;
+      if(msg.sender == owner()) {
+        wad = balance.owner;
+        ownerBalance = OwnerBalance({
+          owner: 0,
+          platform: balance.platform
+        });
+      }
+      else {
+        wad = balance.platform;
+        ownerBalance = OwnerBalance({
+          owner: balance.owner,
+          platform: 0
+        });
+      }
+    }
+    else {
+      wad = affiliateBalance[msg.sender];
+      affiliateBalance[msg.sender] = 0;
+    }
 
-    payable(platform).transfer(cut);
-    payable(owner()).transfer(remainder);
+
+    if(wad==0) {
+      revert BalanceEmpty();
+    }
+    (bool success, ) = msg.sender.call{value: wad}("");
+    if(!success) {
+      revert TransferFailed();
+    }
+    emit Withdrawal(msg.sender, wad);
   }
 
   function setInvites(Invitelist[] calldata invitelist) external onlyOwner {
@@ -204,7 +278,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   }
 
   // based on: https://github.com/miguelmota/merkletreejs-solidity/blob/master/contracts/MerkleProof.sol
-  function verify(Auth calldata auth, address account) internal view returns (bool) {
+  function verify(Auth calldata auth, address account) internal pure returns (bool) {
     if (auth.key == "") return true;
 
     bytes32 computedHash = keccak256(abi.encodePacked(account));
@@ -217,5 +291,13 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
       }
     }
     return computedHash == auth.key;
+  }
+
+  function validateAffiliate(address affiliate, bytes memory signature, address affiliateSigner) internal pure {
+    bytes32 signedMessagehash = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(affiliate)));
+    address signer = ECDSA.recover(signedMessagehash, signature);
+    if (signer != affiliateSigner) {
+        revert InvalidSignature();
+    }
   }
 }
