@@ -6,11 +6,19 @@ import { Contract } from "@ethersproject/contracts";
 import Invitelist from "../lib/invitelist";
 import { IArchetypeConfig } from "../lib/types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import ipfsh from "ipfsh";
 
 const DEFAULT_NAME = "Pookie";
 const DEFAULT_SYMBOL = "POOKIE";
 let AFFILIATE_SIGNER: SignerWithAddress;
 let DEFAULT_CONFIG: IArchetypeConfig;
+// this is an IPFS content ID which stores a list of addresses ({address: string[]})
+// eg: https://ipfs.io/ipfs/bafkreih2kyxirba6a6dyzt4tsdqb5iim3soprumtewq6garaohkfknqlaq
+// utility for converting CID to bytes32: https://github.com/factoria-org/ipfsh
+const CID_DEFAULT = "Qmbro8pnECVvjwWH6J9KyFXR8isquPFNgbUiHDGXhYnmFn";
+
+const CID_ZERO = "bafkreiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
 const ZERO = "0x0000000000000000000000000000000000000000";
 
 describe("Factory", function () {
@@ -206,7 +214,7 @@ describe("Factory", function () {
 
     const nft = NFT.attach(newCollectionAddress);
 
-    await nft.connect(owner).setInvite(ethers.constants.HashZero, {
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.08"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
@@ -262,6 +270,7 @@ describe("Factory", function () {
     await nft.connect(owner).setInvites([
       {
         key: ethers.constants.HashZero,
+        cid: ipfsh.ctod(CID_ZERO),
         invite: {
           price: ethers.utils.parseEther("0.1"),
           start: ethers.BigNumber.from(Math.floor(tomorrow / 1000)),
@@ -270,6 +279,7 @@ describe("Factory", function () {
       },
       {
         key: root,
+        cid: ipfsh.ctod(CID_DEFAULT),
         invite: {
           price: price,
           start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
@@ -359,7 +369,7 @@ describe("Factory", function () {
     ).to.be.revertedWith("MintingPaused");
   });
 
-  it("test affiliate sig and withdrawals (valid, invalid)", async function () {
+  it("should validate affiliate signatures and withdraw to correct account", async function () {
     const [accountZero, accountOne, accountTwo, accountThree] = await ethers.getSigners();
 
     const owner = accountOne;
@@ -381,7 +391,7 @@ describe("Factory", function () {
 
     const nft = NFT.attach(newCollectionAddress);
 
-    await nft.connect(owner).setInvite(ethers.constants.HashZero, {
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.08"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
