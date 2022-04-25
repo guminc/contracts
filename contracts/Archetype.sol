@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// Archetype v0.2.0
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -32,32 +33,20 @@ error InvalidSignature();
 error BalanceEmpty();
 error TransferFailed();
 error MaxBatchSizeExceeded();
+error WrongPassword();
+error LockedForever();
 
 contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
-  event Invited(bytes32 indexed key);
+  //
+  // EVENTS
+  //
+  event Invited(bytes32 indexed key, bytes32 indexed cid);
   event Referral(address indexed affiliate, uint128 wad);
   event Withdrawal(address indexed src, uint128 wad);
 
-  mapping(bytes32 => Invite) public invites;
-  mapping(address => mapping(bytes32 => uint256)) private minted;
-  mapping(address => uint128) public affiliateBalance;
-  OwnerBalance public ownerBalance;
-  struct OwnerBalance {
-    uint128 owner;
-    uint128 platform;
-  }
-
-  // address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
-
-  address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
-
-  bool public revealed;
-  bool public uriUnlocked;
-  string public provenance;
-  bool public provenanceHashUnlocked;
-
-  Config public config;
-
+  //
+  // STRUCTS
+  //
   struct Auth {
     bytes32 key;
     bytes32[] proof;
@@ -81,9 +70,33 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
   struct Invitelist {
     bytes32 key;
+    bytes32 cid;
     Invite invite;
   }
 
+  struct OwnerBalance {
+    uint128 owner;
+    uint128 platform;
+  }
+
+  //
+  // VARIABLES
+  //
+  mapping(bytes32 => Invite) public invites;
+  mapping(address => mapping(bytes32 => uint256)) private minted;
+  mapping(address => uint128) public affiliateBalance;
+  address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
+  // address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
+  bool public revealed;
+  bool public uriUnlocked;
+  string public provenance;
+  bool public provenanceHashUnlocked;
+  OwnerBalance public ownerBalance;
+  Config public config;
+
+  //
+  // METHODS
+  //
   function initialize(
     string memory name,
     string memory symbol,
@@ -108,13 +121,6 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     bytes calldata signature
   ) external payable {
     Invite memory i = invites[auth.key];
-
-    if (affiliate != address(0)) {
-      if (affiliate == PLATFORM || affiliate == owner() || affiliate == msg.sender) {
-        revert InvalidReferral();
-      }
-      validateAffiliate(affiliate, signature, config.affiliateSigner);
-    }
 
     if (affiliate != address(0)) {
       if (affiliate == PLATFORM || affiliate == owner() || affiliate == msg.sender) {
@@ -207,10 +213,9 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
 
   /// @notice the password is "forever"
   function lockURI(string memory password) public onlyOwner {
-    require(
-      keccak256(abi.encodePacked(password)) == keccak256(abi.encodePacked("forever")),
-      "You need to explicitly pass the string 'forever'"
-    );
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
 
     uriUnlocked = false;
   }
@@ -220,23 +225,27 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   }
 
   function setBaseURI(string memory baseUri_) public onlyOwner {
-    require(uriUnlocked, "The token URI has been locked forever.");
+    if (!uriUnlocked) {
+      revert LockedForever();
+    }
+
     config.baseUri = baseUri_;
   }
 
   /// @notice Set BAYC-style provenance once it's calculated
   function setProvenanceHash(string memory provenanceHash) public onlyOwner {
-    require(provenanceHashUnlocked, "The provenance hash has been locked forever.");
+    if (!provenanceHashUnlocked) {
+      revert LockedForever();
+    }
 
     provenance = provenanceHash;
   }
 
   /// @notice the password is "forever"
   function lockProvenanceHash(string memory password) public onlyOwner {
-    require(
-      keccak256(abi.encodePacked(password)) == keccak256(abi.encodePacked("forever")),
-      "You need to explicitly pass the string 'forever'"
-    );
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
 
     provenanceHashUnlocked = false;
   }
@@ -272,13 +281,17 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     for (uint256 i = 0; i < invitelist.length; i++) {
       Invitelist calldata list = invitelist[i];
       invites[list.key] = list.invite;
-      emit Invited(list.key);
+      emit Invited(list.key, list.cid);
     }
   }
 
-  function setInvite(bytes32 _key, Invite calldata _invite) external onlyOwner {
+  function setInvite(
+    bytes32 _key,
+    bytes32 _cid,
+    Invite calldata _invite
+  ) external onlyOwner {
     invites[_key] = _invite;
-    emit Invited(_key);
+    emit Invited(_key, _cid);
   }
 
   // based on: https://github.com/miguelmota/merkletreejs-solidity/blob/master/contracts/MerkleProof.sol
