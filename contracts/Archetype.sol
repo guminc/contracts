@@ -19,6 +19,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "hardhat/console.sol";
 
 error InvalidConfig();
 error MintNotYetStarted();
@@ -314,11 +315,22 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     address affiliate,
     bytes memory signature,
     address affiliateSigner
-  ) internal pure {
+  ) internal view {
+
+    console.log("affiliate");
+    console.log(affiliate);
+
     bytes32 signedMessagehash = ECDSA.toEthSignedMessageHash(
       keccak256(abi.encodePacked(affiliate))
     );
     address signer = ECDSA.recover(signedMessagehash, signature);
+
+    console.log("affiliateSigner");
+    console.log(affiliateSigner);
+
+    console.log("signer");
+    console.log(signer);
+
     if (signer != affiliateSigner) {
       revert InvalidSignature();
     }
