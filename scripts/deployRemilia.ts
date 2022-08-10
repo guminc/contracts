@@ -1,9 +1,17 @@
 import { ethers, run } from "hardhat";
 
 async function main() {
-  const NFTContract = await ethers.getContractFactory("ScatterNFT");
+  const NFTContract = await ethers.getContractFactory("Remilia");
 
-  const nftContract = await NFTContract.deploy("Pookie", "POOKIE");
+  const nftContract = await NFTContract.deploy("Pookie", "POOKIE", {
+    unrevealedUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
+    baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
+    affiliateSigner: "0x1f285dD528cf4cDE3081C6d48D9df7A4F8FA9383",
+    maxSupply: 5000,
+    maxBatchSize: 20,
+    affiliateFee: 1500,
+    platformFee: 500,
+  });
 
   await nftContract.deployed();
 
@@ -11,7 +19,7 @@ async function main() {
 
   // await run("verify:verify", {
   //   address: nftContract.address,
-  //   contract: "contracts/NFT.sol:ScatterNFT",
+  //   contract: "contracts/Remilia.sol:Remilia",
   //   constructorArguments: ["Pookie", "POOKIE"],
   // });
 

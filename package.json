@@ -6,7 +6,9 @@
   "scripts": {
     "test": "hardhat test test/archetype.test",
     "test:specific": "hardhat test test/archetype.test --grep",
-    "start": "concurrently \"cd api && npm start\" \"cd app && npm run dev\""
+    "start": "concurrently \"cd api && npm start\" \"cd app && npm run dev\"",
+    "deploy": "npx hardhat run scripts/deployRemilia.ts --network localhost",
+    "network": "npx hardhat node"
   },
   "repository": {
     "type": "git",
