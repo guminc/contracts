@@ -125,6 +125,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
         || config_.discounts.affiliateDiscount > MAXBPS) {
       revert InvalidConfig();
     }
+    // ensure mint tiers are correctly ordered from highest to lowest.
     for (uint256 i = 1; i < config_.discounts.mintTiers.length; i++) {
       if(config_.discounts.mintTiers[i].mintDiscount > MAXBPS 
         ||config_.discounts.mintTiers[i].numMints > config_.discounts.mintTiers[i-1].numMints) {
