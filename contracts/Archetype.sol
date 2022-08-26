@@ -33,6 +33,7 @@ error InvalidSignature();
 error BalanceEmpty();
 error TransferFailed();
 error MaxBatchSizeExceeded();
+error NotTokenOwner();
 error WrongPassword();
 error LockedForever();
 
@@ -98,6 +99,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   mapping(bytes32 => Invite) public invites;
   mapping(address => mapping(bytes32 => uint256)) private minted;
   mapping(address => uint128) public affiliateBalance;
+  mapping(uint256 => bytes) public tokenMsg;
   address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
   // address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
   uint32 private constant MAXBPS = 5000; // max fee or discount is 50%
@@ -159,7 +161,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
       revert MintingPaused();
     }
 
-    if (!verify(auth, _msgSender())) {
+    if (!verify(auth, msg.sender)) {
       revert WalletUnauthorizedToMint();
     }
 
@@ -168,7 +170,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     }
 
     if (i.limit < config.maxSupply) {
-      uint256 totalAfterMint = minted[_msgSender()][auth.key] + quantity;
+      uint256 totalAfterMint = minted[msg.sender][auth.key] + quantity;
 
       if (totalAfterMint > i.limit) {
         revert NumberOfMintsExceeded();
@@ -196,7 +198,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     _safeMint(msg.sender, quantity);
 
     if (i.limit < config.maxSupply) {
-      minted[_msgSender()][auth.key] += quantity;
+      minted[msg.sender][auth.key] += quantity;
     }
 
     uint128 value = uint128(msg.value);
@@ -395,5 +397,18 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     if (signer != affiliateSigner) {
       revert InvalidSignature();
     }
+  }
+
+  function setTokenMsg(uint256 tokenId, string calldata message) public {
+    if(msg.sender != ownerOf(tokenId)) {
+      revert NotTokenOwner();
+    }
+
+    tokenMsg[tokenId] = bytes(message);
+  }
+
+  function getTokenMsg(uint256 tokenId) public view returns (string memory){
+    if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
+    return string(tokenMsg[tokenId]);
   }
 }

@@ -492,13 +492,13 @@ describe("Factory", function () {
     expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.024")));
 
     // withdraw empty owner balance
-    await expect(nft.connect(owner).withdraw()).to.be.revertedWith("BalanceEmpty()");
+    await expect(nft.connect(owner).withdraw()).to.be.revertedWith("BalanceEmpty");
 
     // withdraw empty affiliate balance
-    await expect(nft.connect(affiliate).withdraw()).to.be.revertedWith("BalanceEmpty()");
+    await expect(nft.connect(affiliate).withdraw()).to.be.revertedWith("BalanceEmpty");
 
     // withdraw unused affiliate balance
-    await expect(nft.connect(accountThree).withdraw()).to.be.revertedWith("BalanceEmpty()");
+    await expect(nft.connect(accountThree).withdraw()).to.be.revertedWith("BalanceEmpty");
   });
 
   it("should set correct discounts - mint tiers and affiliate", async function () {
@@ -767,6 +767,60 @@ describe("Factory", function () {
     diff = (await ethers.provider.getBalance(ownerAltPayout.address)).toBigInt() - balance.toBigInt();
     expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.094"))); // leave room for gas
     expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.095")));
+  });
+
+  it("allow token msg storage", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    const owner = accountOne;
+    const holder = accountZero;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+
+    const newCollectionAddress = result.events[0].address || "";
+
+    const NFT = await ethers.getContractFactory("Archetype");
+
+    const nft = NFT.attach(newCollectionAddress);
+
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("0.02"),
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 300,
+    });
+
+    // mint tokens 1, 2, 3
+    await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x", {
+      value: ethers.utils.parseEther("0.06"),
+    });
+
+    let msg = "Hi this is a test, I own this";
+
+    // try to set as non token owner - will fail
+    await expect(nft.connect(owner).setTokenMsg(3, 
+      msg
+    )).to.be.revertedWith("NotTokenOwner");
+
+    // try to set as token owner - will succeed
+    await nft.connect(holder).setTokenMsg(3,
+      msg + msg + msg + msg + msg
+    );
+
+    // try to set as token owner - will succeed
+    await nft.connect(holder).setTokenMsg(3,
+      msg
+    );
+
+    // check that msgs match
+    await expect(await nft.getTokenMsg(3)).to.be.equal(msg);
+    
   });
 
 });
