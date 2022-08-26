@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.2.0
+// Archetype v0.3.0
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -14,11 +14,11 @@
 //                                                        "Y88P"  888
 
 pragma solidity ^0.8.4;
-import "./ERC721A-Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import 'erc721a-upgradeable/contracts/ERC721AUpgradeable.sol';
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "solady/src/utils/MerkleProofLib.sol";
+import "solady/src/utils/LibString.sol";
+import "solady/src/utils/ECDSA.sol";
 
 error InvalidConfig();
 error MintNotYetStarted();
@@ -116,7 +116,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     string memory name,
     string memory symbol,
     Config calldata config_
-  ) external initializer {
+  ) external initializerERC721A initializer {
     __ERC721A_init(name, symbol);
     // check max bps not reached and min platform fee.
     if (config_.affiliateFee > MAXBPS 
@@ -179,7 +179,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
       revert MaxBatchSizeExceeded();
     }
 
-    if ((_currentIndex + quantity) > config.maxSupply) {
+    if ((_nextTokenId() + quantity) > config.maxSupply) {
       revert MaxSupplyExceeded();
     }
 
@@ -243,12 +243,12 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
     if (revealed == false) {
-      return string(abi.encodePacked(config.unrevealedUri, Strings.toString(tokenId)));
+      return string(abi.encodePacked(config.unrevealedUri, LibString.toString(tokenId)));
     }
 
     return
       bytes(config.baseUri).length != 0
-        ? string(abi.encodePacked(config.baseUri, Strings.toString(tokenId)))
+        ? string(abi.encodePacked(config.baseUri, LibString.toString(tokenId)))
         : "";
   }
 
@@ -378,23 +378,14 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   function verify(Auth calldata auth, address account) internal pure returns (bool) {
     if (auth.key == "") return true;
 
-    bytes32 computedHash = keccak256(abi.encodePacked(account));
-    for (uint256 i = 0; i < auth.proof.length; i++) {
-      bytes32 proofElement = auth.proof[i];
-      if (computedHash <= proofElement) {
-        computedHash = keccak256(abi.encodePacked(computedHash, proofElement));
-      } else {
-        computedHash = keccak256(abi.encodePacked(proofElement, computedHash));
-      }
-    }
-    return computedHash == auth.key;
+    return MerkleProofLib.verify(auth.proof, auth.key, keccak256(abi.encodePacked(account)));
   }
 
   function validateAffiliate(
     address affiliate,
-    bytes memory signature,
+    bytes calldata signature,
     address affiliateSigner
-  ) internal pure {
+  ) internal view {
 
     bytes32 signedMessagehash = ECDSA.toEthSignedMessageHash(
       keccak256(abi.encodePacked(affiliate))
