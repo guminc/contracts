@@ -105,9 +105,11 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   uint32 private constant MAXBPS = 5000; // max fee or discount is 50%
   bool public revealed;
   bool public uriUnlocked;
+  bool public maxSupplyUnlocked;
+  bool public affiliateFeeUnlocked;
+  bool public discountsUnlocked;
   string public provenance;
   bool public provenanceHashUnlocked;
-  bool public affiliateFeeUnlocked;
   OwnerBalance public ownerBalance;
   Config public config;
 
@@ -138,8 +140,10 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     __Ownable_init();
     revealed = false;
     uriUnlocked = true;
-    provenanceHashUnlocked = true;
+    maxSupplyUnlocked = true;
     affiliateFeeUnlocked = true;
+    discountsUnlocked = true;
+    provenanceHashUnlocked = true;
   }
 
   function mint(
@@ -283,6 +287,28 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     config.baseUri = baseUri_;
   }
 
+
+  function setMaxSupply(uint32 maxSupply_) public onlyOwner {
+    if (!maxSupplyUnlocked) {
+      revert LockedForever();
+    }
+
+    if(maxSupply_ < _nextTokenId()) {
+      revert MaxSupplyExceeded();
+    }
+
+    config.maxSupply = maxSupply_;
+  }
+
+  /// @notice the password is "forever"
+  function lockMaxSupply(string memory password) public onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+
+    maxSupplyUnlocked = false;
+  }
+
   function setAffiliateFee(uint32 affiliateFee_) public onlyOwner {
     if (!affiliateFeeUnlocked) {
       revert LockedForever();
@@ -301,6 +327,35 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     }
 
     affiliateFeeUnlocked = false;
+  }
+
+  function setDiscounts(Discount calldata discounts_) public onlyOwner {
+    if (!discountsUnlocked) {
+      revert LockedForever();
+    }
+
+    if(discounts_.affiliateDiscount > MAXBPS) {
+      revert InvalidConfig();
+    }
+
+    // ensure mint tiers are correctly ordered from highest to lowest.
+    for (uint256 i = 1; i < discounts_.mintTiers.length; i++) {
+      if(discounts_.mintTiers[i].mintDiscount > MAXBPS 
+        ||discounts_.mintTiers[i].numMints > discounts_.mintTiers[i-1].numMints) {
+        revert InvalidConfig();
+      }
+    }
+
+    config.discounts = discounts_;
+  }
+
+  /// @notice the password is "forever"
+  function lockDiscounts(string memory password) public onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+
+    discountsUnlocked = false;
   }
 
   /// @notice Set BAYC-style provenance once it's calculated

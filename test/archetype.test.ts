@@ -7,6 +7,7 @@ import Invitelist from "../lib/invitelist";
 import { IArchetypeConfig } from "../lib/types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import ipfsh from "ipfsh";
+import { arrayify } from "ethers/lib/utils";
 
 const DEFAULT_NAME = "Pookie";
 const DEFAULT_SYMBOL = "POOKIE";
@@ -769,7 +770,7 @@ describe("Factory", function () {
     expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.095")));
   });
 
-  it("allow token msg storage", async function () {
+  it("allow token owner to store msg", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();
 
     const owner = accountOne;
@@ -823,6 +824,69 @@ describe("Factory", function () {
     
   });
 
+
+  it("test config changes and locking", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    const owner = accountOne;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+
+    const newCollectionAddress = result.events[0].address || "";
+
+    const NFT = await ethers.getContractFactory("Archetype");
+
+    const nft = NFT.attach(newCollectionAddress);
+
+    // CHANGE URI
+    await nft.connect(owner).setBaseURI("test uri");
+    await expect((await nft.connect(owner).config()).baseUri).to.be.equal("test uri");
+    await nft.connect(owner).lockURI("forever");
+    await expect(nft.connect(owner).setBaseURI("new test uri")).to.be.reverted;
+
+    // CHANGE MAX SUPPLY
+    await nft.connect(owner).setMaxSupply(100);
+    await expect((await nft.connect(owner).config()).maxSupply).to.be.equal(100);
+    await nft.connect(owner).lockMaxSupply("forever");
+    await expect(nft.connect(owner).setMaxSupply(20)).to.be.reverted;
+
+    // CHANGE AFFILIATE FEE
+    await nft.connect(owner).setAffiliateFee(1000);
+    await expect((await nft.connect(owner).config()).affiliateFee).to.be.equal(1000);
+    await nft.connect(owner).lockAffiliateFee("forever");
+    await expect(nft.connect(owner).setAffiliateFee(20)).to.be.reverted;
+
+    // CHANGE DISCOUNTS
+    let discount = {
+      affiliateDiscount: 2000,
+      mintTiers: [
+        {
+          numMints: 10, 
+          mintDiscount: 2000,
+        },
+        {
+          numMints: 5, 
+          mintDiscount: 1000,
+        },
+      ]
+    };
+    await nft.connect(owner).setDiscounts(discount);
+    let _discount = Object.values(discount);
+    discount.mintTiers.forEach((obj, i) => {
+      _discount[1][i] = Object.values(obj);
+    });
+    await expect((await nft.connect(owner).config()).discounts).to.deep.equal(_discount);
+    await nft.connect(owner).lockDiscounts("forever");
+    await expect(nft.connect(owner).setDiscounts(discount)).to.be.reverted;
+
+  });
 });
 
 // const _accounts = [
