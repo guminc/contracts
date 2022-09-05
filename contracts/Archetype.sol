@@ -108,6 +108,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   bool public maxSupplyUnlocked;
   bool public affiliateFeeUnlocked;
   bool public discountsUnlocked;
+  bool public ownerAltPayoutUnlocked;
   string public provenance;
   bool public provenanceHashUnlocked;
   OwnerBalance public ownerBalance;
@@ -143,6 +144,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     maxSupplyUnlocked = true;
     affiliateFeeUnlocked = true;
     discountsUnlocked = true;
+    ownerAltPayoutUnlocked = true;
     provenanceHashUnlocked = true;
   }
 
@@ -376,6 +378,23 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     provenanceHashUnlocked = false;
   }
 
+  function setOwnerAltPayout(address ownerAltPayout) public onlyOwner {
+    if (!ownerAltPayoutUnlocked) {
+      revert LockedForever();
+    }
+
+    config.ownerAltPayout = ownerAltPayout;
+  }
+
+  /// @notice the password is "forever"
+  function lockOwnerAltPayout(string memory password) public onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+
+    ownerAltPayoutUnlocked = false;
+  }
+
   function withdraw() public {
     uint128 wad = 0;
 
@@ -408,10 +427,6 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
       revert TransferFailed();
     }
     emit Withdrawal(msg.sender, wad);
-  }
-
-  function setOwnerAltPayout(address ownerAltPayout) public onlyOwner {
-    config.ownerAltPayout = ownerAltPayout;
   }
 
   function setInvites(Invitelist[] calldata invitelist) external onlyOwner {
