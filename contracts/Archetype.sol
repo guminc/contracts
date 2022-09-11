@@ -209,7 +209,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       revert ExcessiveEthSent();
     }
 
-    _safeMint(msg.sender, quantity);
+    _mint(msg.sender, quantity);
 
     if (i.limit < config.maxSupply) {
       minted[msg.sender][auth.key] += quantity;
