@@ -19,7 +19,7 @@ async function main() {
 
   await factory.deployed();
 
-  console.log("Contract Factory deployed to:", factory.address);
+  console.log("Uh, Contract Factory deployed to:", factory.address);
 
   const addresses = {
     proxy: factory.address,
@@ -31,10 +31,10 @@ async function main() {
 
   // await sleep(150 * 1000);
 
-  // Archetype deployed to: 0x93Bbaa422F10ed3b9bD2424175Cf6A56AB5d7bBd
-  // Contract Factory deployed to: 0x2eA29C115dBcE49F3df1fD4EcB6Fc82c635BAD76
+  // Archetype deployed to: 0x48B8b452B2a5dDAF6bB64ceA3E8C06E75dD01ce9
+  // Contract Factory deployed to: 0xB12524e93c54d1489978Bcf6cF7DF3ED9D45E3fE
   // Factory addresses: {
-  //   proxy: '0x2eA29C115dBcE49F3df1fD4EcB6Fc82c635BAD76',
+  //   proxy: '0xB12524e93c54d1489978Bcf6cF7DF3ED9D45E3fE',
   //   admin: '0xE2214a831874728EB4a9f22fE51A09B789F21810',
   //   implementation: '0xc078Aed674c230cDD7ADD602E077797d08d8f0c2'
   // }
