@@ -14,8 +14,10 @@
 //                                                        "Y88P"  888
 
 pragma solidity ^0.8.4;
-import 'erc721a-upgradeable/contracts/ERC721AUpgradeable.sol';
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
+import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
+import "erc721a-upgradeable/contracts/ERC721A__Initializable.sol";
+import "./ERC721A__OwnableUpgradeable.sol";
 import "solady/src/utils/MerkleProofLib.sol";
 import "solady/src/utils/LibString.sol";
 import "solady/src/utils/ECDSA.sol";
@@ -37,12 +39,12 @@ error NotTokenOwner();
 error WrongPassword();
 error LockedForever();
 
-contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
+contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__OwnableUpgradeable {
   //
   // EVENTS
   //
   event Invited(bytes32 indexed key, bytes32 indexed cid);
-  event Referral(address indexed affiliate, uint256 numMints, uint128 wad);
+  event Referral(address indexed affiliate, uint128 wad, uint256 numMints);
   event Withdrawal(address indexed src, uint128 wad);
 
   //
@@ -54,12 +56,12 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   }
 
   struct MintTier {
-    uint32 numMints;
-    uint32 mintDiscount; //BPS
+    uint16 numMints;
+    uint16 mintDiscount; //BPS
   }
 
   struct Discount {
-    uint32 affiliateDiscount; //BPS
+    uint16 affiliateDiscount; //BPS
     MintTier[] mintTiers;
   }
 
@@ -71,8 +73,8 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     address superAffiliatePayout; // optional super affiliate address, will receive half of platform fee if set.
     uint32 maxSupply;
     uint32 maxBatchSize;
-    uint32 affiliateFee; //BPS
-    uint32 platformFee; //BPS
+    uint16 affiliateFee; //BPS
+    uint16 platformFee; //BPS
     Discount discounts;
   }
 
@@ -102,7 +104,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   mapping(uint256 => bytes) public tokenMsg;
   address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
   // address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
-  uint32 private constant MAXBPS = 5000; // max fee or discount is 50%
+  uint16 private constant MAXBPS = 5000; // max fee or discount is 50%
   bool public revealed;
   bool public uriUnlocked;
   bool public maxSupplyUnlocked;
@@ -121,19 +123,25 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     string memory name,
     string memory symbol,
     Config calldata config_
-  ) external initializerERC721A initializer {
+  ) external initializerERC721A {
     __ERC721A_init(name, symbol);
     // check max bps not reached and min platform fee.
-    if (config_.affiliateFee > MAXBPS 
-        || config_.platformFee > MAXBPS 
-        || config_.platformFee < 500
-        || config_.discounts.affiliateDiscount > MAXBPS) {
+    if (
+      config_.affiliateFee > MAXBPS ||
+      config_.platformFee > MAXBPS ||
+      config_.platformFee < 500 ||
+      config_.discounts.affiliateDiscount > MAXBPS ||
+      config_.affiliateSigner == address(0) ||
+      config_.maxBatchSize == 0
+    ) {
       revert InvalidConfig();
     }
     // ensure mint tiers are correctly ordered from highest to lowest.
     for (uint256 i = 1; i < config_.discounts.mintTiers.length; i++) {
-      if(config_.discounts.mintTiers[i].mintDiscount > MAXBPS 
-        ||config_.discounts.mintTiers[i].numMints > config_.discounts.mintTiers[i-1].numMints) {
+      if (
+        config_.discounts.mintTiers[i].mintDiscount > MAXBPS ||
+        config_.discounts.mintTiers[i].numMints > config_.discounts.mintTiers[i - 1].numMints
+      ) {
         revert InvalidConfig();
       }
     }
@@ -213,12 +221,12 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     if (affiliate != address(0)) {
       affiliateWad = (value * config.affiliateFee) / 10000;
       affiliateBalance[affiliate] += affiliateWad;
-      emit Referral(affiliate, quantity, affiliateWad);
+      emit Referral(affiliate, affiliateWad, quantity);
     }
 
     uint128 superAffiliateWad = 0;
-    if(config.superAffiliatePayout != address(0)) {
-      superAffiliateWad = (value * config.platformFee / 2) / 10000;
+    if (config.superAffiliatePayout != address(0)) {
+      superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
       affiliateBalance[config.superAffiliatePayout] += superAffiliateWad;
     }
 
@@ -231,21 +239,25 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     });
   }
 
-  function computePrice(uint128 price, uint256 numTokens, bool affiliateUsed) public view returns (uint256){
-    // calculate price based on affiliate usage and mint discounts
+  // calculate price based on affiliate usage and mint discounts
+  function computePrice(
+    uint128 price,
+    uint256 numTokens,
+    bool affiliateUsed
+  ) public view returns (uint256) {
     uint256 cost = price * numTokens;
 
-    if(affiliateUsed) {
-      cost = cost - (cost * config.discounts.affiliateDiscount / 10000);
+    if (affiliateUsed) {
+      cost = cost - ((cost * config.discounts.affiliateDiscount) / 10000);
     }
 
     for (uint256 i = 0; i < config.discounts.mintTiers.length; i++) {
       if (numTokens >= config.discounts.mintTiers[i].numMints) {
-        return cost = cost - (cost * config.discounts.mintTiers[i].mintDiscount / 10000);
+        return cost = cost - ((cost * config.discounts.mintTiers[i].mintDiscount) / 10000);
       }
     }
     return cost;
-  } 
+  }
 
   function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
     if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
@@ -289,13 +301,12 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     config.baseUri = baseUri_;
   }
 
-
   function setMaxSupply(uint32 maxSupply_) public onlyOwner {
     if (!maxSupplyUnlocked) {
       revert LockedForever();
     }
 
-    if(maxSupply_ < _nextTokenId()) {
+    if (maxSupply_ < _nextTokenId()) {
       revert MaxSupplyExceeded();
     }
 
@@ -311,11 +322,11 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     maxSupplyUnlocked = false;
   }
 
-  function setAffiliateFee(uint32 affiliateFee_) public onlyOwner {
+  function setAffiliateFee(uint16 affiliateFee_) public onlyOwner {
     if (!affiliateFeeUnlocked) {
       revert LockedForever();
     }
-    if(affiliateFee_ > MAXBPS) {
+    if (affiliateFee_ > MAXBPS) {
       revert InvalidConfig();
     }
 
@@ -336,14 +347,16 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
       revert LockedForever();
     }
 
-    if(discounts_.affiliateDiscount > MAXBPS) {
+    if (discounts_.affiliateDiscount > MAXBPS) {
       revert InvalidConfig();
     }
 
     // ensure mint tiers are correctly ordered from highest to lowest.
     for (uint256 i = 1; i < discounts_.mintTiers.length; i++) {
-      if(discounts_.mintTiers[i].mintDiscount > MAXBPS 
-        ||discounts_.mintTiers[i].numMints > discounts_.mintTiers[i-1].numMints) {
+      if (
+        discounts_.mintTiers[i].mintDiscount > MAXBPS ||
+        discounts_.mintTiers[i].numMints > discounts_.mintTiers[i - 1].numMints
+      ) {
         revert InvalidConfig();
       }
     }
@@ -419,8 +432,7 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     // send to ownerAltPayout if set and owner is withdrawing
     if (msg.sender == owner() && config.ownerAltPayout != address(0)) {
       (success, ) = payable(config.ownerAltPayout).call{ value: wad }("");
-    }
-    else {
+    } else {
       (success, ) = msg.sender.call{ value: wad }("");
     }
     if (!success) {
@@ -458,7 +470,6 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
     bytes calldata signature,
     address affiliateSigner
   ) internal view {
-
     bytes32 signedMessagehash = ECDSA.toEthSignedMessageHash(
       keccak256(abi.encodePacked(affiliate))
     );
@@ -470,14 +481,14 @@ contract Archetype is Initializable, ERC721AUpgradeable, OwnableUpgradeable {
   }
 
   function setTokenMsg(uint256 tokenId, string calldata message) public {
-    if(msg.sender != ownerOf(tokenId)) {
+    if (msg.sender != ownerOf(tokenId)) {
       revert NotTokenOwner();
     }
 
     tokenMsg[tokenId] = bytes(message);
   }
 
-  function getTokenMsg(uint256 tokenId) public view returns (string memory){
+  function getTokenMsg(uint256 tokenId) public view returns (string memory) {
     if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
     return string(tokenMsg[tokenId]);
   }

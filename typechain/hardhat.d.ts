@@ -41,30 +41,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Ownable__factory>;
     getContractFactory(
-      name: "ERC721",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC721__factory>;
-    getContractFactory(
-      name: "IERC721Metadata",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC721Metadata__factory>;
-    getContractFactory(
-      name: "IERC721",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC721__factory>;
-    getContractFactory(
-      name: "IERC721Receiver",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC721Receiver__factory>;
-    getContractFactory(
-      name: "ERC165",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC165__factory>;
-    getContractFactory(
-      name: "IERC165",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC165__factory>;
-    getContractFactory(
       name: "Archetype",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Archetype__factory>;
@@ -72,6 +48,10 @@ declare module "hardhat/types/runtime" {
       name: "ArchetypeBackup",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ArchetypeBackup__factory>;
+    getContractFactory(
+      name: "ERC721AOwnableUpgradeable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC721AOwnableUpgradeable__factory>;
     getContractFactory(
       name: "ERC721AUpgradeable",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -109,21 +89,29 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC721A__factory>;
     getContractFactory(
-      name: "ScatterNFT",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ScatterNFT__factory>;
-    getContractFactory(
       name: "Ownable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Ownable__factory>;
     getContractFactory(
-      name: "OwnableUpgradeable",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OwnableUpgradeable__factory>;
-    getContractFactory(
       name: "Remilia",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Remilia__factory>;
+    getContractFactory(
+      name: "ERC721AIERC721ReceiverUpgradeable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC721AIERC721ReceiverUpgradeable__factory>;
+    getContractFactory(
+      name: "ERC721AUpgradeable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC721AUpgradeable__factory>;
+    getContractFactory(
+      name: "IERC721AUpgradeable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC721AUpgradeable__factory>;
+    getContractFactory(
+      name: "LibString",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.LibString__factory>;
 
     getContractAt(
       name: "OwnableUpgradeable",
@@ -161,36 +149,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.Ownable>;
     getContractAt(
-      name: "ERC721",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ERC721>;
-    getContractAt(
-      name: "IERC721Metadata",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC721Metadata>;
-    getContractAt(
-      name: "IERC721",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC721>;
-    getContractAt(
-      name: "IERC721Receiver",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC721Receiver>;
-    getContractAt(
-      name: "ERC165",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ERC165>;
-    getContractAt(
-      name: "IERC165",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC165>;
-    getContractAt(
       name: "Archetype",
       address: string,
       signer?: ethers.Signer
@@ -200,6 +158,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ArchetypeBackup>;
+    getContractAt(
+      name: "ERC721AOwnableUpgradeable",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC721AOwnableUpgradeable>;
     getContractAt(
       name: "ERC721AUpgradeable",
       address: string,
@@ -246,25 +209,35 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IERC721A>;
     getContractAt(
-      name: "ScatterNFT",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ScatterNFT>;
-    getContractAt(
       name: "Ownable",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Ownable>;
     getContractAt(
-      name: "OwnableUpgradeable",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OwnableUpgradeable>;
-    getContractAt(
       name: "Remilia",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Remilia>;
+    getContractAt(
+      name: "ERC721AIERC721ReceiverUpgradeable",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC721AIERC721ReceiverUpgradeable>;
+    getContractAt(
+      name: "ERC721AUpgradeable",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC721AUpgradeable>;
+    getContractAt(
+      name: "IERC721AUpgradeable",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC721AUpgradeable>;
+    getContractAt(
+      name: "LibString",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.LibString>;
 
     // default types
     getContractFactory(
