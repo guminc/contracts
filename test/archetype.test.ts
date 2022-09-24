@@ -829,6 +829,7 @@ describe("Factory", function () {
     const [accountZero, accountOne] = await ethers.getSigners();
 
     const owner = accountOne;
+    const alt = accountZero;
 
     const newCollection = await factory.createCollection(
       owner.address,
@@ -862,6 +863,12 @@ describe("Factory", function () {
     await expect((await nft.connect(owner).config()).affiliateFee).to.be.equal(1000);
     await nft.connect(owner).lockAffiliateFee("forever");
     await expect(nft.connect(owner).setAffiliateFee(20)).to.be.reverted;
+
+    // CHANGE OWNER ALT PAYOUT
+    await nft.connect(owner).setOwnerAltPayout(alt.address);
+    await expect((await nft.connect(owner).config()).ownerAltPayout).to.be.equal(alt.address);
+    await nft.connect(owner).lockOwnerAltPayout("forever");
+    await expect(nft.connect(owner).setOwnerAltPayout(ZERO)).to.be.reverted;
 
     // CHANGE DISCOUNTS
     let discount = {
