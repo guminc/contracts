@@ -11,17 +11,11 @@ async function main() {
 
   console.log("Archetype deployed to:", archetype.address);
 
-  // const archetypeAddress = "0x09635F643e140090A9A8Dcd712eD6285858ceBef";
-
   const Factory = await ethers.getContractFactory("Factory");
 
   const factory = await upgrades.deployProxy(Factory, [archetype.address], {
     initializer: "initialize",
   });
-
-  // const factory = await upgrades.deployProxy(Factory, [archetypeAddress], {
-  //   initializer: "initialize",
-  // });
 
   await factory.deployed();
 
@@ -36,6 +30,15 @@ async function main() {
   console.log("Factory addresses:", addresses);
 
   // await sleep(150 * 1000);
+
+  // Archetype deployed to: 0x93Bbaa422F10ed3b9bD2424175Cf6A56AB5d7bBd
+  // Contract Factory deployed to: 0x2eA29C115dBcE49F3df1fD4EcB6Fc82c635BAD76
+  // Factory addresses: {
+  //   proxy: '0x2eA29C115dBcE49F3df1fD4EcB6Fc82c635BAD76',
+  //   admin: '0xE2214a831874728EB4a9f22fE51A09B789F21810',
+  //   implementation: '0xc078Aed674c230cDD7ADD602E077797d08d8f0c2'
+  // }
+
   // try {
   //   await run("verify:verify", {
   //     address: addresses.implementation,
