@@ -160,6 +160,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     discountsUnlocked = true;
     ownerAltPayoutUnlocked = true;
     provenanceHashUnlocked = true;
+    burnToMintEnabled = false;
   }
 
   function mint(
@@ -255,9 +256,10 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       if(burnToMintContract.ownerOf(tokenIds[i]) != msg.sender) {
         revert NotTokenOwner();
       }
-      if(!burnToMintContract.isApprovedForAll(msg.sender, address(this))) {
-        revert NotApprovedToTransfer();
-      }
+    }
+
+    if(!burnToMintContract.isApprovedForAll(msg.sender, address(this))) {
+      revert NotApprovedToTransfer();
     }
 
     if(tokenIds.length % burnToMintRatio != 0) {

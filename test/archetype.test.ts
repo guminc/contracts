@@ -922,6 +922,14 @@ describe("Factory", function () {
     // approve nftBurn to transfer tokens
     await nftMint.connect(minter).setApprovalForAll(nftBurn.address, true)
 
+    // transfer away a token
+    await nftMint.connect(minter).transferFrom(minter.address, owner.address, 10);
+    
+    // try to burn unowned token
+    await expect(nftBurn.connect(minter).burnToMint([9, 10])).to.be.revertedWith("NotTokenOwner");
+
+    // try to burn invalid number of tokens
+    await expect(nftBurn.connect(minter).burnToMint([9])).to.be.revertedWith("InvalidAmountOfTokens()");
 
     // burn 4 tokens and collect 2 tokens in new collection
     await nftBurn
@@ -932,7 +940,7 @@ describe("Factory", function () {
     await expect(await nftMint.ownerOf(3)).to.be.equal(BURN);
     await expect(await nftMint.ownerOf(5)).to.be.equal(BURN);
     await expect(await nftMint.ownerOf(8)).to.be.equal(BURN);
-    await expect(await nftMint.balanceOf(minter.address)).to.be.equal(6);
+    await expect(await nftMint.balanceOf(minter.address)).to.be.equal(5);
 
     await expect(await nftBurn.balanceOf(minter.address)).to.be.equal(2);
   });
