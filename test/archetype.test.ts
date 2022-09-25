@@ -21,6 +21,7 @@ const CID_DEFAULT = "Qmbro8pnECVvjwWH6J9KyFXR8isquPFNgbUiHDGXhYnmFn";
 const CID_ZERO = "bafkreiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 const ZERO = "0x0000000000000000000000000000000000000000";
+const BURN = "0x000000000000000000000000000000000000dEaD"
 
 describe("Factory", function () {
   let Archetype: Archetype__factory;
@@ -887,6 +888,55 @@ describe("Factory", function () {
     await nft.connect(owner).lockDiscounts("forever");
     await expect(nft.connect(owner).setDiscounts(discount)).to.be.reverted;
   });
+
+  it("test burn to mint functionality", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    const owner = accountZero;
+    const minter = accountOne;
+
+    const newCollectionBurn = await factory.createCollection(owner.address, DEFAULT_NAME, DEFAULT_SYMBOL, DEFAULT_CONFIG);
+    const resultBurn = await newCollectionBurn.wait();
+    const newCollectionAddressBurn = resultBurn.events[0].address || "";
+    const NFTBurn = await ethers.getContractFactory("Archetype");
+    const nftBurn = NFTBurn.attach(newCollectionAddressBurn);
+
+    const newCollectionMint = await factory.createCollection(owner.address, DEFAULT_NAME, DEFAULT_SYMBOL, DEFAULT_CONFIG);
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const NFTMint = await ethers.getContractFactory("Archetype");
+    const nftMint = NFTMint.attach(newCollectionAddressMint);
+
+    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, 2);
+    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 300,
+    });
+
+    // mint 10 tokens
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 10, ZERO, "0x", {value: 0});
+
+    // approve nftBurn to transfer tokens
+    await nftMint.connect(minter).setApprovalForAll(nftBurn.address, true)
+
+
+    // burn 4 tokens and collect 2 tokens in new collection
+    await nftBurn
+      .connect(minter)
+      .burnToMint([1, 3, 5, 8]);
+
+    await expect(await nftMint.ownerOf(1)).to.be.equal(BURN);
+    await expect(await nftMint.ownerOf(3)).to.be.equal(BURN);
+    await expect(await nftMint.ownerOf(5)).to.be.equal(BURN);
+    await expect(await nftMint.ownerOf(8)).to.be.equal(BURN);
+    await expect(await nftMint.balanceOf(minter.address)).to.be.equal(6);
+
+    await expect(await nftBurn.balanceOf(minter.address)).to.be.equal(2);
+  });
+
 });
 
 // todo: add test to ensure affiliate signer can't be zero address
