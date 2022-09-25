@@ -35,7 +35,10 @@ error InvalidSignature();
 error BalanceEmpty();
 error TransferFailed();
 error MaxBatchSizeExceeded();
+error BurnToMintDisabled();
 error NotTokenOwner();
+error NotApprovedToTransfer();
+error InvalidAmountOfTokens();
 error WrongPassword();
 error LockedForever();
 
@@ -102,8 +105,8 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   mapping(address => mapping(bytes32 => uint256)) private minted;
   mapping(address => uint128) public affiliateBalance;
   mapping(uint256 => bytes) public tokenMsg;
-  address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
-  // address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
+  // address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
+  address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
   uint16 private constant MAXBPS = 5000; // max fee or discount is 50%
   bool public revealed;
   bool public uriUnlocked;
@@ -111,6 +114,9 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   bool public affiliateFeeUnlocked;
   bool public discountsUnlocked;
   bool public ownerAltPayoutUnlocked;
+  bool public burnToMintEnabled;
+  Archetype public burnToMintContract;
+  uint16 public burnToMintRatio;
   string public provenance;
   bool public provenanceHashUnlocked;
   OwnerBalance public ownerBalance;
@@ -238,6 +244,52 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       platform: balance.platform + platformWad
     });
   }
+
+  function burnToMint(uint256[] calldata tokenIds) external {
+    if(!burnToMintEnabled) {
+      revert BurnToMintDisabled();
+    }
+
+    // check if msg.sender owns tokens and has correct approvals
+    for (uint256 i = 0; i < tokenIds.length; i++) {
+      if(burnToMintContract.ownerOf(tokenIds[i]) != msg.sender) {
+        revert NotTokenOwner();
+      }
+      if(!burnToMintContract.isApprovedForAll(msg.sender, address(this))) {
+        revert NotApprovedToTransfer();
+      }
+    }
+
+    if(tokenIds.length % burnToMintRatio != 0) {
+      revert InvalidAmountOfTokens();
+    }
+
+    uint256 quantity = tokenIds.length / burnToMintRatio;
+
+    if (quantity > config.maxBatchSize) {
+      revert MaxBatchSizeExceeded();
+    }
+
+    if ((_nextTokenId() + quantity) > config.maxSupply) {
+      revert MaxSupplyExceeded();
+    }
+
+    for (uint256 i = 0; i < tokenIds.length; i++) {
+      burnToMintContract.transferFrom(msg.sender, address(0x000000000000000000000000000000000000dEaD), tokenIds[i]);
+    }
+    _mint(msg.sender, quantity);
+  }
+
+  function enableBurnToMint(address archetype, uint16 ratio) public onlyOwner {
+    burnToMintEnabled = true;
+    burnToMintContract = Archetype(archetype);
+    burnToMintRatio = ratio;
+  }
+
+  function disableBurnToMint() public onlyOwner {
+    burnToMintEnabled = false;
+  }
+
 
   // calculate price based on affiliate usage and mint discounts
   function computePrice(
