@@ -105,8 +105,8 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   mapping(address => mapping(bytes32 => uint256)) private minted;
   mapping(address => uint128) public affiliateBalance;
   mapping(uint256 => bytes) public tokenMsg;
-  // address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
-  address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
+  address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
+  // address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
   uint16 private constant MAXBPS = 5000; // max fee or discount is 50%
   bool public revealed;
   bool public uriUnlocked;
