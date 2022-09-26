@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.3.0
+// Archetype v0.3.2
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -247,22 +247,22 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   }
 
   function burnToMint(uint256[] calldata tokenIds) external {
-    if(!burnToMintEnabled) {
+    if (!burnToMintEnabled) {
       revert BurnToMintDisabled();
     }
 
     // check if msg.sender owns tokens and has correct approvals
     for (uint256 i = 0; i < tokenIds.length; i++) {
-      if(burnToMintContract.ownerOf(tokenIds[i]) != msg.sender) {
+      if (burnToMintContract.ownerOf(tokenIds[i]) != msg.sender) {
         revert NotTokenOwner();
       }
     }
 
-    if(!burnToMintContract.isApprovedForAll(msg.sender, address(this))) {
+    if (!burnToMintContract.isApprovedForAll(msg.sender, address(this))) {
       revert NotApprovedToTransfer();
     }
 
-    if(tokenIds.length % burnToMintRatio != 0) {
+    if (tokenIds.length % burnToMintRatio != 0) {
       revert InvalidAmountOfTokens();
     }
 
@@ -277,7 +277,11 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     }
 
     for (uint256 i = 0; i < tokenIds.length; i++) {
-      burnToMintContract.transferFrom(msg.sender, address(0x000000000000000000000000000000000000dEaD), tokenIds[i]);
+      burnToMintContract.transferFrom(
+        msg.sender,
+        address(0x000000000000000000000000000000000000dEaD),
+        tokenIds[i]
+      );
     }
     _mint(msg.sender, quantity);
   }
@@ -291,7 +295,6 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   function disableBurnToMint() public onlyOwner {
     burnToMintEnabled = false;
   }
-
 
   // calculate price based on affiliate usage and mint discounts
   function computePrice(

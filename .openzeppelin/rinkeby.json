@@ -79,6 +79,31 @@
       "address": "0x2eA29C115dBcE49F3df1fD4EcB6Fc82c635BAD76",
       "txHash": "0x65c42d219644693f0929e7db932a915da5ff6a40f4d0cf0a715212687af74552",
       "kind": "transparent"
+    },
+    {
+      "address": "0xB12524e93c54d1489978Bcf6cF7DF3ED9D45E3fE",
+      "txHash": "0xb4059d503ea5f890692861f065e0d3bfef35ac1058210ba4e5af8c955da3f756",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x8aCa470736FCb234336b5314FAcFF2EA50Be0D21",
+      "txHash": "0x66dfc46817513410b444bbbbf5e6941ed5722017ad2adfa6b975fcd4293ae2e2",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xb7D1d4258EEf11C7F8D7Db3a1c23463a69754343",
+      "txHash": "0xb4f22bc9187a6e684bae1140eb5123edac9185176e55e84c6c01ab91fa8e7889",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x2a230891e638E21d86D7c6427b5f3ab5438f631E",
+      "txHash": "0x01e8037f0eb709a106ae88b51554a3267f1bcc22232e453085021bca17ad6acc",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x7A0459c66FC743E3116274DF3be89dDc60D7Af8c",
+      "txHash": "0x4538a00721c78e37b084febb8f523b202e7814c135e81c3c08b55b10cef742a6",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -1071,6 +1096,67 @@
             "label": "archetype",
             "type": "t_address",
             "src": "contracts/Factory.sol:22"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
+    },
+    "96f63e3f47f7e600cf1f51ad08ebc562ee722862f7dda30e0a7da2ed40991c8c": {
+      "address": "0x8fb6CF65BE3aD6E8644d97376E48Fc851a47966D",
+      "txHash": "0x32e1d5379c4911500550deb45a0007b4a0833beb2683201342cb23435448b835",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:39"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:44"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "contracts/ContextUpgradeable.sol:38"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:87"
+          },
+          {
+            "contract": "Factory",
+            "label": "archetype",
+            "type": "t_address",
+            "src": "contracts/Factory.sol:25"
           }
         ],
         "types": {

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
+// Factory v0.3.2
 //
 // 8888888888                888
 // 888                       888
@@ -13,8 +14,9 @@
 //                                                   "Y88P"
 
 pragma solidity ^0.8.4;
-import "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
+
 import "./Archetype.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract Factory is OwnableUpgradeable {
@@ -22,7 +24,6 @@ contract Factory is OwnableUpgradeable {
   address public archetype;
 
   function initialize(address archetype_) public initializer {
-
     archetype = archetype_;
     __Ownable_init();
   }

@@ -8,7 +8,8 @@
     "test:specific": "hardhat test test/archetype.test --grep",
     "start": "concurrently \"cd api && npm start\" \"cd app && npm run dev\"",
     "deploy": "npx hardhat run scripts/deployRemilia.ts --network localhost",
-    "network": "npx hardhat node"
+    "network": "npx hardhat node",
+    "verify": "npx hardhat verify 0xc078Aed674c230cDD7ADD602E077797d08d8f0c2 --network rinkeby"
   },
   "repository": {
     "type": "git",

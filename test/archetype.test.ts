@@ -2,12 +2,11 @@ import { ethers, upgrades } from "hardhat";
 
 import { expect } from "chai";
 import { Archetype__factory, Archetype as IArchetype, Factory__factory } from "../typechain";
-import { Contract } from "@ethersproject/contracts";
 import Invitelist from "../lib/invitelist";
 import { IArchetypeConfig } from "../lib/types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import ipfsh from "ipfsh";
-import { arrayify } from "ethers/lib/utils";
+import { Contract } from "ethers";
 
 const DEFAULT_NAME = "Pookie";
 const DEFAULT_SYMBOL = "POOKIE";
@@ -21,7 +20,7 @@ const CID_DEFAULT = "Qmbro8pnECVvjwWH6J9KyFXR8isquPFNgbUiHDGXhYnmFn";
 const CID_ZERO = "bafkreiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 const ZERO = "0x0000000000000000000000000000000000000000";
-const BURN = "0x000000000000000000000000000000000000dEaD"
+const BURN = "0x000000000000000000000000000000000000dEaD";
 
 describe("Factory", function () {
   let Archetype: Archetype__factory;
@@ -533,15 +532,15 @@ describe("Factory", function () {
           mintTiers: [
             {
               numMints: 100,
-              mintDiscount: 2000, //20%
+              mintDiscount: 2000, // 20%
             },
             {
               numMints: 20,
-              mintDiscount: 1000, //10%
+              mintDiscount: 1000, // 10%
             },
             {
               numMints: 5,
-              mintDiscount: 500, //5%
+              mintDiscount: 500, // 5%
             },
           ],
         },
@@ -693,12 +692,9 @@ describe("Factory", function () {
   });
 
   it("should withdraw to alt owner address", async function () {
-    const [accountZero, accountOne, accountTwo, accountThree, accountFour] =
-      await ethers.getSigners();
+    const [accountZero, accountOne, accountFour] = await ethers.getSigners();
 
     const owner = accountOne;
-    const platform = accountTwo;
-    const affiliate = accountThree;
     const ownerAltPayout = accountFour;
 
     const newCollection = await factory.createCollection(
@@ -805,7 +801,7 @@ describe("Factory", function () {
       value: ethers.utils.parseEther("0.06"),
     });
 
-    let msg = "Hi this is a test, I own this";
+    const msg = "Hi this is a test, I own this";
 
     // try to set as non token owner - will fail
     await expect(nft.connect(owner).setTokenMsg(3, msg)).to.be.revertedWith("NotTokenOwner");
@@ -866,7 +862,7 @@ describe("Factory", function () {
     await expect(nft.connect(owner).setOwnerAltPayout(ZERO)).to.be.reverted;
 
     // CHANGE DISCOUNTS
-    let discount = {
+    const discount = {
       affiliateDiscount: 2000,
       mintTiers: [
         {
@@ -880,7 +876,7 @@ describe("Factory", function () {
       ],
     };
     await nft.connect(owner).setDiscounts(discount);
-    let _discount = Object.values(discount);
+    const _discount = Object.values(discount);
     discount.mintTiers.forEach((obj, i) => {
       _discount[1][i] = Object.values(obj);
     });
@@ -895,13 +891,23 @@ describe("Factory", function () {
     const owner = accountZero;
     const minter = accountOne;
 
-    const newCollectionBurn = await factory.createCollection(owner.address, DEFAULT_NAME, DEFAULT_SYMBOL, DEFAULT_CONFIG);
+    const newCollectionBurn = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
     const resultBurn = await newCollectionBurn.wait();
     const newCollectionAddressBurn = resultBurn.events[0].address || "";
     const NFTBurn = await ethers.getContractFactory("Archetype");
     const nftBurn = NFTBurn.attach(newCollectionAddressBurn);
 
-    const newCollectionMint = await factory.createCollection(owner.address, DEFAULT_NAME, DEFAULT_SYMBOL, DEFAULT_CONFIG);
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
     const NFTMint = await ethers.getContractFactory("Archetype");
@@ -917,24 +923,24 @@ describe("Factory", function () {
     // mint 10 tokens
     await nftMint
       .connect(minter)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 10, ZERO, "0x", {value: 0});
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 10, ZERO, "0x", { value: 0 });
 
     // approve nftBurn to transfer tokens
-    await nftMint.connect(minter).setApprovalForAll(nftBurn.address, true)
+    await nftMint.connect(minter).setApprovalForAll(nftBurn.address, true);
 
     // transfer away a token
     await nftMint.connect(minter).transferFrom(minter.address, owner.address, 10);
-    
+
     // try to burn unowned token
     await expect(nftBurn.connect(minter).burnToMint([9, 10])).to.be.revertedWith("NotTokenOwner");
 
     // try to burn invalid number of tokens
-    await expect(nftBurn.connect(minter).burnToMint([9])).to.be.revertedWith("InvalidAmountOfTokens()");
+    await expect(nftBurn.connect(minter).burnToMint([9])).to.be.revertedWith(
+      "InvalidAmountOfTokens()"
+    );
 
     // burn 4 tokens and collect 2 tokens in new collection
-    await nftBurn
-      .connect(minter)
-      .burnToMint([1, 3, 5, 8]);
+    await nftBurn.connect(minter).burnToMint([1, 3, 5, 8]);
 
     await expect(await nftMint.ownerOf(1)).to.be.equal(BURN);
     await expect(await nftMint.ownerOf(3)).to.be.equal(BURN);
@@ -944,7 +950,6 @@ describe("Factory", function () {
 
     await expect(await nftBurn.balanceOf(minter.address)).to.be.equal(2);
   });
-
 });
 
 // todo: add test to ensure affiliate signer can't be zero address
