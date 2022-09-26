@@ -354,6 +354,25 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     return string(tokenMsg[tokenId]);
   }
 
+  // calculate price based on affiliate usage and mint discounts
+  function computePrice(
+    uint128 price,
+    uint256 numTokens,
+    bool affiliateUsed
+  ) public view returns (uint256) {
+    uint256 cost = price * numTokens;
+
+    if (affiliateUsed) {
+      cost = cost - ((cost * config.discounts.affiliateDiscount) / 10000);
+    }
+
+    for (uint256 i = 0; i < config.discounts.mintTiers.length; i++) {
+      if (numTokens >= config.discounts.mintTiers[i].numMints) {
+        return cost = cost - ((cost * config.discounts.mintTiers[i].mintDiscount) / 10000);
+      }
+    }
+    return cost;
+  }
 
   //
   // OWNER ONLY
@@ -534,24 +553,6 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     return 1;
   }
 
-  function computePrice(
-    uint128 price,
-    uint256 numTokens,
-    bool affiliateUsed
-  ) internal view returns (uint256) {
-    uint256 cost = price * numTokens;
-
-    if (affiliateUsed) {
-      cost = cost - ((cost * config.discounts.affiliateDiscount) / 10000);
-    }
-
-    for (uint256 i = 0; i < config.discounts.mintTiers.length; i++) {
-      if (numTokens >= config.discounts.mintTiers[i].numMints) {
-        return cost = cost - ((cost * config.discounts.mintTiers[i].mintDiscount) / 10000);
-      }
-    }
-    return cost;
-  }
 
   function validateAffiliate(
     address affiliate,
