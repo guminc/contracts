@@ -99,9 +99,11 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   }
 
   struct BurnConfig {
+    Archetype archetype;
     bool enabled;
     uint16 ratio;
-    Archetype archetype;
+    uint64 start;
+    uint64 limit;
   }
 
   //
@@ -260,6 +262,10 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       revert BurnToMintDisabled();
     }
 
+    if (block.timestamp < burnConfig.start) {
+      revert MintNotYetStarted();
+    }
+
     // check if msg.sender owns tokens and has correct approvals
     for (uint256 i = 0; i < tokenIds.length; i++) {
       if(burnConfig.archetype.ownerOf(tokenIds[i]) != msg.sender) {
@@ -281,6 +287,14 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       revert MaxBatchSizeExceeded();
     }
 
+    if (burnConfig.limit < config.maxSupply) {
+      uint256 totalAfterMint = minted[msg.sender][bytes32("burn")] + quantity;
+
+      if (totalAfterMint > burnConfig.limit) {
+        revert NumberOfMintsExceeded();
+      }
+    }
+
     if ((_nextTokenId() + quantity) > config.maxSupply) {
       revert MaxSupplyExceeded();
     }
@@ -293,6 +307,10 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       );
     }
     _mint(msg.sender, quantity);
+
+    if (burnConfig.limit < config.maxSupply) {
+      minted[msg.sender][bytes32("burn")] += quantity;
+    }
   }
 
   function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
@@ -381,16 +399,16 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     revealed = true;
   }
 
-  function setUnrevealedURI(string memory unrevealedURI_) external onlyOwner {
-    config.unrevealedUri = unrevealedURI_;
+  function setUnrevealedURI(string memory unrevealedURI) external onlyOwner {
+    config.unrevealedUri = unrevealedURI;
   }
 
-  function setBaseURI(string memory baseUri_) external onlyOwner {
+  function setBaseURI(string memory baseUri) external onlyOwner {
     if (!uriUnlocked) {
       revert LockedForever();
     }
 
-    config.baseUri = baseUri_;
+    config.baseUri = baseUri;
   }
 
   /// @notice the password is "forever"
@@ -402,16 +420,16 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     uriUnlocked = false;
   }
 
-  function setMaxSupply(uint32 maxSupply_) external onlyOwner {
+  function setMaxSupply(uint32 maxSupply) external onlyOwner {
     if (!maxSupplyUnlocked) {
       revert LockedForever();
     }
 
-    if (maxSupply_ < _nextTokenId()) {
+    if (maxSupply < _nextTokenId()) {
       revert MaxSupplyExceeded();
     }
 
-    config.maxSupply = maxSupply_;
+    config.maxSupply = maxSupply;
   }
 
   /// @notice the password is "forever"
@@ -423,15 +441,15 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     maxSupplyUnlocked = false;
   }
 
-  function setAffiliateFee(uint16 affiliateFee_) external onlyOwner {
+  function setAffiliateFee(uint16 affiliateFee) external onlyOwner {
     if (!affiliateFeeUnlocked) {
       revert LockedForever();
     }
-    if (affiliateFee_ > MAXBPS) {
+    if (affiliateFee > MAXBPS) {
       revert InvalidConfig();
     }
 
-    config.affiliateFee = affiliateFee_;
+    config.affiliateFee = affiliateFee;
   }
 
   /// @notice the password is "forever"
@@ -443,26 +461,26 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     affiliateFeeUnlocked = false;
   }
 
-  function setDiscounts(Discount calldata discounts_) external onlyOwner {
+  function setDiscounts(Discount calldata discounts) external onlyOwner {
     if (!discountsUnlocked) {
       revert LockedForever();
     }
 
-    if (discounts_.affiliateDiscount > MAXBPS) {
+    if (discounts.affiliateDiscount > MAXBPS) {
       revert InvalidConfig();
     }
 
     // ensure mint tiers are correctly ordered from highest to lowest.
-    for (uint256 i = 1; i < discounts_.mintTiers.length; i++) {
+    for (uint256 i = 1; i < discounts.mintTiers.length; i++) {
       if (
-        discounts_.mintTiers[i].mintDiscount > MAXBPS ||
-        discounts_.mintTiers[i].numMints > discounts_.mintTiers[i - 1].numMints
+        discounts.mintTiers[i].mintDiscount > MAXBPS ||
+        discounts.mintTiers[i].numMints > discounts.mintTiers[i - 1].numMints
       ) {
         revert InvalidConfig();
       }
     }
 
-    config.discounts = discounts_;
+    config.discounts = discounts;
   }
 
   /// @notice the password is "forever"
@@ -492,12 +510,12 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     provenanceHashUnlocked = false;
   }
 
-  function setOwnerAltPayout(address ownerAltPayout_) external onlyOwner {
+  function setOwnerAltPayout(address ownerAltPayout) external onlyOwner {
     if (!ownerAltPayoutUnlocked) {
       revert LockedForever();
     }
 
-    config.ownerAltPayout = ownerAltPayout_;
+    config.ownerAltPayout = ownerAltPayout;
   }
 
   /// @notice the password is "forever"
@@ -526,24 +544,32 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     emit Invited(_key, _cid);
   }
 
-  function enableBurnToMint(address archetype_, uint16 ratio_) external onlyOwner {
-    if(ratio_ == 0) {
-      revert InvalidConfig();
-    }
+  function enableBurnToMint(address archetype, uint16 ratio, uint64 start, uint64 limit) external onlyOwner {
 
     burnConfig = BurnConfig({
+      archetype: Archetype(archetype),
       enabled: true,
-      ratio: ratio_,
-      archetype: Archetype(archetype_)
+      ratio: ratio,
+      start: start,
+      limit: limit
     });
   }
 
   function disableBurnToMint() external onlyOwner {
     burnConfig = BurnConfig({
       enabled: false,
-      ratio: burnConfig.ratio,
-      archetype: burnConfig.archetype
+      ratio: 0,
+      archetype: Archetype(address(0)),
+      start: 0,
+      limit: 0
     });
+  }
+
+  //
+  // PLATFORM ONLY
+  //
+  function setSuperAffiliatePayout(address superAffiliate) external onlyPlatform {
+    config.superAffiliatePayout = superAffiliate;
   }
 
   //
@@ -574,6 +600,11 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     if (auth.key == "") return true;
 
     return MerkleProofLib.verify(auth.proof, auth.key, keccak256(abi.encodePacked(account)));
+  }
+
+  modifier onlyPlatform() {
+      require(PLATFORM == _msgSenderERC721A(), "caller is not the platform");
+      _;
   }
 
 }

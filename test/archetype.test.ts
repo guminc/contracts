@@ -913,7 +913,7 @@ describe("Factory", function () {
     const NFTMint = await ethers.getContractFactory("Archetype");
     const nftMint = NFTMint.attach(newCollectionAddressMint);
 
-    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, 2);
+    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, 2, 0, 5000);
     await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
@@ -935,20 +935,43 @@ describe("Factory", function () {
     await expect(nftBurn.connect(minter).burnToMint([9, 10])).to.be.revertedWith("NotTokenOwner");
 
     // try to burn invalid number of tokens
-    await expect(nftBurn.connect(minter).burnToMint([9])).to.be.revertedWith(
-      "InvalidAmountOfTokens()"
-    );
+    await expect(nftBurn.connect(minter).burnToMint([9])).to.be.revertedWith("InvalidAmountOfTokens");
+
+    // burn 2 tokens and collect 1 token in new collection
+    await nftBurn
+      .connect(minter)
+      .burnToMint([2, 4]);
 
     // burn 4 tokens and collect 2 tokens in new collection
     await nftBurn.connect(minter).burnToMint([1, 3, 5, 8]);
 
     await expect(await nftMint.ownerOf(1)).to.be.equal(BURN);
+    await expect(await nftMint.ownerOf(2)).to.be.equal(BURN);
     await expect(await nftMint.ownerOf(3)).to.be.equal(BURN);
+    await expect(await nftMint.ownerOf(4)).to.be.equal(BURN);
     await expect(await nftMint.ownerOf(5)).to.be.equal(BURN);
     await expect(await nftMint.ownerOf(8)).to.be.equal(BURN);
-    await expect(await nftMint.balanceOf(minter.address)).to.be.equal(5);
+    await expect(await nftMint.balanceOf(minter.address)).to.be.equal(3);
+  });
 
-    await expect(await nftBurn.balanceOf(minter.address)).to.be.equal(2);
+  it("test platform only modifier", async function () {
+    const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
+
+    const owner = accountZero;
+    const minter = accountOne;
+    const platform = accountTwo;
+
+    const newCollection = await factory.createCollection(owner.address, DEFAULT_NAME, DEFAULT_SYMBOL, DEFAULT_CONFIG);
+    const result = await newCollection.wait();
+    const newCollectionAddress = result.events[0].address || "";
+    const NFT = await ethers.getContractFactory("Archetype");
+    const nft = NFT.attach(newCollectionAddress);
+
+    await expect(nft.connect(owner).setSuperAffiliatePayout(minter.address)).to.be.revertedWith("caller is not the platform");
+    await nft.connect(platform).setSuperAffiliatePayout(minter.address);
+
+    await expect((await nft.connect(minter).config()).superAffiliatePayout).to.be.equal(minter.address);
+
   });
 });
 
