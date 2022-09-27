@@ -568,8 +568,8 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   //
   // PLATFORM ONLY
   //
-  function setSuperAffiliatePayout(address superAffiliate) external onlyPlatform {
-    config.superAffiliatePayout = superAffiliate;
+  function setSuperAffiliatePayout(address superAffiliatePayout) external onlyPlatform {
+    config.superAffiliatePayout = superAffiliatePayout;
   }
 
   //
