@@ -177,10 +177,15 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   function mint(
     Auth calldata auth,
     uint256 quantity,
+    address to,
     address affiliate,
     bytes calldata signature
   ) external payable {
     Invite memory i = invites[auth.key];
+
+    if (to == address(0)) {
+      to = msg.sender;
+    }
 
     if (affiliate != address(0)) {
       if (affiliate == PLATFORM || affiliate == owner() || affiliate == msg.sender) {
@@ -227,7 +232,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       revert ExcessiveEthSent();
     }
 
-    _mint(msg.sender, quantity);
+    _mint(to, quantity);
 
     if (i.limit < config.maxSupply) {
       minted[msg.sender][auth.key] += quantity;
