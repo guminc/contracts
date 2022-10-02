@@ -213,7 +213,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       revert MaxBatchSizeExceeded();
     }
 
-    if ((_nextTokenId() + quantity) > config.maxSupply) {
+    if ((_nextTokenId() - 1 + quantity) > config.maxSupply) {
       revert MaxSupplyExceeded();
     }
 
@@ -295,7 +295,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       }
     }
 
-    if ((_nextTokenId() + quantity) > config.maxSupply) {
+    if ((_nextTokenId() - 1 + quantity) > config.maxSupply) {
       revert MaxSupplyExceeded();
     }
 
