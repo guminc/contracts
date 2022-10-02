@@ -935,12 +935,12 @@ describe("Factory", function () {
     await expect(nftBurn.connect(minter).burnToMint([9, 10])).to.be.revertedWith("NotTokenOwner");
 
     // try to burn invalid number of tokens
-    await expect(nftBurn.connect(minter).burnToMint([9])).to.be.revertedWith("InvalidAmountOfTokens");
+    await expect(nftBurn.connect(minter).burnToMint([9])).to.be.revertedWith(
+      "InvalidAmountOfTokens"
+    );
 
     // burn 2 tokens and collect 1 token in new collection
-    await nftBurn
-      .connect(minter)
-      .burnToMint([2, 4]);
+    await nftBurn.connect(minter).burnToMint([2, 4]);
 
     // burn 4 tokens and collect 2 tokens in new collection
     await nftBurn.connect(minter).burnToMint([1, 3, 5, 8]);
@@ -961,17 +961,116 @@ describe("Factory", function () {
     const minter = accountOne;
     const platform = accountTwo;
 
-    const newCollection = await factory.createCollection(owner.address, DEFAULT_NAME, DEFAULT_SYMBOL, DEFAULT_CONFIG);
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
     const result = await newCollection.wait();
     const newCollectionAddress = result.events[0].address || "";
     const NFT = await ethers.getContractFactory("Archetype");
     const nft = NFT.attach(newCollectionAddress);
 
-    await expect(nft.connect(owner).setSuperAffiliatePayout(minter.address)).to.be.revertedWith("caller is not the platform");
+    await expect(nft.connect(owner).setSuperAffiliatePayout(minter.address)).to.be.revertedWith(
+      "caller is not the platform"
+    );
     await nft.connect(platform).setSuperAffiliatePayout(minter.address);
 
-    await expect((await nft.connect(minter).config()).superAffiliatePayout).to.be.equal(minter.address);
+    await expect((await nft.connect(minter).config()).superAffiliatePayout).to.be.equal(
+      minter.address
+    );
+  });
 
+  it("test max supply checks", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+    DEFAULT_CONFIG["maxBatchSize"] = 5000;
+    DEFAULT_CONFIG["maxSupply"] = 5000;
+
+    const owner = accountZero;
+    const minter = accountOne;
+
+    const newCollectionBurn = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+    const resultBurn = await newCollectionBurn.wait();
+    const newCollectionAddressBurn = resultBurn.events[0].address || "";
+    const NFTBurn = await ethers.getContractFactory("Archetype");
+    const nftBurn = NFTBurn.attach(newCollectionAddressBurn);
+
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const NFTMint = await ethers.getContractFactory("Archetype");
+    const nftMint = NFTMint.attach(newCollectionAddressMint);
+
+    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, 2, 0, 5000);
+    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 10000,
+    });
+    await nftBurn.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 10000,
+    });
+
+    // mint some tokens
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 10, ZERO, "0x", { value: 0 });
+
+    // try to mint more than max tokens tokens
+    await expect(
+      nftMint
+        .connect(minter)
+        .mint({ key: ethers.constants.HashZero, proof: [] }, 4991, ZERO, "0x", { value: 0 })
+    ).to.be.revertedWith("MaxSupplyExceeded");
+
+    // mint max tokens
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 4990, ZERO, "0x", { value: 0 });
+
+    // try to mint after max reached
+    await expect(
+      nftMint
+        .connect(minter)
+        .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", { value: 0 })
+    ).to.be.revertedWith("MaxSupplyExceeded");
+
+    // approve nftBurn to transfer tokens
+    await nftMint.connect(minter).setApprovalForAll(nftBurn.address, true);
+
+    // mint tokens on burn to mint
+    await nftBurn
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 4990, ZERO, "0x", { value: 0 });
+
+    // try burn to mint past max supply
+    await expect(
+      nftBurn.connect(minter).burnToMint(Array.from({ length: 40 }, (_, i) => i + 1))
+    ).to.be.revertedWith("MaxSupplyExceeded");
+
+    // burn to max
+    await nftBurn.connect(minter).burnToMint(Array.from({ length: 20 }, (_, i) => i + 1));
+
+    // try to burn past max supply
+    await expect(nftBurn.connect(minter).burnToMint([1000, 1001])).to.be.revertedWith(
+      "MaxSupplyExceeded"
+    );
+
+    await expect(await nftMint.totalSupply()).to.be.equal(DEFAULT_CONFIG.maxSupply);
+    await expect(await nftBurn.totalSupply()).to.be.equal(DEFAULT_CONFIG.maxSupply);
   });
 });
 
