@@ -430,7 +430,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       revert LockedForever();
     }
 
-    if (maxSupply < _nextTokenId()) {
+    if (maxSupply < _totalMinted()) {
       revert MaxSupplyExceeded();
     }
 
