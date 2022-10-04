@@ -844,10 +844,10 @@ describe("Factory", function () {
     await expect(nft.connect(owner).setBaseURI("new test uri")).to.be.reverted;
 
     // CHANGE MAX SUPPLY
-    await nft.connect(owner).setMaxSupply(100);
+    await nft.connect(owner).setMaxSupply(100, "forever");
     await expect((await nft.connect(owner).config()).maxSupply).to.be.equal(100);
     await nft.connect(owner).lockMaxSupply("forever");
-    await expect(nft.connect(owner).setMaxSupply(20)).to.be.reverted;
+    await expect(nft.connect(owner).setMaxSupply(20, "forever")).to.be.reverted;
 
     // CHANGE AFFILIATE FEE
     await nft.connect(owner).setAffiliateFee(1000);

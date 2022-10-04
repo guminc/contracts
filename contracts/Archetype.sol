@@ -434,7 +434,13 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     uriUnlocked = false;
   }
 
-  function setMaxSupply(uint32 maxSupply) external onlyOwner {
+  /// @notice the password is "forever"
+  // max supply cannot subceed total supply. Be careful changing.
+  function setMaxSupply(uint32 maxSupply, string memory password) external onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+    
     if (!maxSupplyUnlocked) {
       revert LockedForever();
     }
