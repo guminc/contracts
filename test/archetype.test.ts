@@ -235,16 +235,9 @@ describe("Factory", function () {
 
     // console.log({ invites });
 
-    await nft.mint(
-      { key: ethers.constants.HashZero, proof: [] },
-      1,
-      accountZero.address,
-      ZERO,
-      "0x",
-      {
-        value: ethers.utils.parseEther("0.08"),
-      }
-    );
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+      value: ethers.utils.parseEther("0.08"),
+    });
 
     expect(await nft.balanceOf(accountZero.address)).to.equal(1);
   });
@@ -313,22 +306,22 @@ describe("Factory", function () {
 
     // whitelisted wallet
     await expect(
-      nft.mint({ key: root, proof: proof }, 1, accountZero.address, ZERO, "0x", {
+      nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
         value: ethers.utils.parseEther("0.07"),
       })
     ).to.be.revertedWith("InsufficientEthSent");
 
     await expect(
-      nft.mint({ key: root, proof: proof }, 1, accountZero.address, ZERO, "0x", {
+      nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
         value: ethers.utils.parseEther("0.09"),
       })
     ).to.be.revertedWith("ExcessiveEthSent");
 
-    await nft.mint({ key: root, proof: proof }, 1, accountZero.address, ZERO, "0x", {
+    await nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
       value: price,
     });
 
-    await nft.mint({ key: root, proof: proof }, 5, accountZero.address, ZERO, "0x", {
+    await nft.mint({ key: root, proof: proof }, 5, ZERO, "0x", {
       value: price.mul(5),
     });
 
@@ -339,20 +332,16 @@ describe("Factory", function () {
     // non-whitelisted wallet
     // private mint rejection
     await expect(
-      nft
-        .connect(accountTwo)
-        .mint({ key: root, proof: proofTwo }, 2, accountTwo.address, ZERO, "0x", {
-          value: price.mul(2),
-        })
+      nft.connect(accountTwo).mint({ key: root, proof: proofTwo }, 2, ZERO, "0x", {
+        value: price.mul(2),
+      })
     ).to.be.revertedWith("WalletUnauthorizedToMint");
 
     // public mint rejection
     await expect(
-      nft
-        .connect(accountTwo)
-        .mint({ key: ethers.constants.HashZero, proof: [] }, 2, accountTwo.address, ZERO, "0x", {
-          value: price.mul(2),
-        })
+      nft.connect(accountTwo).mint({ key: ethers.constants.HashZero, proof: [] }, 2, ZERO, "0x", {
+        value: price.mul(2),
+      })
     ).to.be.revertedWith("MintNotYetStarted");
 
     expect(await nft.balanceOf(accountTwo.address)).to.equal(0);
@@ -385,7 +374,7 @@ describe("Factory", function () {
     console.log({ invites });
 
     await expect(
-      nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, owner.address, ZERO, "0x", {
+      nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
         value: ethers.utils.parseEther("0.08"),
       })
     ).to.be.revertedWith("MintingPaused");
@@ -433,7 +422,6 @@ describe("Factory", function () {
         .mint(
           { key: ethers.constants.HashZero, proof: [] },
           1,
-          accountZero.address,
           affiliate.address,
           invalidReferral,
           {
@@ -449,16 +437,9 @@ describe("Factory", function () {
 
     await nft
       .connect(accountZero)
-      .mint(
-        { key: ethers.constants.HashZero, proof: [] },
-        1,
-        accountZero.address,
-        affiliate.address,
-        referral,
-        {
-          value: ethers.utils.parseEther("0.08"),
-        }
-      );
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, affiliate.address, referral, {
+        value: ethers.utils.parseEther("0.08"),
+      });
 
     await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.064")); // 80%
     await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.004")); // 5%
@@ -483,16 +464,9 @@ describe("Factory", function () {
     // mint again
     await nft
       .connect(accountZero)
-      .mint(
-        { key: ethers.constants.HashZero, proof: [] },
-        1,
-        accountZero.address,
-        affiliate.address,
-        referral,
-        {
-          value: ethers.utils.parseEther("0.08"),
-        }
-      );
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, affiliate.address, referral, {
+        value: ethers.utils.parseEther("0.08"),
+      });
 
     await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.064"));
     await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.008")); // 5% x 2 mints
@@ -594,16 +568,9 @@ describe("Factory", function () {
 
     await nft
       .connect(accountZero)
-      .mint(
-        { key: ethers.constants.HashZero, proof: [] },
-        1,
-        accountZero.address,
-        affiliate.address,
-        referral,
-        {
-          value: ethers.utils.parseEther("0.09"), // 10 % discount from using an affiliate = 0.9
-        }
-      );
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, affiliate.address, referral, {
+        value: ethers.utils.parseEther("0.09"), // 10 % discount from using an affiliate = 0.9
+      });
 
     await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.072")); // 80%
     await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.0045")); // 5%
@@ -618,16 +585,9 @@ describe("Factory", function () {
 
     await nft
       .connect(accountZero)
-      .mint(
-        { key: ethers.constants.HashZero, proof: [] },
-        20,
-        accountZero.address,
-        affiliate.address,
-        referral,
-        {
-          value: ethers.utils.parseEther((0.081 * 20).toString()), // 10 % discount from using an affiliate, additional 10% for minting 20 = 0.081 per
-        }
-      );
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 20, affiliate.address, referral, {
+        value: ethers.utils.parseEther((0.081 * 20).toString()), // 10 % discount from using an affiliate, additional 10% for minting 20 = 0.081 per
+      });
 
     await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("1.296")); // 80%
     await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.081")); // 5%
@@ -688,16 +648,9 @@ describe("Factory", function () {
 
     await nft
       .connect(accountZero)
-      .mint(
-        { key: ethers.constants.HashZero, proof: [] },
-        1,
-        accountZero.address,
-        affiliate.address,
-        referral,
-        {
-          value: ethers.utils.parseEther("0.1"),
-        }
-      );
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, affiliate.address, referral, {
+        value: ethers.utils.parseEther("0.1"),
+      });
 
     await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.08")); // 80%
     await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.0025")); // 2.5%
@@ -782,7 +735,7 @@ describe("Factory", function () {
 
     await nft
       .connect(accountZero)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, accountZero.address, ZERO, "0x", {
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
         value: ethers.utils.parseEther("0.1"),
       });
 
@@ -801,7 +754,7 @@ describe("Factory", function () {
 
     await nft
       .connect(accountZero)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, accountZero.address, ZERO, "0x", {
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
         value: ethers.utils.parseEther("0.1"),
       });
 
@@ -844,11 +797,9 @@ describe("Factory", function () {
     });
 
     // mint tokens 1, 2, 3
-    await nft
-      .connect(holder)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 3, holder.address, ZERO, "0x", {
-        value: ethers.utils.parseEther("0.06"),
-      });
+    await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x", {
+      value: ethers.utils.parseEther("0.06"),
+    });
 
     const msg = "Hi this is a test, I own this";
 
@@ -972,7 +923,7 @@ describe("Factory", function () {
     // mint 10 tokens
     await nftMint
       .connect(minter)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 10, minter.address, ZERO, "0x", {
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 10, ZERO, "0x", {
         value: 0,
       });
 
@@ -1078,7 +1029,7 @@ describe("Factory", function () {
     // mint some tokens
     await nftMint
       .connect(minter)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 10, minter.address, ZERO, "0x", {
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 10, ZERO, "0x", {
         value: 0,
       });
 
@@ -1086,7 +1037,7 @@ describe("Factory", function () {
     await expect(
       nftMint
         .connect(minter)
-        .mint({ key: ethers.constants.HashZero, proof: [] }, 4991, minter.address, ZERO, "0x", {
+        .mint({ key: ethers.constants.HashZero, proof: [] }, 4991, ZERO, "0x", {
           value: 0,
         })
     ).to.be.revertedWith("MaxSupplyExceeded");
@@ -1094,17 +1045,15 @@ describe("Factory", function () {
     // mint max tokens
     await nftMint
       .connect(minter)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 4990, minter.address, ZERO, "0x", {
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 4990, ZERO, "0x", {
         value: 0,
       });
 
     // try to mint after max reached
     await expect(
-      nftMint
-        .connect(minter)
-        .mint({ key: ethers.constants.HashZero, proof: [] }, 1, minter.address, ZERO, "0x", {
-          value: 0,
-        })
+      nftMint.connect(minter).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: 0,
+      })
     ).to.be.revertedWith("MaxSupplyExceeded");
 
     // approve nftBurn to transfer tokens
@@ -1113,7 +1062,7 @@ describe("Factory", function () {
     // mint tokens on burn to mint
     await nftBurn
       .connect(minter)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 4990, minter.address, ZERO, "0x", {
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 4990, ZERO, "0x", {
         value: 0,
       });
 
@@ -1163,14 +1112,14 @@ describe("Factory", function () {
     // mint tokens from owner to holder address
     await nft
       .connect(owner)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 3, holder.address, ZERO, "0x", {
+      .mintTo({ key: ethers.constants.HashZero, proof: [] }, 3, holder.address, ZERO, "0x", {
         value: ethers.utils.parseEther("0.06"),
       });
 
     // test to=zero defaults to msg.sender
     await nft
       .connect(owner)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, ZERO, "0x", {
+      .mintTo({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, ZERO, "0x", {
         value: ethers.utils.parseEther("0.02"),
       });
 

@@ -177,10 +177,19 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   function mint(
     Auth calldata auth,
     uint256 quantity,
-    address to,
     address affiliate,
     bytes calldata signature
   ) external payable {
+    mintTo(auth, quantity, msg.sender, affiliate, signature);
+  }
+
+  function mintTo(
+    Auth calldata auth,
+    uint256 quantity,
+    address to,
+    address affiliate,
+    bytes calldata signature
+  ) public payable {
     Invite memory i = invites[auth.key];
 
     if (to == address(0)) {
