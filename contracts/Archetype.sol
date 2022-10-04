@@ -162,7 +162,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     }
     config = config_;
     __Ownable_init();
-    revealed = false;
+    revealed = true;
     uriUnlocked = true;
     maxSupplyUnlocked = true;
     affiliateFeeUnlocked = true;
@@ -410,7 +410,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   // OWNER ONLY
   //
   function reveal() external onlyOwner {
-    revealed = true;
+    revealed = !revealed;
   }
 
   function setUnrevealedURI(string memory unrevealedURI) external onlyOwner {
