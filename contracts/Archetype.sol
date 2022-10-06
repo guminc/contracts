@@ -162,7 +162,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     }
     config = config_;
     __Ownable_init();
-    revealed = false;
+    revealed = true;
     uriUnlocked = true;
     maxSupplyUnlocked = true;
     affiliateFeeUnlocked = true;
@@ -180,7 +180,21 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     address affiliate,
     bytes calldata signature
   ) external payable {
+    mintTo(auth, quantity, msg.sender, affiliate, signature);
+  }
+
+  function mintTo(
+    Auth calldata auth,
+    uint256 quantity,
+    address to,
+    address affiliate,
+    bytes calldata signature
+  ) public payable {
     Invite memory i = invites[auth.key];
+
+    if (to == address(0)) {
+      to = msg.sender;
+    }
 
     if (affiliate != address(0)) {
       if (affiliate == PLATFORM || affiliate == owner() || affiliate == msg.sender) {
@@ -227,7 +241,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       revert ExcessiveEthSent();
     }
 
-    _mint(msg.sender, quantity);
+    _mint(to, quantity);
 
     if (i.limit < config.maxSupply) {
       minted[msg.sender][auth.key] += quantity;
@@ -396,7 +410,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   // OWNER ONLY
   //
   function reveal() external onlyOwner {
-    revealed = true;
+    revealed = !revealed;
   }
 
   function setUnrevealedURI(string memory unrevealedURI) external onlyOwner {
@@ -420,12 +434,18 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     uriUnlocked = false;
   }
 
-  function setMaxSupply(uint32 maxSupply) external onlyOwner {
+  /// @notice the password is "forever"
+  // max supply cannot subceed total supply. Be careful changing.
+  function setMaxSupply(uint32 maxSupply, string memory password) external onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+    
     if (!maxSupplyUnlocked) {
       revert LockedForever();
     }
 
-    if (maxSupply < _nextTokenId()) {
+    if (maxSupply < _totalMinted()) {
       revert MaxSupplyExceeded();
     }
 
