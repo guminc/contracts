@@ -258,7 +258,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   }
 
   function burnToMint(uint256[] calldata tokenIds) external {
-    if(!burnConfig.enabled) {
+    if (!burnConfig.enabled) {
       revert BurnToMintDisabled();
     }
 
@@ -268,16 +268,16 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
 
     // check if msg.sender owns tokens and has correct approvals
     for (uint256 i = 0; i < tokenIds.length; i++) {
-      if(burnConfig.archetype.ownerOf(tokenIds[i]) != msg.sender) {
+      if (burnConfig.archetype.ownerOf(tokenIds[i]) != msg.sender) {
         revert NotTokenOwner();
       }
     }
 
-    if(!burnConfig.archetype.isApprovedForAll(msg.sender, address(this))) {
+    if (!burnConfig.archetype.isApprovedForAll(msg.sender, address(this))) {
       revert NotApprovedToTransfer();
     }
 
-    if(tokenIds.length % burnConfig.ratio != 0) {
+    if (tokenIds.length % burnConfig.ratio != 0) {
       revert InvalidAmountOfTokens();
     }
 
@@ -544,8 +544,12 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     emit Invited(_key, _cid);
   }
 
-  function enableBurnToMint(address archetype, uint16 ratio, uint64 start, uint64 limit) external onlyOwner {
-
+  function enableBurnToMint(
+    address archetype,
+    uint16 ratio,
+    uint64 start,
+    uint64 limit
+  ) external onlyOwner {
     burnConfig = BurnConfig({
       archetype: Archetype(archetype),
       enabled: true,
@@ -579,7 +583,6 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     return 1;
   }
 
-
   function validateAffiliate(
     address affiliate,
     bytes calldata signature,
@@ -603,8 +606,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   }
 
   modifier onlyPlatform() {
-      require(PLATFORM == _msgSenderERC721A(), "caller is not the platform");
-      _;
+    require(PLATFORM == _msgSenderERC721A(), "caller is not the platform");
+    _;
   }
-
 }
