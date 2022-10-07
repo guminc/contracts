@@ -21,6 +21,9 @@ async function main() {
       maxBatchSize: 20,
       affiliateFee: 1500,
       platformFee: 500,
+      ownerAltPayout: ethers.constants.AddressZero,
+      superAffiliatePayout: ethers.constants.AddressZero,
+      discounts: { affiliateDiscount: null, mintTiers: [] },
     }
   );
 

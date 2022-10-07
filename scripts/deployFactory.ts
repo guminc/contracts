@@ -31,12 +31,12 @@ async function main() {
 
   // await sleep(150 * 1000);
 
-  // Archetype deployed to: 0x48B8b452B2a5dDAF6bB64ceA3E8C06E75dD01ce9
-  // Contract Factory deployed to: 0xB12524e93c54d1489978Bcf6cF7DF3ED9D45E3fE
+  // Archetype deployed to: 0x6e77e2514F75ECe71b6e5abC1a4d96Cc012eFB4e
+  // Uh, Contract Factory deployed to: 0x69C96B9a0a091252C7A9b6D221D443641eDf7BD4
   // Factory addresses: {
-  //   proxy: '0xB12524e93c54d1489978Bcf6cF7DF3ED9D45E3fE',
-  //   admin: '0xE2214a831874728EB4a9f22fE51A09B789F21810',
-  //   implementation: '0xc078Aed674c230cDD7ADD602E077797d08d8f0c2'
+  //   proxy: '0x69C96B9a0a091252C7A9b6D221D443641eDf7BD4',
+  //   admin: '0xc90A3419941dC2311745346B01450988116D6910',
+  //   implementation: '0x690eb624DFBd36f83a8092E3F586b733Df827baA'
   // }
 
   // try {
