@@ -986,8 +986,8 @@ describe("Factory", function () {
 
   it("test max supply checks", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();
-    DEFAULT_CONFIG["maxBatchSize"] = 5000;
-    DEFAULT_CONFIG["maxSupply"] = 5000;
+    DEFAULT_CONFIG.maxBatchSize = 5000;
+    DEFAULT_CONFIG.maxSupply = 5000;
 
     const owner = accountZero;
     const minter = accountOne;

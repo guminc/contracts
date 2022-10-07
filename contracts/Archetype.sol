@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.3.2
+// Archetype v0.3.3
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -618,7 +618,6 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     }
   }
 
-  // based on: https://github.com/miguelmota/merkletreejs-solidity/blob/master/contracts/MerkleProof.sol
   function verify(Auth calldata auth, address account) internal pure returns (bool) {
     if (auth.key == "") return true;
 
