@@ -923,7 +923,7 @@ describe("Factory", function () {
     // mint 10 tokens
     await nftMint
       .connect(minter)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 10, ZERO, "0x", {
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 12, ZERO, "0x", {
         value: 0,
       });
 
@@ -947,12 +947,36 @@ describe("Factory", function () {
     // burn 4 tokens and collect 2 tokens in new collection
     await nftBurn.connect(minter).burnToMint([1, 3, 5, 8]);
 
+    // disable burn to mint
+    await nftBurn.connect(owner).disableBurnToMint();
+
+    // burn will fail as burn is disabled
+    await expect(nftBurn.connect(minter).burnToMint([11, 12])).to.be.revertedWith(
+      "BurnToMintDisabled"
+    );;
+
+    // re-enable with time set in future
+    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, 2, 10000000000, 5000);
+
+    // burn will fail as burn is time is set in future
+    await expect(nftBurn.connect(minter).burnToMint([11, 12])).to.be.revertedWith(
+      "MintNotYetStarted"
+    );
+
+    // re-enable again with valid config
+    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, 2, 0, 5000);
+
+    // burn 4 tokens and collect 2 tokens in new collection
+    await nftBurn.connect(minter).burnToMint([11, 12]);
+
     await expect(await nftMint.ownerOf(1)).to.be.equal(BURN);
     await expect(await nftMint.ownerOf(2)).to.be.equal(BURN);
     await expect(await nftMint.ownerOf(3)).to.be.equal(BURN);
     await expect(await nftMint.ownerOf(4)).to.be.equal(BURN);
     await expect(await nftMint.ownerOf(5)).to.be.equal(BURN);
     await expect(await nftMint.ownerOf(8)).to.be.equal(BURN);
+    await expect(await nftMint.ownerOf(11)).to.be.equal(BURN);
+    await expect(await nftMint.ownerOf(12)).to.be.equal(BURN);
     await expect(await nftMint.balanceOf(minter.address)).to.be.equal(3);
   });
 
