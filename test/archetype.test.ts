@@ -978,6 +978,8 @@ describe("Factory", function () {
     await expect(await nftMint.ownerOf(11)).to.be.equal(BURN);
     await expect(await nftMint.ownerOf(12)).to.be.equal(BURN);
     await expect(await nftMint.balanceOf(minter.address)).to.be.equal(3);
+
+    await expect(await nftBurn.balanceOf(minter.address)).to.be.equal(4);
   });
 
   it("test platform only modifier", async function () {
