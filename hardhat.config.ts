@@ -57,6 +57,15 @@ const config: HardhatUserConfig = {
   // },
   defaultNetwork: "localhost",
   networks: {
+    goerli: {
+      accounts: [privateKey],
+      url: "https://goerli.infura.io/v3/569cee6284754b9e86ff2e5e55a0dc22",
+      chainId: 5,
+      // gas: 2100000,
+      // gasPrice: 8000000000000,
+      // gasPrice: 200000,
+      // gasPrice: 2000000000000000000,
+    },
     rinkeby: {
       accounts: [privateKey],
       url: "https://rinkeby.infura.io/v3/569cee6284754b9e86ff2e5e55a0dc22",

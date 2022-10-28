@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-// Factory v0.3.1
+// Factory v0.3.2
 //
 // 8888888888                888
 // 888                       888
@@ -18,7 +18,6 @@ pragma solidity ^0.8.4;
 import "./Archetype.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "hardhat/console.sol";
 
 contract Factory is OwnableUpgradeable {
   event CollectionAdded(address indexed sender, address indexed receiver, address collection);
@@ -50,7 +49,6 @@ contract Factory is OwnableUpgradeable {
   }
 
   function setArchetype(address archetype_) public onlyOwner {
-    console.log("address");
     archetype = archetype_;
   }
 }
