@@ -28,6 +28,7 @@ error WalletUnauthorizedToMint();
 error InsufficientEthSent();
 error ExcessiveEthSent();
 error MaxSupplyExceeded();
+error ListMaxSupplyExceeded();
 error NumberOfMintsExceeded();
 error MintingPaused();
 error InvalidReferral();
@@ -84,7 +85,8 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   struct Invite {
     uint128 price;
     uint64 start;
-    uint64 limit;
+    uint32 limit;
+    uint32 maxSupply;
   }
 
   struct Invitelist {
@@ -111,6 +113,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   //
   mapping(bytes32 => Invite) public invites;
   mapping(address => mapping(bytes32 => uint256)) private minted;
+  mapping(bytes32 => uint256) private listSupply;
   mapping(address => uint128) public affiliateBalance;
   mapping(uint256 => bytes) private tokenMsg;
 
@@ -215,11 +218,17 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       revert MintNotYetStarted();
     }
 
-    if (i.limit < config.maxSupply) {
+    if (i.limit < i.maxSupply) {
       uint256 totalAfterMint = minted[msg.sender][auth.key] + quantity;
-
       if (totalAfterMint > i.limit) {
         revert NumberOfMintsExceeded();
+      }
+    }
+
+    if (i.maxSupply < config.maxSupply) {
+      uint256 totalAfterMint = listSupply[auth.key] + quantity;
+      if (totalAfterMint> i.limit) {
+        revert ListMaxSupplyExceeded();
       }
     }
 
@@ -243,8 +252,12 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
 
     _mint(to, quantity);
 
-    if (i.limit < config.maxSupply) {
+    if (i.limit < i.maxSupply) {
       minted[msg.sender][auth.key] += quantity;
+    }
+
+    if (i.maxSupply < config.maxSupply) {
+      listSupply[auth.key] += quantity;
     }
 
     uint128 value = uint128(msg.value);

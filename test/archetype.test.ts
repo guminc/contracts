@@ -229,6 +229,7 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.08"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply
     });
 
     // const invites = await nft.invites(ethers.constants.HashZero);
@@ -286,6 +287,7 @@ describe("Factory", function () {
           price: ethers.utils.parseEther("0.1"),
           start: ethers.BigNumber.from(Math.floor(tomorrow / 1000)),
           limit: 1000,
+          maxSupply: DEFAULT_CONFIG.maxSupply
         },
       },
       {
@@ -295,6 +297,7 @@ describe("Factory", function () {
           price: price,
           start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
           limit: 10,
+          maxSupply: DEFAULT_CONFIG.maxSupply
         },
       },
     ]);
@@ -409,6 +412,7 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.08"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply
     });
 
     // test invalid signature
@@ -559,6 +563,7 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply
     });
 
     // valid signature (from affiliateSigner)
@@ -639,6 +644,7 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply
     });
 
     // valid signature (from affiliateSigner)
@@ -731,6 +737,7 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply
     });
 
     await nft
@@ -794,6 +801,7 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.02"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply
     });
 
     // mint tokens 1, 2, 3
@@ -918,6 +926,7 @@ describe("Factory", function () {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply
     });
 
     // mint 10 tokens
@@ -1045,11 +1054,13 @@ describe("Factory", function () {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 10000,
+      maxSupply: DEFAULT_CONFIG.maxSupply
     });
     await nftBurn.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 10000,
+      maxSupply: DEFAULT_CONFIG.maxSupply
     });
 
     // mint some tokens
@@ -1108,6 +1119,50 @@ describe("Factory", function () {
     await expect(await nftMint.totalSupply()).to.be.equal(DEFAULT_CONFIG.maxSupply);
     await expect(await nftBurn.totalSupply()).to.be.equal(DEFAULT_CONFIG.maxSupply);
   });
+
+  it("test invite list max supply check", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+    DEFAULT_CONFIG.maxSupply = 100;
+    const PublicMaxSupply = 90;
+
+    const owner = accountZero;
+    const minter = accountOne;
+
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const NFTMint = await ethers.getContractFactory("Archetype");
+    const nftMint = NFTMint.attach(newCollectionAddressMint);
+
+    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: PublicMaxSupply,
+      maxSupply: PublicMaxSupply
+    });
+
+    await nftMint.connect(minter).mint({ key: ethers.constants.HashZero, proof: [] }, 20, ZERO, "0x", {value: 0});
+
+    // try to mint past invite list max
+    await expect(
+      nftMint
+        .connect(minter)
+        .mint({ key: ethers.constants.HashZero, proof: [] }, 71, ZERO, "0x", {
+          value: 0,
+        })
+    ).to.be.revertedWith("ListMaxSupplyExceeded");
+
+    await nftMint.connect(minter).mint({ key: ethers.constants.HashZero, proof: [] }, 70, ZERO, "0x", {value: 0});
+
+    await expect(await nftMint.totalSupply()).to.be.equal(PublicMaxSupply);
+  });
+
+
   it("test minting to another wallet", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();
 
@@ -1133,6 +1188,7 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.02"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply
     });
 
     // mint tokens from owner to holder address
