@@ -24,7 +24,6 @@
   "dependencies": {
     "@daonomic/tests-common": "0.2.2",
     "@openzeppelin/contracts": "4.5.0",
-    "@openzeppelin/contracts-upgradeable": "4.5.2",
     "@rarible/exchange-interfaces": "0.4.0",
     "@rarible/lazy-mint": "0.5.5",
     "@rarible/meta-tx": "0.1.2",
@@ -32,6 +31,7 @@
     "@uploadcare/upload-client": "2.0.0",
     "concurrently": "6.4.0",
     "ethereumjs-util": "7.1.4",
+    "hardhat-contract-sizer": "^2.6.1",
     "ipfsh": "0.0.6",
     "moment": "2.29.1",
     "solady": "^0.0.19"
@@ -42,6 +42,7 @@
     "@nomiclabs/hardhat-truffle5": "2.0.3",
     "@nomiclabs/hardhat-waffle": "2.0.1",
     "@nomiclabs/hardhat-web3": "2.0.0",
+    "@openzeppelin/contracts-upgradeable": "^4.8.0",
     "@openzeppelin/hardhat-upgrades": "1.12.1",
     "@openzeppelin/truffle-upgrades": "1.11.0",
     "@rarible/custom-matchers": "0.3.0",
@@ -57,6 +58,7 @@
     "@typescript-eslint/parser": "4.33.0",
     "chai": "4.3.4",
     "dotenv": "10.0.0",
+    "erc721": "^5.2.0",
     "erc721a-upgradeable": "^4.2.2",
     "eslint": "7.32.0",
     "eslint-config-prettier": "8.3.0",
