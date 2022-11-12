@@ -1152,6 +1152,66 @@ describe("Factory", function () {
     await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
     await expect(await nft.balanceOf(owner.address)).to.be.equal(1);
   });
+
+  it("test batchMintTo Airdrop", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    const owner = accountOne;
+    const holder = accountZero;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+    const newCollectionAddress = result.events[0].address || "";
+    const NFT = await ethers.getContractFactory("Archetype");
+    const nft = NFT.attach(newCollectionAddress);
+
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("0.00"),
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 5000,
+    });
+
+    // mint tokens from owner to air drop list
+    let airDropList:[string, number][] = []
+    for(let i=0; i<1000; i++) {
+      airDropList.push([ethers.Wallet.createRandom().address, 1])
+    }
+
+    // mint in n txs (can handle about 500 owners per tx with 3mil gas limit)
+    const splits = 2
+    function splitToChunks(array, parts) {
+        const copied = [ ...array ]
+        let result = [];
+        for (let i = parts; i > 0; i--) {
+            result.push(copied.splice(0, Math.ceil(copied.length / i)));
+        }
+        return result;
+    }
+    const airDropListSplit = splitToChunks(airDropList, splits)
+    for (const split of airDropListSplit) {
+      await nft
+        .connect(owner)
+        .batchMintTo({ key: ethers.constants.HashZero, proof: [] }, 
+          split.map(list => list[0]),
+          split.map(list => list[1]),
+          ZERO, "0x", {
+          value: ethers.utils.parseEther("0.00"),
+        });
+      }
+
+    await expect(await nft.totalSupply()).to.be.equal(airDropList.length);
+    await expect(await nft.ownerOf(1)).to.be.equal(airDropList[0][0]);
+    await expect(await nft.ownerOf(10)).to.be.equal(airDropList[9][0]);
+    await expect(await nft.ownerOf(100)).to.be.equal(airDropList[99][0]);
+    await expect(await nft.ownerOf(500)).to.be.equal(airDropList[499][0]);
+    await expect(await nft.ownerOf(1000)).to.be.equal(airDropList[999][0]);
+  });
 });
 
 // todo: add test to ensure affiliate signer can't be zero address

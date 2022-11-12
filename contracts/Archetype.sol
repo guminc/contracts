@@ -183,6 +183,21 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     mintTo(auth, quantity, msg.sender, affiliate, signature);
   }
 
+  function batchMintTo(
+    Auth calldata auth,
+    address[] calldata to,
+    uint256[] calldata quantity,
+    address affiliate,
+    bytes calldata signature
+  ) public payable {
+    if(quantity.length != to.length) {
+      revert InvalidConfig();
+    }
+    for (uint256 i=0; i< to.length; i++){
+      mintTo(auth, quantity[i], to[i], affiliate, signature);
+    }
+  }
+
   function mintTo(
     Auth calldata auth,
     uint256 quantity,
