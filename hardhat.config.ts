@@ -10,6 +10,7 @@ import "@nomiclabs/hardhat-truffle5";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 require("hardhat-log-remover");
+require('hardhat-contract-sizer');
 
 const fs = require("fs");
 const privateKey = fs.readFileSync(".secret").toString().trim() || "01234567890123456789";
@@ -55,7 +56,7 @@ const config: HardhatUserConfig = {
   //     },
   //   ],
   // },
-  defaultNetwork: "localhost",
+  defaultNetwork: "hardhat",
   networks: {
     goerli: {
       accounts: [privateKey],
