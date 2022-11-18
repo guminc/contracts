@@ -649,8 +649,8 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     _;
   }
 
-  // ROYALTY ENFORCEMENT
-  function enableOpenseaRoyaltyEnforcement() external onlyOwner {
+  // OPTIONAL ROYALTY ENFORCEMENT WITH OPENSEA
+  function enableRoyaltyEnforcement() external onlyOwner {
     if (royaltyEnforcementLocked) {
       revert LockedForever();
     }
@@ -658,7 +658,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     royaltyEnforcementEnabled = true;
   }
 
-  function disableOpenseaRoyaltyEnforcement() external onlyOwner{
+  function disableRoyaltyEnforcement() external onlyOwner{
     if (royaltyEnforcementLocked) {
       revert LockedForever();
     }
@@ -666,7 +666,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   }
 
   /// @notice the password is "forever"
-  function lockOpenseaRoyaltyEnforcement(string memory password) external onlyOwner {
+  function lockRoyaltyEnforcement(string memory password) external onlyOwner {
     if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
       revert WrongPassword();
     }

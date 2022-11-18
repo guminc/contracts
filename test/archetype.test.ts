@@ -1218,7 +1218,6 @@ describe("Factory", function () {
 
     const owner = accountOne;
     const holder = accountZero;
-    const opensea = accountTwo;
 
     const newCollection = await factory.createCollection(
       owner.address,
@@ -1253,14 +1252,14 @@ describe("Factory", function () {
     // });
 
     await expect(await nft.royaltyEnforcementEnabled()).to.be.equal(false);
-    await nft.connect(owner).enableOpenseaRoyaltyEnforcement()
+    await nft.connect(owner).enableRoyaltyEnforcement()
     await expect(await nft.royaltyEnforcementEnabled()).to.be.equal(true);
-    await nft.connect(owner).disableOpenseaRoyaltyEnforcement()
+    await nft.connect(owner).disableRoyaltyEnforcement()
     await expect(await nft.royaltyEnforcementEnabled()).to.be.equal(false);
     await expect(await nft.royaltyEnforcementLocked()).to.be.equal(false);
-    await nft.connect(owner).lockOpenseaRoyaltyEnforcement("forever")
+    await nft.connect(owner).lockRoyaltyEnforcement("forever")
     await expect(await nft.royaltyEnforcementLocked()).to.be.equal(true);
-    await expect(nft.connect(owner).enableOpenseaRoyaltyEnforcement()).to.be.reverted;
+    await expect(nft.connect(owner).enableRoyaltyEnforcement()).to.be.reverted;
   });
 });
 
