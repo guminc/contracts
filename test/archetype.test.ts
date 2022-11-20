@@ -1171,7 +1171,11 @@ describe("Factory", function () {
     const NFT = await ethers.getContractFactory("Archetype");
     const nft = NFT.attach(newCollectionAddress);
 
-    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+    const invitelist = new Invitelist([owner.address]);
+    const root = invitelist.root();
+    const proof = invitelist.proof(accountZero.address);
+
+    await nft.connect(owner).setInvite(root, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.00"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 5000,
@@ -1197,7 +1201,7 @@ describe("Factory", function () {
     for (const split of airDropListSplit) {
       await nft
         .connect(owner)
-        .batchMintTo({ key: ethers.constants.HashZero, proof: [] }, 
+        .batchMintTo({ key: root, proof: proof }, 
           split.map(list => list[0]),
           split.map(list => list[1]),
           ZERO, "0x", {
