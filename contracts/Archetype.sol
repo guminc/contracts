@@ -119,7 +119,6 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   Config public config;
   BurnConfig public burnConfig;
 
-  bool public revealed;
   bool public uriLocked;
   bool public maxSupplyLocked;
   bool public affiliateFeeLocked;
@@ -165,7 +164,6 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     }
     config = config_;
     __Ownable_init();
-    revealed = true;
     uriLocked = false;
     maxSupplyLocked = false;
     affiliateFeeLocked = false;
@@ -350,10 +348,6 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
     if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
-    if (revealed == false) {
-      return string(abi.encodePacked(config.unrevealedUri, LibString.toString(tokenId)));
-    }
-
     return
       bytes(config.baseUri).length != 0
         ? string(abi.encodePacked(config.baseUri, LibString.toString(tokenId)))
@@ -429,13 +423,6 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   //
   // OWNER ONLY
   //
-  function reveal() external onlyOwner {
-    revealed = !revealed;
-  }
-
-  function setUnrevealedURI(string memory unrevealedURI) external onlyOwner {
-    config.unrevealedUri = unrevealedURI;
-  }
 
   function setBaseURI(string memory baseUri) external onlyOwner {
     if (uriLocked) {
