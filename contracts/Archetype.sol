@@ -129,8 +129,8 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   bool public provenanceHashLocked;
   string public provenance;
 
-  // address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
-  address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
+  address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
+  // address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
   uint16 private constant MAXBPS = 5000; // max fee or discount is 50%
 
   //
@@ -188,17 +188,29 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
 
   function batchMintTo(
     Auth calldata auth,
-    address[] calldata to,
-    uint256[] calldata quantity,
+    address[] calldata toList,
+    uint256[] calldata quantityList,
     address affiliate,
     bytes calldata signature
   ) public payable {
-    if(quantity.length != to.length) {
+    if(quantityList.length != toList.length) {
       revert InvalidConfig();
     }
-    for (uint256 i=0; i< to.length; i++){
-      mintTo(auth, quantity[i], to[i], affiliate, signature);
+    uint256 quantity = 0;
+    for (uint256 i=0; i< quantityList.length; i++){
+      quantity += quantityList[i];
     }
+    validateMint(auth, quantity, affiliate, signature);
+    
+    for (uint256 i=0; i< toList.length; i++){
+      _mint(toList[i], quantityList[i]);
+    }
+
+    Invite memory invite = invites[auth.key];
+    if (invite.limit < config.maxSupply) {
+      minted[msg.sender][auth.key] += quantity;
+    }
+    payoutEth(affiliate, quantity);
   }
 
   function mintTo(
@@ -208,85 +220,15 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     address affiliate,
     bytes calldata signature
   ) public payable {
-    Invite memory i = invites[auth.key];
 
-    if (to == address(0)) {
-      to = msg.sender;
-    }
-
-    if (affiliate != address(0)) {
-      if (affiliate == PLATFORM || affiliate == owner() || affiliate == msg.sender) {
-        revert InvalidReferral();
-      }
-      validateAffiliate(affiliate, signature, config.affiliateSigner);
-    }
-
-    if (i.limit == 0) {
-      revert MintingPaused();
-    }
-
-    if (!verify(auth, msg.sender)) {
-      revert WalletUnauthorizedToMint();
-    }
-
-    if (block.timestamp < i.start) {
-      revert MintNotYetStarted();
-    }
-
-    if (i.limit < config.maxSupply) {
-      uint256 totalAfterMint = minted[msg.sender][auth.key] + quantity;
-
-      if (totalAfterMint > i.limit) {
-        revert NumberOfMintsExceeded();
-      }
-    }
-
-    if (quantity > config.maxBatchSize) {
-      revert MaxBatchSizeExceeded();
-    }
-
-    if ((_totalMinted() + quantity) > config.maxSupply) {
-      revert MaxSupplyExceeded();
-    }
-
-    uint256 cost = computePrice(i.price, quantity, affiliate != address(0));
-
-    if (msg.value < cost) {
-      revert InsufficientEthSent();
-    }
-
-    if (msg.value > cost) {
-      revert ExcessiveEthSent();
-    }
-
+    validateMint(auth, quantity, affiliate, signature);
     _mint(to, quantity);
 
+    Invite memory i = invites[auth.key];
     if (i.limit < config.maxSupply) {
       minted[msg.sender][auth.key] += quantity;
     }
-
-    uint128 value = uint128(msg.value);
-
-    uint128 affiliateWad = 0;
-    if (affiliate != address(0)) {
-      affiliateWad = (value * config.affiliateFee) / 10000;
-      affiliateBalance[affiliate] += affiliateWad;
-      emit Referral(affiliate, affiliateWad, quantity);
-    }
-
-    uint128 superAffiliateWad = 0;
-    if (config.superAffiliatePayout != address(0)) {
-      superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
-      affiliateBalance[config.superAffiliatePayout] += superAffiliateWad;
-    }
-
-    OwnerBalance memory balance = ownerBalance;
-    uint128 platformWad = ((value * config.platformFee) / 10000) - superAffiliateWad;
-    uint128 ownerWad = value - affiliateWad - platformWad - superAffiliateWad;
-    ownerBalance = OwnerBalance({
-      owner: balance.owner + ownerWad,
-      platform: balance.platform + platformWad
-    });
+    payoutEth(affiliate, quantity);
   }
 
   function burnToMint(uint256[] calldata tokenIds) external {
@@ -608,6 +550,85 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   //
   function _startTokenId() internal view virtual override returns (uint256) {
     return 1;
+  }
+
+  function payoutEth(address affiliate, uint256 quantity) internal {
+    uint128 value = uint128(msg.value);
+
+    uint128 affiliateWad = 0;
+    if (affiliate != address(0)) {
+      affiliateWad = (value * config.affiliateFee) / 10000;
+      affiliateBalance[affiliate] += affiliateWad;
+      emit Referral(affiliate, affiliateWad, quantity);
+    }
+
+    uint128 superAffiliateWad = 0;
+    if (config.superAffiliatePayout != address(0)) {
+      superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
+      affiliateBalance[config.superAffiliatePayout] += superAffiliateWad;
+    }
+
+    OwnerBalance memory balance = ownerBalance;
+    uint128 platformWad = ((value * config.platformFee) / 10000) - superAffiliateWad;
+    uint128 ownerWad = value - affiliateWad - platformWad - superAffiliateWad;
+    ownerBalance = OwnerBalance({
+      owner: balance.owner + ownerWad,
+      platform: balance.platform + platformWad
+    });
+  }
+
+  function validateMint(
+    Auth calldata auth,
+    uint256 quantity,
+    address affiliate,
+    bytes calldata signature
+  ) internal view {
+    Invite memory i = invites[auth.key];
+
+    if (affiliate != address(0)) {
+      if (affiliate == PLATFORM || affiliate == owner() || affiliate == msg.sender) {
+        revert InvalidReferral();
+      }
+      validateAffiliate(affiliate, signature, config.affiliateSigner);
+    }
+
+    if (i.limit == 0) {
+      revert MintingPaused();
+    }
+
+    if (!verify(auth, msg.sender)) {
+      revert WalletUnauthorizedToMint();
+    }
+
+    if (block.timestamp < i.start) {
+      revert MintNotYetStarted();
+    }
+
+    if (i.limit < config.maxSupply) {
+      uint256 totalAfterMint = minted[msg.sender][auth.key] + quantity;
+
+      if (totalAfterMint > i.limit) {
+        revert NumberOfMintsExceeded();
+      }
+    }
+
+    if (quantity > config.maxBatchSize) {
+      revert MaxBatchSizeExceeded();
+    }
+
+    if ((_totalMinted() + quantity) > config.maxSupply) {
+      revert MaxSupplyExceeded();
+    }
+
+    uint256 cost = computePrice(i.price, quantity, affiliate != address(0));
+
+    if (msg.value < cost) {
+      revert InsufficientEthSent();
+    }
+
+    if (msg.value > cost) {
+      revert ExcessiveEthSent();
+    }
   }
 
   function validateAffiliate(
