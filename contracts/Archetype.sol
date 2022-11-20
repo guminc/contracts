@@ -129,8 +129,8 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   bool public provenanceHashLocked;
   string public provenance;
 
-  address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
-  // address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
+  // address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
+  address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
   uint16 private constant MAXBPS = 5000; // max fee or discount is 50%
 
   //
