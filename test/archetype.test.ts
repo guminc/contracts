@@ -1142,15 +1142,15 @@ describe("Factory", function () {
         value: ethers.utils.parseEther("0.06"),
       });
 
-    // test to=zero defaults to msg.sender
-    await nft
+    // test to=zero reverts with MintToZeroAddress
+    await expect(nft
       .connect(owner)
       .mintTo({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, ZERO, "0x", {
         value: ethers.utils.parseEther("0.02"),
-      });
+      })).to.be.revertedWith("MintToZeroAddress");
 
     await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
-    await expect(await nft.balanceOf(owner.address)).to.be.equal(1);
+    await expect(await nft.balanceOf(owner.address)).to.be.equal(0);
   });
 
   it("test batchMintTo Airdrop", async function () {
