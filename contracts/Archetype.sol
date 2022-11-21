@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.3.3
+// Archetype v0.3.4
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -21,6 +21,7 @@ import "./ERC721A__OwnableUpgradeable.sol";
 import "solady/src/utils/MerkleProofLib.sol";
 import "solady/src/utils/LibString.sol";
 import "solady/src/utils/ECDSA.sol";
+import "closedsea/src/OperatorFilterer.sol";
 
 error InvalidConfig();
 error MintNotYetStarted();
@@ -42,7 +43,7 @@ error InvalidAmountOfTokens();
 error WrongPassword();
 error LockedForever();
 
-contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__OwnableUpgradeable {
+contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilterer, ERC721A__OwnableUpgradeable {
   //
   // EVENTS
   //
@@ -118,13 +119,14 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   Config public config;
   BurnConfig public burnConfig;
 
-  bool public revealed;
-  bool public uriUnlocked;
-  bool public maxSupplyUnlocked;
-  bool public affiliateFeeUnlocked;
-  bool public discountsUnlocked;
-  bool public ownerAltPayoutUnlocked;
-  bool public provenanceHashUnlocked;
+  bool public uriLocked;
+  bool public maxSupplyLocked;
+  bool public affiliateFeeLocked;
+  bool public discountsLocked;
+  bool public ownerAltPayoutLocked;
+  bool public royaltyEnforcementEnabled;
+  bool public royaltyEnforcementLocked;
+  bool public provenanceHashLocked;
   string public provenance;
 
   // address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
@@ -162,13 +164,14 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     }
     config = config_;
     __Ownable_init();
-    revealed = true;
-    uriUnlocked = true;
-    maxSupplyUnlocked = true;
-    affiliateFeeUnlocked = true;
-    discountsUnlocked = true;
-    ownerAltPayoutUnlocked = true;
-    provenanceHashUnlocked = true;
+    uriLocked = false;
+    maxSupplyLocked = false;
+    affiliateFeeLocked = false;
+    discountsLocked = false;
+    ownerAltPayoutLocked = false;
+    provenanceHashLocked = false;
+    royaltyEnforcementEnabled = false;
+    royaltyEnforcementLocked = false;
   }
 
   //
@@ -183,6 +186,33 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     mintTo(auth, quantity, msg.sender, affiliate, signature);
   }
 
+  function batchMintTo(
+    Auth calldata auth,
+    address[] calldata toList,
+    uint256[] calldata quantityList,
+    address affiliate,
+    bytes calldata signature
+  ) public payable {
+    if(quantityList.length != toList.length) {
+      revert InvalidConfig();
+    }
+    uint256 quantity = 0;
+    for (uint256 i=0; i< quantityList.length; i++){
+      quantity += quantityList[i];
+    }
+    validateMint(auth, quantity, affiliate, signature);
+    
+    for (uint256 i=0; i< toList.length; i++){
+      _mint(toList[i], quantityList[i]);
+    }
+
+    Invite memory invite = invites[auth.key];
+    if (invite.limit < config.maxSupply) {
+      minted[msg.sender][auth.key] += quantity;
+    }
+    payoutEth(affiliate, quantity);
+  }
+
   function mintTo(
     Auth calldata auth,
     uint256 quantity,
@@ -190,85 +220,15 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     address affiliate,
     bytes calldata signature
   ) public payable {
-    Invite memory i = invites[auth.key];
 
-    if (to == address(0)) {
-      to = msg.sender;
-    }
-
-    if (affiliate != address(0)) {
-      if (affiliate == PLATFORM || affiliate == owner() || affiliate == msg.sender) {
-        revert InvalidReferral();
-      }
-      validateAffiliate(affiliate, signature, config.affiliateSigner);
-    }
-
-    if (i.limit == 0) {
-      revert MintingPaused();
-    }
-
-    if (!verify(auth, msg.sender)) {
-      revert WalletUnauthorizedToMint();
-    }
-
-    if (block.timestamp < i.start) {
-      revert MintNotYetStarted();
-    }
-
-    if (i.limit < config.maxSupply) {
-      uint256 totalAfterMint = minted[msg.sender][auth.key] + quantity;
-
-      if (totalAfterMint > i.limit) {
-        revert NumberOfMintsExceeded();
-      }
-    }
-
-    if (quantity > config.maxBatchSize) {
-      revert MaxBatchSizeExceeded();
-    }
-
-    if ((_totalMinted() + quantity) > config.maxSupply) {
-      revert MaxSupplyExceeded();
-    }
-
-    uint256 cost = computePrice(i.price, quantity, affiliate != address(0));
-
-    if (msg.value < cost) {
-      revert InsufficientEthSent();
-    }
-
-    if (msg.value > cost) {
-      revert ExcessiveEthSent();
-    }
-
+    validateMint(auth, quantity, affiliate, signature);
     _mint(to, quantity);
 
+    Invite memory i = invites[auth.key];
     if (i.limit < config.maxSupply) {
       minted[msg.sender][auth.key] += quantity;
     }
-
-    uint128 value = uint128(msg.value);
-
-    uint128 affiliateWad = 0;
-    if (affiliate != address(0)) {
-      affiliateWad = (value * config.affiliateFee) / 10000;
-      affiliateBalance[affiliate] += affiliateWad;
-      emit Referral(affiliate, affiliateWad, quantity);
-    }
-
-    uint128 superAffiliateWad = 0;
-    if (config.superAffiliatePayout != address(0)) {
-      superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
-      affiliateBalance[config.superAffiliatePayout] += superAffiliateWad;
-    }
-
-    OwnerBalance memory balance = ownerBalance;
-    uint128 platformWad = ((value * config.platformFee) / 10000) - superAffiliateWad;
-    uint128 ownerWad = value - affiliateWad - platformWad - superAffiliateWad;
-    ownerBalance = OwnerBalance({
-      owner: balance.owner + ownerWad,
-      platform: balance.platform + platformWad
-    });
+    payoutEth(affiliate, quantity);
   }
 
   function burnToMint(uint256[] calldata tokenIds) external {
@@ -329,10 +289,6 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
 
   function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
     if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
-
-    if (revealed == false) {
-      return string(abi.encodePacked(config.unrevealedUri, LibString.toString(tokenId)));
-    }
 
     return
       bytes(config.baseUri).length != 0
@@ -409,16 +365,9 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   //
   // OWNER ONLY
   //
-  function reveal() external onlyOwner {
-    revealed = !revealed;
-  }
-
-  function setUnrevealedURI(string memory unrevealedURI) external onlyOwner {
-    config.unrevealedUri = unrevealedURI;
-  }
 
   function setBaseURI(string memory baseUri) external onlyOwner {
-    if (!uriUnlocked) {
+    if (uriLocked) {
       revert LockedForever();
     }
 
@@ -431,7 +380,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       revert WrongPassword();
     }
 
-    uriUnlocked = false;
+    uriLocked = true;
   }
 
   /// @notice the password is "forever"
@@ -441,7 +390,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       revert WrongPassword();
     }
     
-    if (!maxSupplyUnlocked) {
+    if (maxSupplyLocked) {
       revert LockedForever();
     }
 
@@ -458,11 +407,11 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       revert WrongPassword();
     }
 
-    maxSupplyUnlocked = false;
+    maxSupplyLocked = true;
   }
 
   function setAffiliateFee(uint16 affiliateFee) external onlyOwner {
-    if (!affiliateFeeUnlocked) {
+    if (affiliateFeeLocked) {
       revert LockedForever();
     }
     if (affiliateFee > MAXBPS) {
@@ -478,11 +427,11 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       revert WrongPassword();
     }
 
-    affiliateFeeUnlocked = false;
+    affiliateFeeLocked = true;
   }
 
   function setDiscounts(Discount calldata discounts) external onlyOwner {
-    if (!discountsUnlocked) {
+    if (discountsLocked) {
       revert LockedForever();
     }
 
@@ -509,12 +458,12 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       revert WrongPassword();
     }
 
-    discountsUnlocked = false;
+    discountsLocked = true;
   }
 
   /// @notice Set BAYC-style provenance once it's calculated
   function setProvenanceHash(string memory provenanceHash) external onlyOwner {
-    if (!provenanceHashUnlocked) {
+    if (provenanceHashLocked) {
       revert LockedForever();
     }
 
@@ -527,11 +476,11 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       revert WrongPassword();
     }
 
-    provenanceHashUnlocked = false;
+    provenanceHashLocked = true;
   }
 
   function setOwnerAltPayout(address ownerAltPayout) external onlyOwner {
-    if (!ownerAltPayoutUnlocked) {
+    if (ownerAltPayoutLocked) {
       revert LockedForever();
     }
 
@@ -544,7 +493,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
       revert WrongPassword();
     }
 
-    ownerAltPayoutUnlocked = false;
+    ownerAltPayoutLocked = true;
   }
 
   function setInvites(Invitelist[] calldata invitelist) external onlyOwner {
@@ -603,6 +552,85 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
     return 1;
   }
 
+  function payoutEth(address affiliate, uint256 quantity) internal {
+    uint128 value = uint128(msg.value);
+
+    uint128 affiliateWad = 0;
+    if (affiliate != address(0)) {
+      affiliateWad = (value * config.affiliateFee) / 10000;
+      affiliateBalance[affiliate] += affiliateWad;
+      emit Referral(affiliate, affiliateWad, quantity);
+    }
+
+    uint128 superAffiliateWad = 0;
+    if (config.superAffiliatePayout != address(0)) {
+      superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
+      affiliateBalance[config.superAffiliatePayout] += superAffiliateWad;
+    }
+
+    OwnerBalance memory balance = ownerBalance;
+    uint128 platformWad = ((value * config.platformFee) / 10000) - superAffiliateWad;
+    uint128 ownerWad = value - affiliateWad - platformWad - superAffiliateWad;
+    ownerBalance = OwnerBalance({
+      owner: balance.owner + ownerWad,
+      platform: balance.platform + platformWad
+    });
+  }
+
+  function validateMint(
+    Auth calldata auth,
+    uint256 quantity,
+    address affiliate,
+    bytes calldata signature
+  ) internal view {
+    Invite memory i = invites[auth.key];
+
+    if (affiliate != address(0)) {
+      if (affiliate == PLATFORM || affiliate == owner() || affiliate == msg.sender) {
+        revert InvalidReferral();
+      }
+      validateAffiliate(affiliate, signature, config.affiliateSigner);
+    }
+
+    if (i.limit == 0) {
+      revert MintingPaused();
+    }
+
+    if (!verify(auth, msg.sender)) {
+      revert WalletUnauthorizedToMint();
+    }
+
+    if (block.timestamp < i.start) {
+      revert MintNotYetStarted();
+    }
+
+    if (i.limit < config.maxSupply) {
+      uint256 totalAfterMint = minted[msg.sender][auth.key] + quantity;
+
+      if (totalAfterMint > i.limit) {
+        revert NumberOfMintsExceeded();
+      }
+    }
+
+    if (quantity > config.maxBatchSize) {
+      revert MaxBatchSizeExceeded();
+    }
+
+    if ((_totalMinted() + quantity) > config.maxSupply) {
+      revert MaxSupplyExceeded();
+    }
+
+    uint256 cost = computePrice(i.price, quantity, affiliate != address(0));
+
+    if (msg.value < cost) {
+      revert InsufficientEthSent();
+    }
+
+    if (msg.value > cost) {
+      revert ExcessiveEthSent();
+    }
+  }
+
   function validateAffiliate(
     address affiliate,
     bytes calldata signature,
@@ -627,5 +655,55 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, ERC721A__Ownab
   modifier onlyPlatform() {
     require(PLATFORM == _msgSenderERC721A(), "caller is not the platform");
     _;
+  }
+
+  // OPTIONAL ROYALTY ENFORCEMENT WITH OPENSEA
+  function enableRoyaltyEnforcement() external onlyOwner {
+    if (royaltyEnforcementLocked) {
+      revert LockedForever();
+    }
+    _registerForOperatorFiltering();
+    royaltyEnforcementEnabled = true;
+  }
+
+  function disableRoyaltyEnforcement() external onlyOwner{
+    if (royaltyEnforcementLocked) {
+      revert LockedForever();
+    }
+    royaltyEnforcementEnabled = false;
+  }
+
+  /// @notice the password is "forever"
+  function lockRoyaltyEnforcement(string memory password) external onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+
+    royaltyEnforcementLocked = true;
+  }
+
+  function setApprovalForAll(address operator, bool approved) 
+  public override onlyAllowedOperatorApproval(operator, royaltyEnforcementEnabled) {
+      super.setApprovalForAll(operator, approved);
+  }
+
+  function approve(address operator, uint256 tokenId)
+  public override onlyAllowedOperatorApproval(operator, royaltyEnforcementEnabled) {
+      super.approve(operator, tokenId);
+  }
+
+  function transferFrom(address from, address to, uint256 tokenId)
+  public override onlyAllowedOperator(from, royaltyEnforcementEnabled) {
+      super.transferFrom(from, to, tokenId);
+  }
+
+  function safeTransferFrom(address from, address to, uint256 tokenId)
+  public override onlyAllowedOperator(from, royaltyEnforcementEnabled) {
+      super.safeTransferFrom(from, to, tokenId);
+  }
+
+  function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data)
+  public override onlyAllowedOperator(from, royaltyEnforcementEnabled) {
+      super.safeTransferFrom(from, to, tokenId, data);
   }
 }

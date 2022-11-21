@@ -1142,15 +1142,128 @@ describe("Factory", function () {
         value: ethers.utils.parseEther("0.06"),
       });
 
-    // test to=zero defaults to msg.sender
-    await nft
+    // test to=zero reverts with MintToZeroAddress
+    await expect(nft
       .connect(owner)
       .mintTo({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, ZERO, "0x", {
         value: ethers.utils.parseEther("0.02"),
-      });
+      })).to.be.revertedWith("MintToZeroAddress");
 
     await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
-    await expect(await nft.balanceOf(owner.address)).to.be.equal(1);
+    await expect(await nft.balanceOf(owner.address)).to.be.equal(0);
+  });
+
+  it("test batchMintTo Airdrop", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    const owner = accountOne;
+    const holder = accountZero;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+    const newCollectionAddress = result.events[0].address || "";
+    const NFT = await ethers.getContractFactory("Archetype");
+    const nft = NFT.attach(newCollectionAddress);
+
+    const invitelist = new Invitelist([owner.address]);
+    const root = invitelist.root();
+    const proof = invitelist.proof(accountZero.address);
+
+    await nft.connect(owner).setInvite(root, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("0.00"),
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 5000,
+    });
+
+    // mint tokens from owner to air drop list
+    let airDropList:[string, number][] = []
+    for(let i=0; i<1000; i++) { /// 1000 addresses
+      airDropList.push([ethers.Wallet.createRandom().address, 1])
+    }
+
+    // mint in n txs (can handle about 500 owners per tx with 3mil gas limit)
+    const splits = 2
+    function splitToChunks(array, parts) {
+        const copied = [ ...array ]
+        let result = [];
+        for (let i = parts; i > 0; i--) {
+            result.push(copied.splice(0, Math.ceil(copied.length / i)));
+        }
+        return result;
+    }
+    const airDropListSplit = splitToChunks(airDropList, splits)
+    for (const split of airDropListSplit) {
+      await nft
+        .connect(owner)
+        .batchMintTo({ key: root, proof: proof }, 
+          split.map(list => list[0]),
+          split.map(list => list[1]),
+          ZERO, "0x", {
+          value: ethers.utils.parseEther("0.00"),
+        });
+      }
+
+    await expect(await nft.totalSupply()).to.be.equal(airDropList.length);
+    await expect(await nft.ownerOf(1)).to.be.equal(airDropList[0][0]);
+    await expect(await nft.ownerOf(10)).to.be.equal(airDropList[9][0]);
+    await expect(await nft.ownerOf(100)).to.be.equal(airDropList[99][0]);
+    await expect(await nft.ownerOf(500)).to.be.equal(airDropList[499][0]);
+    await expect(await nft.ownerOf(1000)).to.be.equal(airDropList[999][0]);
+  });
+
+  it("test royalty enforcement enabling and lock", async function () {
+    const [accountZero, accountOne , accountTwo] = await ethers.getSigners();
+
+    const owner = accountOne;
+    const holder = accountZero;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+
+    const result = await newCollection.wait();
+    const newCollectionAddress = result.events[0].address || "";
+    const NFT = await ethers.getContractFactory("Archetype");
+    const nft = NFT.attach(newCollectionAddress);
+
+    // // mock opensea default block list addresses
+    // ///The default OpenSea operator blocklist subscription.
+    // const _DEFAULT_SUBSCRIPTION = "0x3cc6CddA760b79bAfa08dF41ECFA224f810dCeB6";
+    // const Subscription = await ethers.getContractFactory("OwnedRegistrant");
+    // const subscription = await Subscription.deploy(opensea.address);
+    // await subscription.deployed();
+    
+    // /// @dev The OpenSea operator filter registry.
+    // const _OPERATOR_FILTER_REGISTRY = "0x000000000000AAeB6D7670E522A718067333cd4E";
+    // const Filter = await ethers.getContractFactory("OperatorFilterRegistry");
+    // const filter = await Filter.deploy();
+    // await filter.deployed();
+
+    // await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+    //   price: ethers.utils.parseEther("0.00"),
+    //   start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+    //   limit: 5000,
+    // });
+
+    await expect(await nft.royaltyEnforcementEnabled()).to.be.equal(false);
+    await nft.connect(owner).enableRoyaltyEnforcement()
+    await expect(await nft.royaltyEnforcementEnabled()).to.be.equal(true);
+    await nft.connect(owner).disableRoyaltyEnforcement()
+    await expect(await nft.royaltyEnforcementEnabled()).to.be.equal(false);
+    await expect(await nft.royaltyEnforcementLocked()).to.be.equal(false);
+    await nft.connect(owner).lockRoyaltyEnforcement("forever")
+    await expect(await nft.royaltyEnforcementLocked()).to.be.equal(true);
+    await expect(nft.connect(owner).enableRoyaltyEnforcement()).to.be.reverted;
   });
 });
 
