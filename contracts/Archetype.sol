@@ -22,6 +22,7 @@ import "solady/src/utils/MerkleProofLib.sol";
 import "solady/src/utils/LibString.sol";
 import "solady/src/utils/ECDSA.sol";
 import "closedsea/src/OperatorFilterer.sol";
+import "./ILoyaltyPointsToken.sol";
 
 error InvalidConfig();
 error MintNotYetStarted();
@@ -132,6 +133,8 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   // address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
   address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
   uint16 private constant MAXBPS = 5000; // max fee or discount is 50%
+
+  address private loyaltyPointTokenAddress;
 
   //
   // METHODS
@@ -682,6 +685,10 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     royaltyEnforcementLocked = true;
   }
 
+  function setLoyaltyPointsTokenAddress(address pointsTokenAddress) external onlyOwner {
+    loyaltyPointTokenAddress = pointsTokenAddress;
+  }
+
   function setApprovalForAll(address operator, bool approved) 
   public override onlyAllowedOperatorApproval(operator, royaltyEnforcementEnabled) {
       super.setApprovalForAll(operator, approved);
@@ -705,5 +712,23 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data)
   public override onlyAllowedOperator(from, royaltyEnforcementEnabled) {
       super.safeTransferFrom(from, to, tokenId, data);
+  }
+
+  function _beforeTokenTransfers(address from, address to, uint256 startTokenId, uint256 quantity)
+  internal override {
+      if (loyaltyPointTokenAddress == address(0)) {
+          super._beforeTokenTransfers(from, to, startTokenId, quantity);
+      } else {
+          ILoyaltyPointsToken pointsToken = ILoyaltyPointsToken(loyaltyPointTokenAddress);
+
+          if (to != address(0) && !pointsToken.hasToken(to)) {
+              pointsToken.mintTo(to);
+          }
+
+          for (uint256 i = 0; i < quantity; i++) {
+              pointsToken.registerReceivedToken(to, startTokenId + i);
+              pointsToken.registerSentToken(from, startTokenId + i);
+          }
+      }
   }
 }
