@@ -22,7 +22,7 @@ import "solady/src/utils/MerkleProofLib.sol";
 import "solady/src/utils/LibString.sol";
 import "solady/src/utils/ECDSA.sol";
 import "closedsea/src/OperatorFilterer.sol";
-import "./ILoyaltyPointsToken.sol";
+import "./IPointsToken.sol";
 
 error InvalidConfig();
 error MintNotYetStarted();
@@ -34,6 +34,7 @@ error NumberOfMintsExceeded();
 error MintingPaused();
 error InvalidReferral();
 error InvalidSignature();
+error PointsTokenZeroAddress();
 error BalanceEmpty();
 error TransferFailed();
 error MaxBatchSizeExceeded();
@@ -51,6 +52,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   event Invited(bytes32 indexed key, bytes32 indexed cid);
   event Referral(address indexed affiliate, uint128 wad, uint256 numMints);
   event Withdrawal(address indexed src, uint128 wad);
+  event PointsTokenSet(address indexed tokenAddress);
 
   //
   // STRUCTS
@@ -116,6 +118,8 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   mapping(address => uint128) public affiliateBalance;
   mapping(uint256 => bytes) private tokenMsg;
 
+  address public pointsTokenAddress;
+
   OwnerBalance public ownerBalance;
   Config public config;
   BurnConfig public burnConfig;
@@ -123,6 +127,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   bool public uriLocked;
   bool public maxSupplyLocked;
   bool public affiliateFeeLocked;
+  bool public pointsTokenAddressLocked;
   bool public discountsLocked;
   bool public ownerAltPayoutLocked;
   bool public royaltyEnforcementEnabled;
@@ -133,8 +138,6 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   // address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
   address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
   uint16 private constant MAXBPS = 5000; // max fee or discount is 50%
-
-  address private loyaltyPointTokenAddress;
 
   //
   // METHODS
@@ -433,6 +436,22 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     affiliateFeeLocked = true;
   }
 
+  function setPointsTokenAddress(address tokenAddress) external onlyOwner {
+    if (pointsTokenAddressLocked) revert LockedForever();
+    if (tokenAddress == address(0)) revert PointsTokenZeroAddress();
+
+    pointsTokenAddress = tokenAddress;
+  }
+
+  /// @notice the password is "forever"
+  function lockPointsTokenAddress(string memory password) external onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+
+    pointsTokenAddressLocked = true;
+  }
+
   function setDiscounts(Discount calldata discounts) external onlyOwner {
     if (discountsLocked) {
       revert LockedForever();
@@ -685,10 +704,6 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     royaltyEnforcementLocked = true;
   }
 
-  function setLoyaltyPointsTokenAddress(address pointsTokenAddress) external onlyOwner {
-    loyaltyPointTokenAddress = pointsTokenAddress;
-  }
-
   function setApprovalForAll(address operator, bool approved) 
   public override onlyAllowedOperatorApproval(operator, royaltyEnforcementEnabled) {
       super.setApprovalForAll(operator, approved);
@@ -716,10 +731,10 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
 
   function _beforeTokenTransfers(address from, address to, uint256 startTokenId, uint256 quantity)
   internal override {
-      if (loyaltyPointTokenAddress == address(0)) {
+      if (pointsTokenAddress == address(0)) {
           super._beforeTokenTransfers(from, to, startTokenId, quantity);
       } else {
-          ILoyaltyPointsToken pointsToken = ILoyaltyPointsToken(loyaltyPointTokenAddress);
+          IPointsToken pointsToken = IPointsToken(pointsTokenAddress);
 
           if (to != address(0) && !pointsToken.hasToken(to)) {
               pointsToken.mintTo(to);
