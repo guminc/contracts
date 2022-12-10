@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.3.4
+// Archetype v0.3.5
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -22,6 +22,7 @@ import "solady/src/utils/MerkleProofLib.sol";
 import "solady/src/utils/LibString.sol";
 import "solady/src/utils/ECDSA.sol";
 import "closedsea/src/OperatorFilterer.sol";
+import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
 
 error InvalidConfig();
 error MintNotYetStarted();
@@ -43,7 +44,7 @@ error InvalidAmountOfTokens();
 error WrongPassword();
 error LockedForever();
 
-contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilterer, ERC721A__OwnableUpgradeable {
+contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilterer, ERC721A__OwnableUpgradeable, ERC2981Upgradeable {
   //
   // EVENTS
   //
@@ -100,7 +101,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   }
 
   struct BurnConfig {
-    Archetype archetype;
+    IERC721AUpgradeable archetype;
     bool enabled;
     uint16 ratio;
     uint64 start;
@@ -520,7 +521,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     uint64 limit
   ) external onlyOwner {
     burnConfig = BurnConfig({
-      archetype: Archetype(archetype),
+      archetype: IERC721AUpgradeable(archetype),
       enabled: true,
       ratio: ratio,
       start: start,
@@ -532,7 +533,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     burnConfig = BurnConfig({
       enabled: false,
       ratio: 0,
-      archetype: Archetype(address(0)),
+      archetype: IERC721AUpgradeable(address(0)),
       start: 0,
       limit: 0
     });
@@ -682,28 +683,45 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     royaltyEnforcementLocked = true;
   }
 
-  function setApprovalForAll(address operator, bool approved) 
-  public override onlyAllowedOperatorApproval(operator, royaltyEnforcementEnabled) {
+  function setApprovalForAll(address operator, bool approved) public override onlyAllowedOperatorApproval(operator) {
       super.setApprovalForAll(operator, approved);
   }
 
-  function approve(address operator, uint256 tokenId)
-  public override onlyAllowedOperatorApproval(operator, royaltyEnforcementEnabled) {
+  function approve(address operator, uint256 tokenId) public override onlyAllowedOperatorApproval(operator) {
       super.approve(operator, tokenId);
   }
 
-  function transferFrom(address from, address to, uint256 tokenId)
-  public override onlyAllowedOperator(from, royaltyEnforcementEnabled) {
+  function transferFrom(address from, address to, uint256 tokenId) public override onlyAllowedOperator(from) {
       super.transferFrom(from, to, tokenId);
   }
 
-  function safeTransferFrom(address from, address to, uint256 tokenId)
-  public override onlyAllowedOperator(from, royaltyEnforcementEnabled) {
+  function safeTransferFrom(address from, address to, uint256 tokenId) public override onlyAllowedOperator(from) {
       super.safeTransferFrom(from, to, tokenId);
   }
 
-  function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data)
-  public override onlyAllowedOperator(from, royaltyEnforcementEnabled) {
+  function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public override onlyAllowedOperator(from) {
       super.safeTransferFrom(from, to, tokenId, data);
   }
+
+  function _operatorFilteringEnabled() internal view override returns (bool) {
+      return royaltyEnforcementEnabled;
+  }
+
+  //ERC2981 ROYALTY
+  function supportsInterface(bytes4 interfaceId) public view virtual
+        override (ERC721AUpgradeable, ERC2981Upgradeable)
+        returns (bool)
+    {
+        // Supports the following `interfaceId`s:
+        // - IERC165: 0x01ffc9a7
+        // - IERC721: 0x80ac58cd
+        // - IERC721Metadata: 0x5b5e139f
+        // - IERC2981: 0x2a55205a
+        return ERC721AUpgradeable.supportsInterface(interfaceId)
+            || ERC2981Upgradeable.supportsInterface(interfaceId);
+    }
+
+    function setDefaultRoyalty(address receiver, uint96 feeNumerator) public onlyOwner {
+        _setDefaultRoyalty(receiver, feeNumerator);
+    }
 }
