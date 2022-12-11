@@ -594,12 +594,10 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   function updateBalances(Auth calldata auth, address affiliate, uint256 quantity) internal {
     Invite memory i = invites[auth.key];
     address erc20Address = address(0);
-    uint128 value = 0;
+    uint128 value = uint128(msg.value);
     if (i.isErc20 && i.erc20Address != address(0)) {
       erc20Address = i.erc20Address;
       value = uint128(computePrice(i.price, quantity, affiliate != address(0)));
-    } else {
-      value = uint128(msg.value);
     }
 
 
