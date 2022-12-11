@@ -51,10 +51,8 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   // EVENTS
   //
   event Invited(bytes32 indexed key, bytes32 indexed cid);
-  event Referral(address indexed affiliate, uint128 wad, uint256 numMints);
-  event ReferralErc20(address indexed affiliate, address erc20Token, uint128 wad, uint256 numMints);
-  event Withdrawal(address indexed src, uint128 wad);
-  event WithdrawalErc20(address indexed src, address erc20Token, uint128 wad);
+  event Referral(address indexed affiliate,  address erc20Token, uint128 wad, uint256 numMints);
+  event Withdrawal(address indexed src,  address erc20Token, uint128 wad);
 
   //
   // STRUCTS
@@ -130,12 +128,10 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   //
   mapping(bytes32 => Invite) public invites;
   mapping(address => mapping(bytes32 => uint256)) private minted;
-  mapping(address => uint128) public affiliateBalance;
-  mapping(address => mapping(address => uint128)) public affiliateBalanceErc20;
+  mapping(address => mapping(address => uint128)) public affiliateBalance;
   mapping(uint256 => bytes) private tokenMsg;
 
-  OwnerBalance public ownerBalance;
-  mapping(address => OwnerBalance) public ownerBalanceErc20;
+  mapping(address => OwnerBalance) public ownerBalance;
 
   Config public config;
   BurnConfig public burnConfig;
@@ -309,66 +305,51 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   }
 
   function withdraw() external {
-    uint128 wad = 0;
-
-    if (msg.sender == owner() || msg.sender == config.ownerAltPayout || msg.sender == PLATFORM) {
-      OwnerBalance memory balance = ownerBalance;
-      if (msg.sender == owner() || msg.sender == config.ownerAltPayout) {
-        wad = balance.owner;
-        ownerBalance = OwnerBalance({ owner: 0, platform: balance.platform });
-      } else {
-        wad = balance.platform;
-        ownerBalance = OwnerBalance({ owner: balance.owner, platform: 0 });
-      }
-    } else {
-      wad = affiliateBalance[msg.sender];
-      affiliateBalance[msg.sender] = 0;
-    }
-
-    if (wad == 0) {
-      revert BalanceEmpty();
-    }
-    bool success = false;
-    // send to ownerAltPayout if set and owner is withdrawing
-    if (msg.sender == owner() && config.ownerAltPayout != address(0)) {
-      (success, ) = payable(config.ownerAltPayout).call{ value: wad }("");
-    } else {
-      (success, ) = msg.sender.call{ value: wad }("");
-    }
-    if (!success) {
-      revert TransferFailed();
-    }
-    emit Withdrawal(msg.sender, wad);
+    withdrawErc20(address(0));
   }
 
-  function withdrawErc20(address erc20Address) external {
-    IERC20Upgradeable erc20Token = IERC20Upgradeable(erc20Address);
+  function withdrawErc20(address erc20Address) public {
     uint128 wad = 0;
 
     if (msg.sender == owner() || msg.sender == config.ownerAltPayout || msg.sender == PLATFORM) {
-      OwnerBalance memory balance = ownerBalanceErc20[erc20Address];
+      OwnerBalance memory balance = ownerBalance[erc20Address];
       if (msg.sender == owner() || msg.sender == config.ownerAltPayout) {
         wad = balance.owner;
-        ownerBalanceErc20[erc20Address] = OwnerBalance({ owner: 0, platform: balance.platform });
+        ownerBalance[erc20Address] = OwnerBalance({ owner: 0, platform: balance.platform });
       } else {
         wad = balance.platform;
-        ownerBalanceErc20[erc20Address] = OwnerBalance({ owner: balance.owner, platform: 0 });
+        ownerBalance[erc20Address] = OwnerBalance({ owner: balance.owner, platform: 0 });
       }
     } else {
-      wad = affiliateBalance[msg.sender];
-      affiliateBalanceErc20[erc20Address][msg.sender] = 0;
+      wad = affiliateBalance[msg.sender][erc20Address];
+      affiliateBalance[msg.sender][erc20Address] = 0;
     }
 
     if (wad == 0) {
       revert BalanceEmpty();
     }
-    // send to ownerAltPayout if set and owner is withdrawing
-    if (msg.sender == owner() && config.ownerAltPayout != address(0)) {
-      erc20Token.transferFrom(address(this), config.ownerAltPayout, wad);
+
+    if (erc20Address == address(0)) {
+      bool success = false;
+      // send to ownerAltPayout if set and owner is withdrawing
+      if (msg.sender == owner() && config.ownerAltPayout != address(0)) {
+        (success, ) = payable(config.ownerAltPayout).call{ value: wad }("");
+      } else {
+        (success, ) = msg.sender.call{ value: wad }("");
+      }
+      if (!success) {
+        revert TransferFailed();
+      }
     } else {
-      erc20Token.transferFrom(address(this), msg.sender, wad);
+        IERC20Upgradeable erc20Token = IERC20Upgradeable(erc20Address);
+
+      if (msg.sender == owner() && config.ownerAltPayout != address(0)) {
+        erc20Token.transferFrom(address(this), config.ownerAltPayout, wad);
+      } else {
+        erc20Token.transferFrom(address(this), msg.sender, wad);
+      }
     }
-    emit WithdrawalErc20(msg.sender, erc20Address, wad);
+    emit Withdrawal(msg.sender, erc20Address, wad);
   }
 
   function setTokenMsg(uint256 tokenId, string calldata message) external {
@@ -596,60 +577,44 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
 
   function updateBalances(Auth calldata auth, address affiliate, uint256 quantity) internal {
     Invite memory i = invites[auth.key];
-    if(i.isErc20 && i.erc20Address != address(0)) {
-      IERC20Upgradeable erc20Token = IERC20Upgradeable(i.erc20Address);
-      uint128 value = i.price * uint128(quantity);
+    address erc20Address = address(0);
+    uint128 value = 0;
+    if (i.isErc20 && i.erc20Address != address(0)) {
+      erc20Address = i.erc20Address;
+      value = uint128(computePrice(i.price, quantity, affiliate != address(0)));
+    } else {
+      value = uint128(msg.value);
+    }
 
-      uint128 affiliateWad = 0;
-      if (affiliate != address(0)) {
-        affiliateWad = (value * config.affiliateFee) / 10000;
-        affiliateBalanceErc20[affiliate][i.erc20Address] += affiliateWad;
-        emit ReferralErc20(affiliate, i.erc20Address, affiliateWad, quantity);
-      }
 
-      uint128 superAffiliateWad = 0;
-      if (config.superAffiliatePayout != address(0)) {
-        superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
-        affiliateBalanceErc20[config.superAffiliatePayout][i.erc20Address] += superAffiliateWad;
-      }
+    uint128 affiliateWad = 0;
+    if (affiliate != address(0)) {
+      affiliateWad = (value * config.affiliateFee) / 10000;
+      affiliateBalance[affiliate][erc20Address] += affiliateWad;
+      emit Referral(affiliate, erc20Address, affiliateWad, quantity);
+    }
 
-      OwnerBalance memory balance = ownerBalanceErc20[i.erc20Address];
-      uint128 platformWad = ((value * config.platformFee) / 10000) - superAffiliateWad;
-      uint128 ownerWad = value - affiliateWad - platformWad - superAffiliateWad;
-      ownerBalanceErc20[i.erc20Address] = OwnerBalance({
-        owner: balance.owner + ownerWad,
-        platform: balance.platform + platformWad
-      });
-    
+    uint128 superAffiliateWad = 0;
+    if (config.superAffiliatePayout != address(0)) {
+      superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
+      affiliateBalance[config.superAffiliatePayout][erc20Address] += superAffiliateWad;
+    }
+
+    OwnerBalance memory balance = ownerBalance[erc20Address];
+    uint128 platformWad = ((value * config.platformFee) / 10000) - superAffiliateWad;
+    uint128 ownerWad = value - affiliateWad - platformWad - superAffiliateWad;
+    ownerBalance[erc20Address] = OwnerBalance({
+      owner: balance.owner + ownerWad,
+      platform: balance.platform + platformWad
+    });
+
+    if (i.isErc20 && erc20Address != address(0)) {
+      IERC20Upgradeable erc20Token = IERC20Upgradeable(erc20Address);
       erc20Token.transferFrom(
         msg.sender,
         address(this),
         value
       );
-
-    } else {
-      uint128 value = uint128(msg.value);
-
-      uint128 affiliateWad = 0;
-      if (affiliate != address(0)) {
-        affiliateWad = (value * config.affiliateFee) / 10000;
-        affiliateBalance[affiliate] += affiliateWad;
-        emit Referral(affiliate, affiliateWad, quantity);
-      }
-
-      uint128 superAffiliateWad = 0;
-      if (config.superAffiliatePayout != address(0)) {
-        superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
-        affiliateBalance[config.superAffiliatePayout] += superAffiliateWad;
-      }
-
-      OwnerBalance memory balance = ownerBalance;
-      uint128 platformWad = ((value * config.platformFee) / 10000) - superAffiliateWad;
-      uint128 ownerWad = value - affiliateWad - platformWad - superAffiliateWad;
-      ownerBalance = OwnerBalance({
-        owner: balance.owner + ownerWad,
-        platform: balance.platform + platformWad
-      });
     }
   }
 
