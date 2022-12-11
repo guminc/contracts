@@ -46,13 +46,19 @@ error InvalidAmountOfTokens();
 error WrongPassword();
 error LockedForever();
 
-contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilterer, ERC721A__OwnableUpgradeable, ERC2981Upgradeable {
+contract Archetype is
+  ERC721A__Initializable,
+  ERC721AUpgradeable,
+  OperatorFilterer,
+  ERC721A__OwnableUpgradeable,
+  ERC2981Upgradeable
+{
   //
   // EVENTS
   //
   event Invited(bytes32 indexed key, bytes32 indexed cid);
-  event Referral(address indexed affiliate,  address erc20Token, uint128 wad, uint256 numMints);
-  event Withdrawal(address indexed src,  address erc20Token, uint128 wad);
+  event Referral(address indexed affiliate, address erc20Token, uint128 wad, uint256 numMints);
+  event Withdrawal(address indexed src, address erc20Token, uint128 wad);
 
   //
   // STRUCTS
@@ -174,7 +180,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     config = config_;
     __Ownable_init();
 
-    if(config.ownerAltPayout != address(0)){
+    if (config.ownerAltPayout != address(0)) {
       setDefaultRoyalty(config.ownerAltPayout, config.defaultRoyalty);
     } else {
       setDefaultRoyalty(msg.sender, config.defaultRoyalty);
@@ -200,16 +206,16 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     address affiliate,
     bytes calldata signature
   ) external payable {
-    if(quantityList.length != toList.length) {
+    if (quantityList.length != toList.length) {
       revert InvalidConfig();
     }
     uint256 quantity = 0;
-    for (uint256 i=0; i< quantityList.length; i++){
+    for (uint256 i = 0; i < quantityList.length; i++) {
       quantity += quantityList[i];
     }
     validateMint(auth, quantity, affiliate, signature);
-    
-    for (uint256 i=0; i< toList.length; i++){
+
+    for (uint256 i = 0; i < toList.length; i++) {
       _mint(toList[i], quantityList[i]);
     }
 
@@ -227,7 +233,6 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     address affiliate,
     bytes calldata signature
   ) public payable {
-
     validateMint(auth, quantity, affiliate, signature);
     _mint(to, quantity);
 
@@ -340,7 +345,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
         revert TransferFailed();
       }
     } else {
-        IERC20Upgradeable erc20Token = IERC20Upgradeable(erc20Address);
+      IERC20Upgradeable erc20Token = IERC20Upgradeable(erc20Address);
 
       if (msg.sender == owner() && config.ownerAltPayout != address(0)) {
         erc20Token.transferFrom(address(this), config.ownerAltPayout, wad);
@@ -383,7 +388,6 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     }
     return cost;
   }
-
 
   function ownerBalance() external view returns (OwnerBalance memory) {
     return _ownerBalance[address(0)];
@@ -428,7 +432,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
       revert WrongPassword();
     }
-    
+
     if (options.maxSupplyLocked) {
       revert LockedForever();
     }
@@ -591,7 +595,11 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     return 1;
   }
 
-  function updateBalances(Auth calldata auth, address affiliate, uint256 quantity) internal {
+  function updateBalances(
+    Auth calldata auth,
+    address affiliate,
+    uint256 quantity
+  ) internal {
     Invite memory i = invites[auth.key];
     address erc20Address = address(0);
     uint128 value = uint128(msg.value);
@@ -599,7 +607,6 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
       erc20Address = i.erc20Address;
       value = uint128(computePrice(i.price, quantity, affiliate != address(0)));
     }
-
 
     uint128 affiliateWad = 0;
     if (affiliate != address(0)) {
@@ -624,11 +631,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
 
     if (i.isErc20 && erc20Address != address(0)) {
       IERC20Upgradeable erc20Token = IERC20Upgradeable(erc20Address);
-      erc20Token.transferFrom(
-        msg.sender,
-        address(this),
-        value
-      );
+      erc20Token.transferFrom(msg.sender, address(this), value);
     }
   }
 
@@ -677,7 +680,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
 
     uint256 cost = computePrice(i.price, quantity, affiliate != address(0));
 
-    if(i.isErc20 && i.erc20Address != address(0)) {
+    if (i.isErc20 && i.erc20Address != address(0)) {
       IERC20Upgradeable erc20Token = IERC20Upgradeable(i.erc20Address);
       if (erc20Token.allowance(msg.sender, address(this)) < cost) {
         revert NotApprovedToTransfer();
@@ -690,8 +693,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
       if (msg.value != 0) {
         revert ExcessiveEthSent();
       }
-    }
-    else {
+    } else {
       if (msg.value < cost) {
         revert InsufficientEthSent();
       }
@@ -737,7 +739,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     options.royaltyEnforcementEnabled = true;
   }
 
-  function disableRoyaltyEnforcement() external onlyOwner{
+  function disableRoyaltyEnforcement() external onlyOwner {
     if (options.royaltyEnforcementLocked) {
       revert LockedForever();
     }
@@ -753,45 +755,70 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     options.royaltyEnforcementLocked = true;
   }
 
-  function setApprovalForAll(address operator, bool approved) public override onlyAllowedOperatorApproval(operator) {
-      super.setApprovalForAll(operator, approved);
+  function setApprovalForAll(address operator, bool approved)
+    public
+    override
+    onlyAllowedOperatorApproval(operator)
+  {
+    super.setApprovalForAll(operator, approved);
   }
 
-  function approve(address operator, uint256 tokenId) public override onlyAllowedOperatorApproval(operator) {
-      super.approve(operator, tokenId);
+  function approve(address operator, uint256 tokenId)
+    public
+    override
+    onlyAllowedOperatorApproval(operator)
+  {
+    super.approve(operator, tokenId);
   }
 
-  function transferFrom(address from, address to, uint256 tokenId) public override onlyAllowedOperator(from) {
-      super.transferFrom(from, to, tokenId);
+  function transferFrom(
+    address from,
+    address to,
+    uint256 tokenId
+  ) public override onlyAllowedOperator(from) {
+    super.transferFrom(from, to, tokenId);
   }
 
-  function safeTransferFrom(address from, address to, uint256 tokenId) public override onlyAllowedOperator(from) {
-      super.safeTransferFrom(from, to, tokenId);
+  function safeTransferFrom(
+    address from,
+    address to,
+    uint256 tokenId
+  ) public override onlyAllowedOperator(from) {
+    super.safeTransferFrom(from, to, tokenId);
   }
 
-  function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public override onlyAllowedOperator(from) {
-      super.safeTransferFrom(from, to, tokenId, data);
+  function safeTransferFrom(
+    address from,
+    address to,
+    uint256 tokenId,
+    bytes memory data
+  ) public override onlyAllowedOperator(from) {
+    super.safeTransferFrom(from, to, tokenId, data);
   }
 
   function _operatorFilteringEnabled() internal view override returns (bool) {
-      return options.royaltyEnforcementEnabled;
+    return options.royaltyEnforcementEnabled;
   }
 
   //ERC2981 ROYALTY
-  function supportsInterface(bytes4 interfaceId) public view virtual
-        override (ERC721AUpgradeable, ERC2981Upgradeable)
-        returns (bool)
-    {
-        // Supports the following `interfaceId`s:
-        // - IERC165: 0x01ffc9a7
-        // - IERC721: 0x80ac58cd
-        // - IERC721Metadata: 0x5b5e139f
-        // - IERC2981: 0x2a55205a
-        return ERC721AUpgradeable.supportsInterface(interfaceId)
-            || ERC2981Upgradeable.supportsInterface(interfaceId);
-    }
+  function supportsInterface(bytes4 interfaceId)
+    public
+    view
+    virtual
+    override(ERC721AUpgradeable, ERC2981Upgradeable)
+    returns (bool)
+  {
+    // Supports the following `interfaceId`s:
+    // - IERC165: 0x01ffc9a7
+    // - IERC721: 0x80ac58cd
+    // - IERC721Metadata: 0x5b5e139f
+    // - IERC2981: 0x2a55205a
+    return
+      ERC721AUpgradeable.supportsInterface(interfaceId) ||
+      ERC2981Upgradeable.supportsInterface(interfaceId);
+  }
 
-    function setDefaultRoyalty(address receiver, uint96 feeNumerator) public onlyOwner {
-        _setDefaultRoyalty(receiver, feeNumerator);
-    }
+  function setDefaultRoyalty(address receiver, uint96 feeNumerator) public onlyOwner {
+    _setDefaultRoyalty(receiver, feeNumerator);
+  }
 }
