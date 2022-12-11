@@ -4,14 +4,9 @@ pragma solidity ^0.8.4;
 
 interface IPointsToken {
   /**
-   * register token ID from source collection as received by user
+   * register token ID movements from source collection
   */
-  function registerReceivedToken(address owner, uint256 collectionTokenId) external;
-
-  /**
-   * register token ID from source collection as sent by user
-  */
-  function registerSentToken(address owner, uint256 collectionTokenId) external;
+  function registerTokenMovement(address from, address, to, uint256 collectionTokenStartId, uint256 quantity) external;
 
   /**
    * mint points token to provided address

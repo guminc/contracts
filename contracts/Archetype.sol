@@ -740,10 +740,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
               pointsToken.mintTo(to);
           }
 
-          for (uint256 i = 0; i < quantity; i++) {
-              pointsToken.registerReceivedToken(to, startTokenId + i);
-              pointsToken.registerSentToken(from, startTokenId + i);
-          }
+          pointsToken.registerTokenMovement(from, to, startTokenId, quantity);
       }
   }
 }
