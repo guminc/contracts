@@ -23,7 +23,7 @@ import "solady/src/utils/LibString.sol";
 import "solady/src/utils/ECDSA.sol";
 import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 error InvalidConfig();
 error MintNotYetStarted();
@@ -87,6 +87,17 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     Discount discounts;
   }
 
+  struct Options {
+    bool uriLocked;
+    bool maxSupplyLocked;
+    bool affiliateFeeLocked;
+    bool discountsLocked;
+    bool ownerAltPayoutLocked;
+    bool royaltyEnforcementEnabled;
+    bool royaltyEnforcementLocked;
+    bool provenanceHashLocked;
+  }
+
   struct Invite {
     uint128 price;
     uint32 start;
@@ -128,15 +139,8 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
 
   Config public config;
   BurnConfig public burnConfig;
+  Options public options;
 
-  bool public uriLocked;
-  bool public maxSupplyLocked;
-  bool public affiliateFeeLocked;
-  bool public discountsLocked;
-  bool public ownerAltPayoutLocked;
-  bool public royaltyEnforcementEnabled;
-  bool public royaltyEnforcementLocked;
-  bool public provenanceHashLocked;
   string public provenance;
 
   // address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
@@ -200,7 +204,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     uint256[] calldata quantityList,
     address affiliate,
     bytes calldata signature
-  ) public payable {
+  ) external payable {
     if(quantityList.length != toList.length) {
       revert InvalidConfig();
     }
@@ -338,7 +342,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   }
 
   function withdrawErc20(address erc20Address) external {
-    IERC20 erc20Token = IERC20(erc20Address);
+    IERC20Upgradeable erc20Token = IERC20Upgradeable(erc20Address);
     uint128 wad = 0;
 
     if (msg.sender == owner() || msg.sender == config.ownerAltPayout || msg.sender == PLATFORM) {
@@ -405,7 +409,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   //
 
   function setBaseURI(string memory baseUri) external onlyOwner {
-    if (uriLocked) {
+    if (options.uriLocked) {
       revert LockedForever();
     }
 
@@ -418,7 +422,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
       revert WrongPassword();
     }
 
-    uriLocked = true;
+    options.uriLocked = true;
   }
 
   /// @notice the password is "forever"
@@ -428,7 +432,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
       revert WrongPassword();
     }
     
-    if (maxSupplyLocked) {
+    if (options.maxSupplyLocked) {
       revert LockedForever();
     }
 
@@ -445,11 +449,11 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
       revert WrongPassword();
     }
 
-    maxSupplyLocked = true;
+    options.maxSupplyLocked = true;
   }
 
   function setAffiliateFee(uint16 affiliateFee) external onlyOwner {
-    if (affiliateFeeLocked) {
+    if (options.affiliateFeeLocked) {
       revert LockedForever();
     }
     if (affiliateFee > MAXBPS) {
@@ -465,11 +469,11 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
       revert WrongPassword();
     }
 
-    affiliateFeeLocked = true;
+    options.affiliateFeeLocked = true;
   }
 
   function setDiscounts(Discount calldata discounts) external onlyOwner {
-    if (discountsLocked) {
+    if (options.discountsLocked) {
       revert LockedForever();
     }
 
@@ -496,12 +500,12 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
       revert WrongPassword();
     }
 
-    discountsLocked = true;
+    options.discountsLocked = true;
   }
 
   /// @notice Set BAYC-style provenance once it's calculated
   function setProvenanceHash(string memory provenanceHash) external onlyOwner {
-    if (provenanceHashLocked) {
+    if (options.provenanceHashLocked) {
       revert LockedForever();
     }
 
@@ -514,11 +518,11 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
       revert WrongPassword();
     }
 
-    provenanceHashLocked = true;
+    options.provenanceHashLocked = true;
   }
 
   function setOwnerAltPayout(address ownerAltPayout) external onlyOwner {
-    if (ownerAltPayoutLocked) {
+    if (options.ownerAltPayoutLocked) {
       revert LockedForever();
     }
 
@@ -531,7 +535,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
       revert WrongPassword();
     }
 
-    ownerAltPayoutLocked = true;
+    options.ownerAltPayoutLocked = true;
   }
 
   function setInvites(Invitelist[] calldata invitelist) external onlyOwner {
@@ -593,7 +597,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   function updateBalances(Auth calldata auth, address affiliate, uint256 quantity) internal {
     Invite memory i = invites[auth.key];
     if(i.isErc20 && i.erc20Address != address(0)) {
-      IERC20 erc20Token = IERC20(i.erc20Address);
+      IERC20Upgradeable erc20Token = IERC20Upgradeable(i.erc20Address);
       uint128 value = i.price * uint128(quantity);
 
       uint128 affiliateWad = 0;
@@ -695,7 +699,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     uint256 cost = computePrice(i.price, quantity, affiliate != address(0));
 
     if(i.isErc20 && i.erc20Address != address(0)) {
-      IERC20 erc20Token = IERC20(i.erc20Address);
+      IERC20Upgradeable erc20Token = IERC20Upgradeable(i.erc20Address);
       if (erc20Token.allowance(msg.sender, address(this)) < cost) {
         revert NotApprovedToTransfer();
       }
@@ -747,18 +751,18 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
 
   // OPTIONAL ROYALTY ENFORCEMENT WITH OPENSEA
   function enableRoyaltyEnforcement() external onlyOwner {
-    if (royaltyEnforcementLocked) {
+    if (options.royaltyEnforcementLocked) {
       revert LockedForever();
     }
     _registerForOperatorFiltering();
-    royaltyEnforcementEnabled = true;
+    options.royaltyEnforcementEnabled = true;
   }
 
   function disableRoyaltyEnforcement() external onlyOwner{
-    if (royaltyEnforcementLocked) {
+    if (options.royaltyEnforcementLocked) {
       revert LockedForever();
     }
-    royaltyEnforcementEnabled = false;
+    options.royaltyEnforcementEnabled = false;
   }
 
   /// @notice the password is "forever"
@@ -767,7 +771,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
       revert WrongPassword();
     }
 
-    royaltyEnforcementLocked = true;
+    options.royaltyEnforcementLocked = true;
   }
 
   function setApprovalForAll(address operator, bool approved) public override onlyAllowedOperatorApproval(operator) {
@@ -791,7 +795,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   }
 
   function _operatorFilteringEnabled() internal view override returns (bool) {
-      return royaltyEnforcementEnabled;
+      return options.royaltyEnforcementEnabled;
   }
 
   //ERC2981 ROYALTY
