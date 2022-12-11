@@ -127,11 +127,10 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   // VARIABLES
   //
   mapping(bytes32 => Invite) public invites;
-  mapping(address => mapping(bytes32 => uint256)) private minted;
-  mapping(address => mapping(address => uint128)) public affiliateBalance;
-  mapping(uint256 => bytes) private tokenMsg;
-
-  mapping(address => OwnerBalance) public ownerBalance;
+  mapping(address => mapping(bytes32 => uint256)) private _minted;
+  mapping(address => OwnerBalance) private _ownerBalance;
+  mapping(address => mapping(address => uint128)) private _affiliateBalance;
+  mapping(uint256 => bytes) private _tokenMsg;
 
   Config public config;
   BurnConfig public burnConfig;
@@ -139,8 +138,8 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
 
   string public provenance;
 
-  // address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
-  address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
+  address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
+  // address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
   uint16 private constant MAXBPS = 5000; // max fee or discount is 50%
 
   //
@@ -216,7 +215,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
 
     Invite memory invite = invites[auth.key];
     if (invite.limit < config.maxSupply) {
-      minted[msg.sender][auth.key] += quantity;
+      _minted[msg.sender][auth.key] += quantity;
     }
     updateBalances(auth, affiliate, quantity);
   }
@@ -234,7 +233,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
 
     Invite memory i = invites[auth.key];
     if (i.limit < config.maxSupply) {
-      minted[msg.sender][auth.key] += quantity;
+      _minted[msg.sender][auth.key] += quantity;
     }
     updateBalances(auth, affiliate, quantity);
   }
@@ -270,7 +269,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     }
 
     if (burnConfig.limit < config.maxSupply) {
-      uint256 totalAfterMint = minted[msg.sender][bytes32("burn")] + quantity;
+      uint256 totalAfterMint = _minted[msg.sender][bytes32("burn")] + quantity;
 
       if (totalAfterMint > burnConfig.limit) {
         revert NumberOfMintsExceeded();
@@ -291,7 +290,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     _mint(msg.sender, quantity);
 
     if (burnConfig.limit < config.maxSupply) {
-      minted[msg.sender][bytes32("burn")] += quantity;
+      _minted[msg.sender][bytes32("burn")] += quantity;
     }
   }
 
@@ -312,17 +311,17 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     uint128 wad = 0;
 
     if (msg.sender == owner() || msg.sender == config.ownerAltPayout || msg.sender == PLATFORM) {
-      OwnerBalance memory balance = ownerBalance[erc20Address];
+      OwnerBalance memory balance = _ownerBalance[erc20Address];
       if (msg.sender == owner() || msg.sender == config.ownerAltPayout) {
         wad = balance.owner;
-        ownerBalance[erc20Address] = OwnerBalance({ owner: 0, platform: balance.platform });
+        _ownerBalance[erc20Address] = OwnerBalance({ owner: 0, platform: balance.platform });
       } else {
         wad = balance.platform;
-        ownerBalance[erc20Address] = OwnerBalance({ owner: balance.owner, platform: 0 });
+        _ownerBalance[erc20Address] = OwnerBalance({ owner: balance.owner, platform: 0 });
       }
     } else {
-      wad = affiliateBalance[msg.sender][erc20Address];
-      affiliateBalance[msg.sender][erc20Address] = 0;
+      wad = _affiliateBalance[msg.sender][erc20Address];
+      _affiliateBalance[msg.sender][erc20Address] = 0;
     }
 
     if (wad == 0) {
@@ -357,12 +356,12 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
       revert NotTokenOwner();
     }
 
-    tokenMsg[tokenId] = bytes(message);
+    _tokenMsg[tokenId] = bytes(message);
   }
 
   function getTokenMsg(uint256 tokenId) external view returns (string memory) {
     if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
-    return string(tokenMsg[tokenId]);
+    return string(_tokenMsg[tokenId]);
   }
 
   // calculate price based on affiliate usage and mint discounts
@@ -383,6 +382,23 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
       }
     }
     return cost;
+  }
+
+
+  function ownerBalance() external view returns (OwnerBalance memory) {
+    return _ownerBalance[address(0)];
+  }
+
+  function ownerBalanceErc20(address erc20) external view returns (OwnerBalance memory) {
+    return _ownerBalance[erc20];
+  }
+
+  function affiliateBalance(address affiliate) external view returns (uint128) {
+    return _affiliateBalance[affiliate][address(0)];
+  }
+
+  function affiliateBalanceErc20(address affiliate, address erc20) external view returns (uint128) {
+    return _affiliateBalance[affiliate][erc20];
   }
 
   //
@@ -590,20 +606,20 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     uint128 affiliateWad = 0;
     if (affiliate != address(0)) {
       affiliateWad = (value * config.affiliateFee) / 10000;
-      affiliateBalance[affiliate][erc20Address] += affiliateWad;
+      _affiliateBalance[affiliate][erc20Address] += affiliateWad;
       emit Referral(affiliate, erc20Address, affiliateWad, quantity);
     }
 
     uint128 superAffiliateWad = 0;
     if (config.superAffiliatePayout != address(0)) {
       superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
-      affiliateBalance[config.superAffiliatePayout][erc20Address] += superAffiliateWad;
+      _affiliateBalance[config.superAffiliatePayout][erc20Address] += superAffiliateWad;
     }
 
-    OwnerBalance memory balance = ownerBalance[erc20Address];
+    OwnerBalance memory balance = _ownerBalance[erc20Address];
     uint128 platformWad = ((value * config.platformFee) / 10000) - superAffiliateWad;
     uint128 ownerWad = value - affiliateWad - platformWad - superAffiliateWad;
-    ownerBalance[erc20Address] = OwnerBalance({
+    _ownerBalance[erc20Address] = OwnerBalance({
       owner: balance.owner + ownerWad,
       platform: balance.platform + platformWad
     });
@@ -646,7 +662,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     }
 
     if (i.limit < config.maxSupply) {
-      uint256 totalAfterMint = minted[msg.sender][auth.key] + quantity;
+      uint256 totalAfterMint = _minted[msg.sender][auth.key] + quantity;
 
       if (totalAfterMint > i.limit) {
         revert NumberOfMintsExceeded();
