@@ -31,7 +31,6 @@ describe("Factory", function () {
   before(async function () {
     AFFILIATE_SIGNER = (await ethers.getSigners())[4]; // account[4]
     DEFAULT_CONFIG = {
-      unrevealedUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
       baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
       affiliateSigner: AFFILIATE_SIGNER.address,
       ownerAltPayout: ZERO,
@@ -40,6 +39,7 @@ describe("Factory", function () {
       maxBatchSize: 20,
       affiliateFee: 1500,
       platformFee: 500,
+      defaultRoyalty: 500,
       discounts: {
         affiliateDiscount: 0,
         mintTiers: [],
@@ -229,6 +229,8 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.08"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      isErc20: false,
+      erc20Address: ZERO
     });
 
     // const invites = await nft.invites(ethers.constants.HashZero);
@@ -286,6 +288,8 @@ describe("Factory", function () {
           price: ethers.utils.parseEther("0.1"),
           start: ethers.BigNumber.from(Math.floor(tomorrow / 1000)),
           limit: 1000,
+          isErc20: false,
+          erc20Address: ZERO
         },
       },
       {
@@ -295,6 +299,8 @@ describe("Factory", function () {
           price: price,
           start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
           limit: 10,
+          isErc20: false,
+          erc20Address: ZERO
         },
       },
     ]);
@@ -409,6 +415,8 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.08"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      isErc20: false,
+      erc20Address: ZERO
     });
 
     // test invalid signature
@@ -518,7 +526,6 @@ describe("Factory", function () {
       DEFAULT_SYMBOL,
       // set config that has affiliate and mint tiers
       {
-        unrevealedUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
         baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
         affiliateSigner: AFFILIATE_SIGNER.address,
         ownerAltPayout: ZERO,
@@ -527,6 +534,7 @@ describe("Factory", function () {
         maxBatchSize: 20,
         affiliateFee: 1500,
         platformFee: 500,
+        defaultRoyalty: 500,
         discounts: {
           affiliateDiscount: 1000, // 10%
           mintTiers: [
@@ -559,6 +567,8 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      isErc20: false,
+      erc20Address: ZERO
     });
 
     // valid signature (from affiliateSigner)
@@ -611,7 +621,6 @@ describe("Factory", function () {
       DEFAULT_SYMBOL,
       // set config that has super affiliate set
       {
-        unrevealedUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
         baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
         affiliateSigner: AFFILIATE_SIGNER.address,
         ownerAltPayout: ZERO,
@@ -620,6 +629,7 @@ describe("Factory", function () {
         maxBatchSize: 20,
         affiliateFee: 1500,
         platformFee: 500,
+        defaultRoyalty: 500,
         discounts: {
           affiliateDiscount: 0, // 10%
           mintTiers: [],
@@ -639,6 +649,8 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      isErc20: false,
+      erc20Address: ZERO
     });
 
     // valid signature (from affiliateSigner)
@@ -703,7 +715,6 @@ describe("Factory", function () {
       DEFAULT_SYMBOL,
       // set config that has alt owner payout
       {
-        unrevealedUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
         baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
         affiliateSigner: AFFILIATE_SIGNER.address,
         ownerAltPayout: ownerAltPayout.address,
@@ -712,6 +723,7 @@ describe("Factory", function () {
         maxBatchSize: 20,
         affiliateFee: 1500,
         platformFee: 500,
+        defaultRoyalty: 500,
         discounts: {
           affiliateDiscount: 0, // 10%
           mintTiers: [],
@@ -731,6 +743,8 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      isErc20: false,
+      erc20Address: ZERO
     });
 
     await nft
@@ -794,6 +808,8 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.02"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      isErc20: false,
+      erc20Address: ZERO
     });
 
     // mint tokens 1, 2, 3
@@ -918,6 +934,8 @@ describe("Factory", function () {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      isErc20: false,
+      erc20Address: ZERO
     });
 
     // mint 10 tokens
@@ -1045,11 +1063,15 @@ describe("Factory", function () {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 10000,
+      isErc20: false,
+      erc20Address: ZERO
     });
     await nftBurn.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 10000,
+      isErc20: false,
+      erc20Address: ZERO
     });
 
     // mint some tokens
@@ -1133,6 +1155,8 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.02"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      isErc20: false,
+      erc20Address: ZERO
     });
 
     // mint tokens from owner to holder address
@@ -1179,6 +1203,8 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.00"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 5000,
+      isErc20: false,
+      erc20Address: ZERO
     });
 
     // mint tokens from owner to air drop list
@@ -1253,6 +1279,8 @@ describe("Factory", function () {
     //   price: ethers.utils.parseEther("0.00"),
     //   start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
     //   limit: 5000,
+    //   isErc20: false,
+    //   erc20Address: ZERO
     // });
 
     await expect(await nft.royaltyEnforcementEnabled()).to.be.equal(false);

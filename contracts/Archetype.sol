@@ -23,12 +23,14 @@ import "solady/src/utils/LibString.sol";
 import "solady/src/utils/ECDSA.sol";
 import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 error InvalidConfig();
 error MintNotYetStarted();
 error WalletUnauthorizedToMint();
 error InsufficientEthSent();
 error ExcessiveEthSent();
+error Erc20BalanceTooLow();
 error MaxSupplyExceeded();
 error NumberOfMintsExceeded();
 error MintingPaused();
@@ -50,7 +52,9 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   //
   event Invited(bytes32 indexed key, bytes32 indexed cid);
   event Referral(address indexed affiliate, uint128 wad, uint256 numMints);
+  event ReferralErc20(address indexed affiliate, address erc20Token, uint128 wad, uint256 numMints);
   event Withdrawal(address indexed src, uint128 wad);
+  event WithdrawalErc20(address indexed src, address erc20Token, uint128 wad);
 
   //
   // STRUCTS
@@ -71,7 +75,6 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   }
 
   struct Config {
-    string unrevealedUri;
     string baseUri;
     address affiliateSigner;
     address ownerAltPayout; // optional alternative address for owner withdrawals.
@@ -80,13 +83,16 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     uint32 maxBatchSize;
     uint16 affiliateFee; //BPS
     uint16 platformFee; //BPS
+    uint16 defaultRoyalty; //BPS
     Discount discounts;
   }
 
   struct Invite {
     uint128 price;
-    uint64 start;
-    uint64 limit;
+    uint32 start;
+    uint32 limit;
+    bool isErc20;
+    address erc20Address;
   }
 
   struct Invitelist {
@@ -114,9 +120,12 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   mapping(bytes32 => Invite) public invites;
   mapping(address => mapping(bytes32 => uint256)) private minted;
   mapping(address => uint128) public affiliateBalance;
+  mapping(address => mapping(address => uint128)) public affiliateBalanceErc20;
   mapping(uint256 => bytes) private tokenMsg;
 
   OwnerBalance public ownerBalance;
+  mapping(address => OwnerBalance) public ownerBalanceErc20;
+
   Config public config;
   BurnConfig public burnConfig;
 
@@ -165,14 +174,12 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     }
     config = config_;
     __Ownable_init();
-    uriLocked = false;
-    maxSupplyLocked = false;
-    affiliateFeeLocked = false;
-    discountsLocked = false;
-    ownerAltPayoutLocked = false;
-    provenanceHashLocked = false;
-    royaltyEnforcementEnabled = false;
-    royaltyEnforcementLocked = false;
+
+    if(config.ownerAltPayout != address(0)){
+      setDefaultRoyalty(config.ownerAltPayout, config.defaultRoyalty);
+    } else {
+      setDefaultRoyalty(msg.sender, config.defaultRoyalty);
+    }
   }
 
   //
@@ -211,7 +218,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     if (invite.limit < config.maxSupply) {
       minted[msg.sender][auth.key] += quantity;
     }
-    payoutEth(affiliate, quantity);
+    updateBalances(auth, affiliate, quantity);
   }
 
   function mintTo(
@@ -229,7 +236,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     if (i.limit < config.maxSupply) {
       minted[msg.sender][auth.key] += quantity;
     }
-    payoutEth(affiliate, quantity);
+    updateBalances(auth, affiliate, quantity);
   }
 
   function burnToMint(uint256[] calldata tokenIds) external {
@@ -328,6 +335,36 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
       revert TransferFailed();
     }
     emit Withdrawal(msg.sender, wad);
+  }
+
+  function withdrawErc20(address erc20Address) external {
+    IERC20 erc20Token = IERC20(erc20Address);
+    uint128 wad = 0;
+
+    if (msg.sender == owner() || msg.sender == config.ownerAltPayout || msg.sender == PLATFORM) {
+      OwnerBalance memory balance = ownerBalanceErc20[erc20Address];
+      if (msg.sender == owner() || msg.sender == config.ownerAltPayout) {
+        wad = balance.owner;
+        ownerBalanceErc20[erc20Address] = OwnerBalance({ owner: 0, platform: balance.platform });
+      } else {
+        wad = balance.platform;
+        ownerBalanceErc20[erc20Address] = OwnerBalance({ owner: balance.owner, platform: 0 });
+      }
+    } else {
+      wad = affiliateBalance[msg.sender];
+      affiliateBalanceErc20[erc20Address][msg.sender] = 0;
+    }
+
+    if (wad == 0) {
+      revert BalanceEmpty();
+    }
+    // send to ownerAltPayout if set and owner is withdrawing
+    if (msg.sender == owner() && config.ownerAltPayout != address(0)) {
+      erc20Token.transferFrom(address(this), config.ownerAltPayout, wad);
+    } else {
+      erc20Token.transferFrom(address(this), msg.sender, wad);
+    }
+    emit WithdrawalErc20(msg.sender, erc20Address, wad);
   }
 
   function setTokenMsg(uint256 tokenId, string calldata message) external {
@@ -553,29 +590,63 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
     return 1;
   }
 
-  function payoutEth(address affiliate, uint256 quantity) internal {
-    uint128 value = uint128(msg.value);
+  function updateBalances(Auth calldata auth, address affiliate, uint256 quantity) internal {
+    Invite memory i = invites[auth.key];
+    if(i.isErc20 && i.erc20Address != address(0)) {
+      IERC20 erc20Token = IERC20(i.erc20Address);
+      uint128 value = i.price * uint128(quantity);
 
-    uint128 affiliateWad = 0;
-    if (affiliate != address(0)) {
-      affiliateWad = (value * config.affiliateFee) / 10000;
-      affiliateBalance[affiliate] += affiliateWad;
-      emit Referral(affiliate, affiliateWad, quantity);
+      uint128 affiliateWad = 0;
+      if (affiliate != address(0)) {
+        affiliateWad = (value * config.affiliateFee) / 10000;
+        affiliateBalanceErc20[affiliate][i.erc20Address] += affiliateWad;
+        emit ReferralErc20(affiliate, i.erc20Address, affiliateWad, quantity);
+      }
+
+      uint128 superAffiliateWad = 0;
+      if (config.superAffiliatePayout != address(0)) {
+        superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
+        affiliateBalanceErc20[config.superAffiliatePayout][i.erc20Address] += superAffiliateWad;
+      }
+
+      OwnerBalance memory balance = ownerBalanceErc20[i.erc20Address];
+      uint128 platformWad = ((value * config.platformFee) / 10000) - superAffiliateWad;
+      uint128 ownerWad = value - affiliateWad - platformWad - superAffiliateWad;
+      ownerBalanceErc20[i.erc20Address] = OwnerBalance({
+        owner: balance.owner + ownerWad,
+        platform: balance.platform + platformWad
+      });
+    
+      erc20Token.transferFrom(
+        msg.sender,
+        address(this),
+        value
+      );
+
+    } else {
+      uint128 value = uint128(msg.value);
+
+      uint128 affiliateWad = 0;
+      if (affiliate != address(0)) {
+        affiliateWad = (value * config.affiliateFee) / 10000;
+        affiliateBalance[affiliate] += affiliateWad;
+        emit Referral(affiliate, affiliateWad, quantity);
+      }
+
+      uint128 superAffiliateWad = 0;
+      if (config.superAffiliatePayout != address(0)) {
+        superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
+        affiliateBalance[config.superAffiliatePayout] += superAffiliateWad;
+      }
+
+      OwnerBalance memory balance = ownerBalance;
+      uint128 platformWad = ((value * config.platformFee) / 10000) - superAffiliateWad;
+      uint128 ownerWad = value - affiliateWad - platformWad - superAffiliateWad;
+      ownerBalance = OwnerBalance({
+        owner: balance.owner + ownerWad,
+        platform: balance.platform + platformWad
+      });
     }
-
-    uint128 superAffiliateWad = 0;
-    if (config.superAffiliatePayout != address(0)) {
-      superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
-      affiliateBalance[config.superAffiliatePayout] += superAffiliateWad;
-    }
-
-    OwnerBalance memory balance = ownerBalance;
-    uint128 platformWad = ((value * config.platformFee) / 10000) - superAffiliateWad;
-    uint128 ownerWad = value - affiliateWad - platformWad - superAffiliateWad;
-    ownerBalance = OwnerBalance({
-      owner: balance.owner + ownerWad,
-      platform: balance.platform + platformWad
-    });
   }
 
   function validateMint(
@@ -623,12 +694,28 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
 
     uint256 cost = computePrice(i.price, quantity, affiliate != address(0));
 
-    if (msg.value < cost) {
-      revert InsufficientEthSent();
-    }
+    if(i.isErc20 && i.erc20Address != address(0)) {
+      IERC20 erc20Token = IERC20(i.erc20Address);
+      if (erc20Token.allowance(msg.sender, address(this)) < cost) {
+        revert NotApprovedToTransfer();
+      }
 
-    if (msg.value > cost) {
-      revert ExcessiveEthSent();
+      if (erc20Token.balanceOf(msg.sender) < cost) {
+        revert Erc20BalanceTooLow();
+      }
+
+      if (msg.value != 0) {
+        revert ExcessiveEthSent();
+      }
+    }
+    else {
+      if (msg.value < cost) {
+        revert InsufficientEthSent();
+      }
+
+      if (msg.value > cost) {
+        revert ExcessiveEthSent();
+      }
     }
   }
 
@@ -654,7 +741,7 @@ contract Archetype is ERC721A__Initializable, ERC721AUpgradeable, OperatorFilter
   }
 
   modifier onlyPlatform() {
-    require(PLATFORM == _msgSenderERC721A(), "caller is not the platform");
+    require(PLATFORM == msg.sender, "caller is not the platform");
     _;
   }
 

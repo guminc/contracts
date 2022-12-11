@@ -1,5 +1,4 @@
 export type IArchetypeConfig = {
-  unrevealedUri: string;
   baseUri: string;
   affiliateSigner: string;
   ownerAltPayout: string;
@@ -8,6 +7,7 @@ export type IArchetypeConfig = {
   maxBatchSize: number;
   affiliateFee: number;
   platformFee: number;
+  defaultRoyalty: number;
   discounts: { 
     affiliateDiscount: number;
     mintTiers: { 
