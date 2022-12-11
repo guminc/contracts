@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.3.5
+// Archetype v0.4.0
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -144,8 +144,8 @@ contract Archetype is
 
   string public provenance;
 
-  // address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
-  address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
+  address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
+  // address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
   uint16 private constant MAXBPS = 5000; // max fee or discount is 50%
 
   //
@@ -154,7 +154,8 @@ contract Archetype is
   function initialize(
     string memory name,
     string memory symbol,
-    Config calldata config_
+    Config calldata config_,
+    address _receiver
   ) external initializerERC721A {
     __ERC721A_init(name, symbol);
     // check max bps not reached and min platform fee.
@@ -183,7 +184,7 @@ contract Archetype is
     if (config.ownerAltPayout != address(0)) {
       setDefaultRoyalty(config.ownerAltPayout, config.defaultRoyalty);
     } else {
-      setDefaultRoyalty(msg.sender, config.defaultRoyalty);
+      setDefaultRoyalty(_receiver, config.defaultRoyalty);
     }
   }
 
@@ -818,7 +819,8 @@ contract Archetype is
       ERC2981Upgradeable.supportsInterface(interfaceId);
   }
 
-  function setDefaultRoyalty(address receiver, uint96 feeNumerator) public onlyOwner {
+  function setDefaultRoyalty(address receiver, uint16 feeNumerator) public onlyOwner {
+    config.defaultRoyalty = feeNumerator;
     _setDefaultRoyalty(receiver, feeNumerator);
   }
 }

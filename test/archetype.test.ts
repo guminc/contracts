@@ -93,16 +93,16 @@ describe("Factory", function () {
   });
 
   it("should initialize once and continue to work after initialized", async function () {
-    const res = await archetype.initialize("Flookie", DEFAULT_SYMBOL, DEFAULT_CONFIG);
+    const [_, accountOne] = await ethers.getSigners();
+
+    const res = await archetype.initialize("Flookie", DEFAULT_SYMBOL, DEFAULT_CONFIG, accountOne.address);
     await res.wait();
 
     expect(await archetype.name()).to.equal("Flookie");
 
-    await expect(archetype.initialize("Wookie", DEFAULT_SYMBOL, DEFAULT_CONFIG)).to.be.revertedWith(
+    await expect(archetype.initialize("Wookie", DEFAULT_SYMBOL, DEFAULT_CONFIG, accountOne.address)).to.be.revertedWith(
       "Initializable: contract is already initialized"
     );
-
-    const [_, accountOne] = await ethers.getSigners();
 
     const newCollection = await factory.createCollection(
       accountOne.address,
@@ -1209,7 +1209,7 @@ describe("Factory", function () {
 
     // mint tokens from owner to air drop list
     let airDropList:[string, number][] = []
-    for(let i=0; i<1000; i++) { /// 1000 addresses
+    for(let i=0; i<100; i++) { /// 100 addresses
       airDropList.push([ethers.Wallet.createRandom().address, 1])
     }
 
@@ -1238,9 +1238,9 @@ describe("Factory", function () {
     await expect(await nft.totalSupply()).to.be.equal(airDropList.length);
     await expect(await nft.ownerOf(1)).to.be.equal(airDropList[0][0]);
     await expect(await nft.ownerOf(10)).to.be.equal(airDropList[9][0]);
+    await expect(await nft.ownerOf(20)).to.be.equal(airDropList[19][0]);
+    await expect(await nft.ownerOf(60)).to.be.equal(airDropList[59][0]);
     await expect(await nft.ownerOf(100)).to.be.equal(airDropList[99][0]);
-    await expect(await nft.ownerOf(500)).to.be.equal(airDropList[499][0]);
-    await expect(await nft.ownerOf(1000)).to.be.equal(airDropList[999][0]);
   });
 
   it("test royalty enforcement enabling and lock", async function () {
@@ -1293,6 +1293,87 @@ describe("Factory", function () {
     await expect((await nft.options()).royaltyEnforcementLocked).to.be.equal(true);
     await expect(nft.connect(owner).enableRoyaltyEnforcement()).to.be.reverted;
   });
+
+  it("test default royalty eip 2981", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    const owner = accountOne;
+    const holder = accountZero;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+    const newCollectionAddress = result.events[0].address || "";
+    const NFT = await ethers.getContractFactory("Archetype");
+    const nft = NFT.attach(newCollectionAddress);
+
+    console.log(owner.address)
+    console.log(holder.address)
+
+    await nft.royaltyInfo(0, ethers.utils.parseEther("1"))
+    await expect(JSON.stringify(await nft.royaltyInfo(0, ethers.utils.parseEther("1")))).to.be.equal(JSON.stringify([owner.address, ethers.utils.parseEther("0.05")])); // 5% default royalty to owner
+
+    await nft.connect(owner).setDefaultRoyalty(holder.address, 1000)
+    await expect(JSON.stringify(await nft.royaltyInfo(0, ethers.utils.parseEther("1")))).to.be.equal(JSON.stringify([holder.address, ethers.utils.parseEther("0.10")])); // 10% royalty to holder
+  });
+
+  it("test minting with erc20 list", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    const owner = accountOne;
+    const holder = accountZero;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+    const newCollectionAddress = result.events[0].address || "";
+    const NFT = await ethers.getContractFactory("Archetype");
+    const nft = NFT.attach(newCollectionAddress);
+
+    const erc20 = await (await ethers.getContractFactory("TestErc20")).deploy();
+    const erc20Address = erc20.address;
+
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("1"),
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 300,
+      isErc20: true,
+      erc20Address: erc20Address
+    });
+
+    // try to mint tokens without approval
+    await expect(nft
+      .connect(holder)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x")
+    ).to.be.revertedWith("NotApprovedToTransfer")
+
+    await erc20.connect(holder).approve(nft.address, ethers.constants.MaxUint256)
+
+    // mint without enough erc20
+    await expect(nft
+      .connect(holder)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x")
+    ).to.be.revertedWith("Erc20BalanceTooLow")
+
+    await erc20.connect(holder).mint(3)
+
+    await nft.connect(holder)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x")
+
+    await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
+    await expect(await erc20.balanceOf(holder.address)).to.be.equal(0);
+  });
+
 });
 
 // todo: add test to ensure affiliate signer can't be zero address
