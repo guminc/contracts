@@ -1,5 +1,5 @@
 name: CI
-on: [push, pull_request]
+on: [push]
 
 jobs:
   tests:
@@ -13,7 +13,7 @@ jobs:
           node-version: "16.x"
       - run: npm install
         shell: bash
-      - name: Create local node and deploy
+      - name: Create local node and test
         run: |
           npx hardhat node &
           npm test

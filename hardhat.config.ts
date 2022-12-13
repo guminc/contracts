@@ -10,10 +10,9 @@ import "@nomiclabs/hardhat-truffle5";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 require("hardhat-log-remover");
-require('hardhat-contract-sizer');
+require("hardhat-contract-sizer");
 
-const fs = require("fs");
-const privateKey = fs.readFileSync(".secret").toString().trim() || "01234567890123456789";
+const privateKey = process.env.PRIVATE_KEY;
 
 dotenv.config();
 
@@ -67,15 +66,6 @@ const config: HardhatUserConfig = {
       // gasPrice: 200000,
       // gasPrice: 2000000000000000000,
     },
-    rinkeby: {
-      accounts: [privateKey],
-      url: "https://rinkeby.infura.io/v3/569cee6284754b9e86ff2e5e55a0dc22",
-      chainId: 4,
-      // gas: 2100000,
-      // gasPrice: 8000000000000,
-      // gasPrice: 200000,
-      // gasPrice: 2000000000000000000,
-    },
     localhost: {
       url: "http://127.0.0.1:8545",
       gas: 6000000,
@@ -92,7 +82,7 @@ const config: HardhatUserConfig = {
     hardhat: {},
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY || "HDBRZ227RPV6YFG2QY1SCKE6IG3P7FG7R5",
+    apiKey: process.env.ETHERSCAN_API_KEY,
   },
 };
 
