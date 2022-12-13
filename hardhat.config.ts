@@ -10,7 +10,7 @@ import "@nomiclabs/hardhat-truffle5";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 require("hardhat-log-remover");
-require('hardhat-contract-sizer');
+require("hardhat-contract-sizer");
 
 const fs = require("fs");
 const privateKey = fs.readFileSync(".secret").toString().trim() || "01234567890123456789";
@@ -50,9 +50,6 @@ const config: HardhatUserConfig = {
   //   compilers: [
   //     {
   //       version: "0.7.6",
-  //     },
-  //     {
-  //       version: "0.5.0",
   //     },
   //   ],
   // },

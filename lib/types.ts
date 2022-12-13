@@ -8,11 +8,11 @@ export type IArchetypeConfig = {
   affiliateFee: number;
   platformFee: number;
   defaultRoyalty: number;
-  discounts: { 
+  discounts: {
     affiliateDiscount: number;
-    mintTiers: { 
-      numMints: number; 
-      mintDiscount: number; 
+    mintTiers: {
+      numMints: number;
+      mintDiscount: number;
     }[];
-  }
+  };
 };
