@@ -8,6 +8,8 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import ipfsh from "ipfsh";
 import { Contract } from "ethers";
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const DEFAULT_NAME = "Pookie";
 const DEFAULT_SYMBOL = "POOKIE";
 let AFFILIATE_SIGNER: SignerWithAddress;
@@ -241,6 +243,8 @@ describe("Factory", function () {
     const invites = await nft.invites(ethers.constants.HashZero);
 
     console.log({ invites });
+
+    await sleep(1000);
 
     console.log("current time", Math.floor(Date.now() / 1000));
 
