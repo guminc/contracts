@@ -773,7 +773,6 @@ contract Archetype is
 
   function approve(address operator, uint256 tokenId)
     public
-    payable
     override
     onlyAllowedOperatorApproval(operator)
   {
@@ -784,7 +783,7 @@ contract Archetype is
     address from,
     address to,
     uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
+  ) public override onlyAllowedOperator(from) {
     super.transferFrom(from, to, tokenId);
   }
 
@@ -792,7 +791,7 @@ contract Archetype is
     address from,
     address to,
     uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
+  ) public override onlyAllowedOperator(from) {
     super.safeTransferFrom(from, to, tokenId);
   }
 
@@ -801,7 +800,7 @@ contract Archetype is
     address to,
     uint256 tokenId,
     bytes memory data
-  ) public payable override onlyAllowedOperator(from) {
+  ) public override onlyAllowedOperator(from) {
     super.safeTransferFrom(from, to, tokenId, data);
   }
 
