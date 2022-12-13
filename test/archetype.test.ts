@@ -1039,7 +1039,9 @@ describe("Factory", function () {
     const NFT = await ethers.getContractFactory("Archetype");
     const nft = NFT.attach(newCollectionAddress);
 
-    await expect(nft.connect(owner).setSuperAffiliatePayout(minter.address)).to.be.revertedWith("NotPlatform");
+    await expect(nft.connect(owner).setSuperAffiliatePayout(minter.address)).to.be.revertedWith(
+      "NotPlatform"
+    );
     await nft.connect(platform).setSuperAffiliatePayout(minter.address);
 
     await expect((await nft.connect(minter).config()).superAffiliatePayout).to.be.equal(
@@ -1333,8 +1335,8 @@ describe("Factory", function () {
     const NFT = await ethers.getContractFactory("Archetype");
     const nft = NFT.attach(newCollectionAddress);
 
-    console.log(owner.address);
-    console.log(holder.address);
+    // console.log(owner.address);
+    // console.log(holder.address);
 
     await nft.royaltyInfo(0, ethers.utils.parseEther("1"));
     await expect(
@@ -1381,9 +1383,6 @@ describe("Factory", function () {
       erc20Address: erc20Address,
     });
 
-    const decimals = await erc20.decimals();
-    console.log({ decimals });
-
     // try to mint tokens without approval
     await expect(
       nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x")
@@ -1391,22 +1390,10 @@ describe("Factory", function () {
 
     await erc20.connect(holder).approve(nft.address, ethers.constants.MaxUint256);
 
-    console.log("approved");
-
-    // const res2 = await nft
-    //   .connect(holder)
-    //   .mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x");
-
-    // console.log({ res2 });
-
     // mint without enough erc20
-    const res1 = await expect(
+    await expect(
       nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x")
     ).to.be.revertedWith("Erc20BalanceTooLow");
-
-    console.log("minted");
-
-    console.log({ res1 });
 
     await erc20.connect(holder).mint(ethers.utils.parseEther("3"));
 
@@ -1420,17 +1407,21 @@ describe("Factory", function () {
     await expect(await erc20.balanceOf(holder.address)).to.be.equal(0);
     await expect(await erc20.balanceOf(nft.address)).to.be.equal(ethers.utils.parseEther("3"));
 
+    await expect((await nft.ownerBalanceErc20(erc20.address)).owner).to.be.equal(
+      ethers.utils.parseEther("2.85")
+    ); // 95%
+    await expect((await nft.ownerBalanceErc20(erc20.address)).platform).to.be.equal(
+      ethers.utils.parseEther("0.15")
+    ); // 5%
 
-    await expect((await nft.ownerBalanceErc20(erc20.address)).owner).to.be.equal(ethers.utils.parseEther("2.85")); // 95%
-    await expect((await nft.ownerBalanceErc20(erc20.address)).platform).to.be.equal(ethers.utils.parseEther("0.15")); // 5%
-
-    await nft.connect(owner).withdrawErc20(erc20.address)
+    await nft.connect(owner).withdrawErc20(erc20.address);
     await expect(await erc20.balanceOf(nft.address)).to.be.equal(ethers.utils.parseEther("0.15"));
-    await nft.connect(platform).withdrawErc20(erc20.address)
+    await nft.connect(platform).withdrawErc20(erc20.address);
 
     await expect(await erc20.balanceOf(owner.address)).to.be.equal(ethers.utils.parseEther("2.85"));
-    await expect(await erc20.balanceOf(platform.address)).to.be.equal(ethers.utils.parseEther("0.15"));
-
+    await expect(await erc20.balanceOf(platform.address)).to.be.equal(
+      ethers.utils.parseEther("0.15")
+    );
   });
 });
 
