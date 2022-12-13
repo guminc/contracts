@@ -1,0 +1,23 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install packages
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.x"
+      - run: npm install
+        shell: bash
+      - name: Create local node and deploy
+        run: |
+          npx hardhat node &
+          npm test
