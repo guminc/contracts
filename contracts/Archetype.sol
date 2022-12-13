@@ -41,6 +41,7 @@ error TransferFailed();
 error MaxBatchSizeExceeded();
 error BurnToMintDisabled();
 error NotTokenOwner();
+error NotPlatform();
 error NotApprovedToTransfer();
 error InvalidAmountOfTokens();
 error WrongPassword();
@@ -731,7 +732,9 @@ contract Archetype is
   }
 
   modifier onlyPlatform() {
-    require(PLATFORM == msg.sender, "caller is not the platform");
+    if(msg.sender != PLATFORM) {
+      revert NotPlatform();
+    }
     _;
   }
 
