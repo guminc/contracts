@@ -23,7 +23,7 @@
   "dependencies": {
     "@openzeppelin/contracts-upgradeable": "4.5.2",
     "@uploadcare/upload-client": "2.0.0",
-    "dotenv-safe": "^8.2.0",
+    "dotenv": "^16.0.3",
     "ethereumjs-util": "7.1.4",
     "ipfsh": "0.0.6",
     "solady": "^0.0.19"

@@ -1,4 +1,4 @@
-import * as dotenv from "dotenv-safe";
+import * as dotenv from "dotenv";
 import "hardhat-gas-reporter";
 import { HardhatUserConfig, task } from "hardhat/config";
 import "solidity-coverage";
