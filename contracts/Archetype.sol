@@ -144,8 +144,8 @@ contract Archetype is
 
   string public provenance;
 
-  address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
-  // address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
+  // address private constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
+  address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
   uint16 private constant MAXBPS = 5000; // max fee or discount is 50%
 
   //
@@ -404,6 +404,10 @@ contract Archetype is
 
   function affiliateBalanceErc20(address affiliate, address erc20) external view returns (uint128) {
     return _affiliateBalance[affiliate][erc20];
+  }
+
+  function minted(address minter, bytes32 key) external view returns (uint256) {
+    return _minted[minter][key];
   }
 
   //
