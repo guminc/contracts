@@ -69,6 +69,16 @@ describe("Factory", function () {
     console.log({ factoryAddress: factory.address, archetypeAddress: archetype.address });
   });
 
+  it("should have platform set to test account", async function () {
+    const [_, _accountOne, accountTwo] = await ethers.getSigners();
+
+    const contractPlatform = await archetype.PLATFORM();
+
+    console.log({ accountTwo, contractPlatform });
+
+    expect(accountTwo.address).to.equal(contractPlatform);
+  });
+
   it("should create a collection", async function () {
     const [_, accountOne] = await ethers.getSigners();
 
