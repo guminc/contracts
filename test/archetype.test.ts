@@ -238,9 +238,11 @@ describe("Factory", function () {
       erc20Address: ZERO,
     });
 
-    // const invites = await nft.invites(ethers.constants.HashZero);
+    const invites = await nft.invites(ethers.constants.HashZero);
 
-    // console.log({ invites });
+    console.log({ invites });
+
+    console.log("current time", Math.floor(Date.now() / 1000));
 
     await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
       value: ethers.utils.parseEther("0.08"),
