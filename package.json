@@ -6,8 +6,7 @@
   "scripts": {
     "test": "hardhat test test/archetype.test",
     "test:specific": "hardhat test test/archetype.test --grep",
-    "start": "concurrently \"cd api && npm start\" \"cd app && npm run dev\"",
-    "deploy": "npx hardhat run scripts/deployRemilia.ts --network localhost",
+    "deploy": "npx hardhat run scripts/deployFactory.ts --network localhost",
     "network": "npx hardhat node",
     "verify": "npx hardhat verify 0xc078Aed674c230cDD7ADD602E077797d08d8f0c2 --network rinkeby"
   },
@@ -22,17 +21,11 @@
   },
   "homepage": "https://github.com/addy-the-young/scatter#readme",
   "dependencies": {
-    "@daonomic/tests-common": "0.2.2",
     "@openzeppelin/contracts-upgradeable": "4.5.2",
-    "@rarible/exchange-interfaces": "0.4.0",
-    "@rarible/lazy-mint": "0.5.5",
-    "@rarible/meta-tx": "0.1.2",
-    "@rarible/royalties": "0.7.4",
     "@uploadcare/upload-client": "2.0.0",
-    "concurrently": "6.4.0",
+    "dotenv-safe": "^8.2.0",
     "ethereumjs-util": "7.1.4",
     "ipfsh": "0.0.6",
-    "moment": "2.29.1",
     "solady": "^0.0.19"
   },
   "devDependencies": {
@@ -44,9 +37,6 @@
     "@openzeppelin/contracts": "^4.8.0",
     "@openzeppelin/hardhat-upgrades": "1.12.1",
     "@openzeppelin/truffle-upgrades": "1.11.0",
-    "@rarible/custom-matchers": "0.3.0",
-    "@rarible/tokens": "0.7.0",
-    "@rarible/transfer-proxy": "0.3.0",
     "@typechain/ethers-v5": "7.2.0",
     "@typechain/hardhat": "2.3.1",
     "@typechain/truffle-v5": "6.0.0",
@@ -57,7 +47,6 @@
     "@typescript-eslint/parser": "4.33.0",
     "chai": "4.3.4",
     "closedsea": "^0.0.10",
-    "dotenv": "10.0.0",
     "erc721a-upgradeable": "^4.2.2",
     "eslint": "7.32.0",
     "eslint-config-prettier": "8.3.0",
