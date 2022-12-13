@@ -350,9 +350,9 @@ contract Archetype is
       IERC20Upgradeable erc20Token = IERC20Upgradeable(erc20Address);
 
       if (msg.sender == owner() && config.ownerAltPayout != address(0)) {
-        erc20Token.transferFrom(address(this), config.ownerAltPayout, wad);
+        erc20Token.transfer(config.ownerAltPayout, wad);
       } else {
-        erc20Token.transferFrom(address(this), msg.sender, wad);
+        erc20Token.transfer(msg.sender, wad);
       }
     }
     emit Withdrawal(msg.sender, erc20Address, wad);
