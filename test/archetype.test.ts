@@ -1395,7 +1395,7 @@ describe("Factory", function () {
       nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x")
     ).to.be.revertedWith("Erc20BalanceTooLow");
 
-    await erc20.connect(holder).mint(ethers.utils.parseEther("3"));
+    await erc20.connect(holder).mint(3);
 
     const balance = await erc20.balanceOf(holder.address);
 
