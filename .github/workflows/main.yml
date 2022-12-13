@@ -3,6 +3,10 @@ on: [push]
 
 jobs:
   tests:
+    env:
+      ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+      PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+
     runs-on: ubuntu-latest
 
     steps:
