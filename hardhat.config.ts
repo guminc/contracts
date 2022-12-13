@@ -1,4 +1,4 @@
-import * as dotenv from "dotenv";
+import * as dotenv from "dotenv-safe";
 import "hardhat-gas-reporter";
 import { HardhatUserConfig, task } from "hardhat/config";
 import "solidity-coverage";
@@ -25,15 +25,6 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
     console.log(account.address);
   }
 });
-
-// extendEnvironment((hre) => {
-// const Web3 = require("web3");
-// hre.network.provider is an EIP1193-compatible provider.
-// hre.web3 = new Web3(hre.network.provider);
-// });
-
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -79,7 +70,7 @@ const config: HardhatUserConfig = {
     hardhat: {},
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: process.env.ETHERSCAN_API_KEY || "",
   },
 };
 
