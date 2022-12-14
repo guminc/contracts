@@ -8,6 +8,8 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import ipfsh from "ipfsh";
 import { Contract } from "ethers";
 
+import { FakeContract, smock, MockContractFactory, MockContract } from "@defi-wonderland/smock";
+
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const DEFAULT_NAME = "Pookie";
@@ -25,8 +27,10 @@ const ZERO = "0x0000000000000000000000000000000000000000";
 const BURN = "0x000000000000000000000000000000000000dEaD";
 
 describe("Factory", function () {
-  let Archetype: Archetype__factory;
-  let archetype: IArchetype;
+  // let Archetype: Archetype__factory;
+  // let archetype: IArchetype;
+  let Archetype: MockContractFactory<Archetype__factory>;
+  let archetype: MockContract<IArchetype>;
   let Factory: Factory__factory;
   let factory: Contract;
 
@@ -52,11 +56,16 @@ describe("Factory", function () {
       },
     };
 
-    Archetype = await ethers.getContractFactory("Archetype");
+    // Archetype = await ethers.getContractFactory("Archetype");
+    Archetype = await smock.mock<Archetype__factory>("Archetype");
 
     archetype = await Archetype.deploy();
 
     await archetype.deployed();
+
+    const [_, _accountOne, accountTwo] = await ethers.getSigners();
+
+    await archetype.setVariable("PLATFORM", accountTwo.address);
 
     Factory = await ethers.getContractFactory("Factory");
 
@@ -74,7 +83,7 @@ describe("Factory", function () {
 
     const contractPlatform = await archetype.PLATFORM();
 
-    console.log({ accountTwo, contractPlatform });
+    console.log({ accountTwo: accountTwo.address, contractPlatform });
 
     expect(accountTwo.address).to.equal(contractPlatform);
   });

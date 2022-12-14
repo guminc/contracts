@@ -11,6 +11,7 @@ import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 require("hardhat-log-remover");
 require("hardhat-contract-sizer");
+// require("@eth-optimism/smock/build/src/plugins/hardhat-storagelayout");
 
 dotenv.config();
 
@@ -33,6 +34,11 @@ const config: HardhatUserConfig = {
       optimizer: {
         enabled: true,
         runs: 200,
+      },
+      outputSelection: {
+        "*": {
+          "*": ["storageLayout"],
+        },
       },
     },
   },
