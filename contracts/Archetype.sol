@@ -58,8 +58,8 @@ contract Archetype is
   // EVENTS
   //
   event Invited(bytes32 indexed key, bytes32 indexed cid);
-  event Referral(address indexed affiliate, address erc20Token, uint128 wad, uint256 numMints);
-  event Withdrawal(address indexed src, address erc20Token, uint128 wad);
+  event Referral(address indexed affiliate, address token, uint128 wad, uint256 numMints);
+  event Withdrawal(address indexed src, address token, uint128 wad);
 
   //
   // STRUCTS
@@ -107,7 +107,7 @@ contract Archetype is
     uint128 price;
     uint32 start;
     uint32 limit;
-    address erc20Address;
+    address tokenAddress;
   }
 
   struct Invitelist {
@@ -310,51 +310,56 @@ contract Archetype is
   }
 
   function withdraw() external {
-    withdrawErc20(address(0));
+    address[] memory tokens = new address[](1);
+    tokens[0] = address(0);
+    withdrawTokens(tokens);
   }
 
-  function withdrawErc20(address erc20Address) public {
-    uint128 wad = 0;
+  function withdrawTokens(address[] memory tokens) public {
+    for (uint256 i = 0; i < tokens.length; i++) {
+      address tokenAddress = tokens[i];
+      uint128 wad = 0;
 
-    if (msg.sender == owner() || msg.sender == config.ownerAltPayout || msg.sender == PLATFORM) {
-      OwnerBalance memory balance = _ownerBalance[erc20Address];
-      if (msg.sender == owner() || msg.sender == config.ownerAltPayout) {
-        wad = balance.owner;
-        _ownerBalance[erc20Address] = OwnerBalance({ owner: 0, platform: balance.platform });
+      if (msg.sender == owner() || msg.sender == config.ownerAltPayout || msg.sender == PLATFORM) {
+        OwnerBalance memory balance = _ownerBalance[tokenAddress];
+        if (msg.sender == owner() || msg.sender == config.ownerAltPayout) {
+          wad = balance.owner;
+          _ownerBalance[tokenAddress] = OwnerBalance({ owner: 0, platform: balance.platform });
+        } else {
+          wad = balance.platform;
+          _ownerBalance[tokenAddress] = OwnerBalance({ owner: balance.owner, platform: 0 });
+        }
       } else {
-        wad = balance.platform;
-        _ownerBalance[erc20Address] = OwnerBalance({ owner: balance.owner, platform: 0 });
+        wad = _affiliateBalance[msg.sender][tokenAddress];
+        _affiliateBalance[msg.sender][tokenAddress] = 0;
       }
-    } else {
-      wad = _affiliateBalance[msg.sender][erc20Address];
-      _affiliateBalance[msg.sender][erc20Address] = 0;
-    }
 
-    if (wad == 0) {
-      revert BalanceEmpty();
-    }
+      if (wad == 0) {
+        revert BalanceEmpty();
+      }
 
-    if (erc20Address == address(0)) {
-      bool success = false;
-      // send to ownerAltPayout if set and owner is withdrawing
-      if (msg.sender == owner() && config.ownerAltPayout != address(0)) {
-        (success, ) = payable(config.ownerAltPayout).call{ value: wad }("");
+      if (tokenAddress == address(0)) {
+        bool success = false;
+        // send to ownerAltPayout if set and owner is withdrawing
+        if (msg.sender == owner() && config.ownerAltPayout != address(0)) {
+          (success, ) = payable(config.ownerAltPayout).call{ value: wad }("");
+        } else {
+          (success, ) = msg.sender.call{ value: wad }("");
+        }
+        if (!success) {
+          revert TransferFailed();
+        }
       } else {
-        (success, ) = msg.sender.call{ value: wad }("");
-      }
-      if (!success) {
-        revert TransferFailed();
-      }
-    } else {
-      IERC20Upgradeable erc20Token = IERC20Upgradeable(erc20Address);
+        IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
 
-      if (msg.sender == owner() && config.ownerAltPayout != address(0)) {
-        erc20Token.transfer(config.ownerAltPayout, wad);
-      } else {
-        erc20Token.transfer(msg.sender, wad);
+        if (msg.sender == owner() && config.ownerAltPayout != address(0)) {
+          erc20Token.transfer(config.ownerAltPayout, wad);
+        } else {
+          erc20Token.transfer(msg.sender, wad);
+        }
       }
+      emit Withdrawal(msg.sender, tokenAddress, wad);
     }
-    emit Withdrawal(msg.sender, erc20Address, wad);
   }
 
   function setTokenMsg(uint256 tokenId, string calldata message) external {
@@ -394,16 +399,16 @@ contract Archetype is
     return _ownerBalance[address(0)];
   }
 
-  function ownerBalanceErc20(address erc20) external view returns (OwnerBalance memory) {
-    return _ownerBalance[erc20];
+  function ownerBalanceToken(address token) external view returns (OwnerBalance memory) {
+    return _ownerBalance[token];
   }
 
   function affiliateBalance(address affiliate) external view returns (uint128) {
     return _affiliateBalance[affiliate][address(0)];
   }
 
-  function affiliateBalanceErc20(address affiliate, address erc20) external view returns (uint128) {
-    return _affiliateBalance[affiliate][erc20];
+  function affiliateBalanceToken(address affiliate, address token) external view returns (uint128) {
+    return _affiliateBalance[affiliate][token];
   }
 
   function minted(address minter, bytes32 key) external view returns (uint256) {
@@ -610,36 +615,35 @@ contract Archetype is
     uint256 quantity
   ) internal {
     Invite memory i = invites[auth.key];
-    address erc20Address = address(0);
+    address tokenAddress = i.tokenAddress;
     uint128 value = uint128(msg.value);
-    if (i.erc20Address != address(0)) {
-      erc20Address = i.erc20Address;
+    if (tokenAddress != address(0)) {
       value = uint128(computePrice(i.price, quantity, affiliate != address(0)));
     }
 
     uint128 affiliateWad = 0;
     if (affiliate != address(0)) {
       affiliateWad = (value * config.affiliateFee) / 10000;
-      _affiliateBalance[affiliate][erc20Address] += affiliateWad;
-      emit Referral(affiliate, erc20Address, affiliateWad, quantity);
+      _affiliateBalance[affiliate][tokenAddress] += affiliateWad;
+      emit Referral(affiliate, tokenAddress, affiliateWad, quantity);
     }
 
     uint128 superAffiliateWad = 0;
     if (config.superAffiliatePayout != address(0)) {
       superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
-      _affiliateBalance[config.superAffiliatePayout][erc20Address] += superAffiliateWad;
+      _affiliateBalance[config.superAffiliatePayout][tokenAddress] += superAffiliateWad;
     }
 
-    OwnerBalance memory balance = _ownerBalance[erc20Address];
+    OwnerBalance memory balance = _ownerBalance[tokenAddress];
     uint128 platformWad = ((value * config.platformFee) / 10000) - superAffiliateWad;
     uint128 ownerWad = value - affiliateWad - platformWad - superAffiliateWad;
-    _ownerBalance[erc20Address] = OwnerBalance({
+    _ownerBalance[tokenAddress] = OwnerBalance({
       owner: balance.owner + ownerWad,
       platform: balance.platform + platformWad
     });
 
-    if (erc20Address != address(0)) {
-      IERC20Upgradeable erc20Token = IERC20Upgradeable(erc20Address);
+    if (tokenAddress != address(0)) {
+      IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
       erc20Token.transferFrom(msg.sender, address(this), value);
     }
   }
@@ -663,7 +667,7 @@ contract Archetype is
       revert MintingPaused();
     }
 
-    if (!verify(auth, i.erc20Address, msg.sender)) {
+    if (!verify(auth, i.tokenAddress, msg.sender)) {
       revert WalletUnauthorizedToMint();
     }
 
@@ -689,8 +693,8 @@ contract Archetype is
 
     uint256 cost = computePrice(i.price, quantity, affiliate != address(0));
 
-    if (i.erc20Address != address(0)) {
-      IERC20Upgradeable erc20Token = IERC20Upgradeable(i.erc20Address);
+    if (i.tokenAddress != address(0)) {
+      IERC20Upgradeable erc20Token = IERC20Upgradeable(i.tokenAddress);
       if (erc20Token.allowance(msg.sender, address(this)) < cost) {
         revert NotApprovedToTransfer();
       }
@@ -728,8 +732,8 @@ contract Archetype is
     }
   }
 
-  function verify(Auth calldata auth, address erc20Address, address account) internal pure returns (bool) {
-    if(auth.key == "" || auth.key == keccak256(abi.encodePacked(erc20Address))) {
+  function verify(Auth calldata auth, address tokenAddress, address account) internal pure returns (bool) {
+    if(auth.key == "" || auth.key == keccak256(abi.encodePacked(tokenAddress))) {
       return true;
     }
 

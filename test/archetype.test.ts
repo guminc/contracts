@@ -246,8 +246,7 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.08"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
-      isErc20: false,
-      erc20Address: ZERO,
+      tokenAddress: ZERO,
     });
 
     const invites = await nft.invites(ethers.constants.HashZero);
@@ -309,8 +308,8 @@ describe("Factory", function () {
           price: ethers.utils.parseEther("0.1"),
           start: ethers.BigNumber.from(Math.floor(tomorrow / 1000)),
           limit: 1000,
-          isErc20: false,
-          erc20Address: ZERO,
+          
+          tokenAddress: ZERO,
         },
       },
       {
@@ -320,8 +319,8 @@ describe("Factory", function () {
           price: price,
           start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
           limit: 10,
-          isErc20: false,
-          erc20Address: ZERO,
+          
+          tokenAddress: ZERO,
         },
       },
     ]);
@@ -436,8 +435,7 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.08"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
-      isErc20: false,
-      erc20Address: ZERO,
+      tokenAddress: ZERO,
     });
 
     // test invalid signature
@@ -588,8 +586,7 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
-      isErc20: false,
-      erc20Address: ZERO,
+      tokenAddress: ZERO,
     });
 
     // valid signature (from affiliateSigner)
@@ -670,8 +667,7 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
-      isErc20: false,
-      erc20Address: ZERO,
+      tokenAddress: ZERO,
     });
 
     // valid signature (from affiliateSigner)
@@ -764,8 +760,7 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
-      isErc20: false,
-      erc20Address: ZERO,
+      tokenAddress: ZERO,
     });
 
     await nft
@@ -829,8 +824,7 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.02"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
-      isErc20: false,
-      erc20Address: ZERO,
+      tokenAddress: ZERO,
     });
 
     // mint tokens 1, 2, 3
@@ -955,8 +949,7 @@ describe("Factory", function () {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
-      isErc20: false,
-      erc20Address: ZERO,
+      tokenAddress: ZERO,
     });
 
     // mint 10 tokens
@@ -1084,15 +1077,13 @@ describe("Factory", function () {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 10000,
-      isErc20: false,
-      erc20Address: ZERO,
+      tokenAddress: ZERO,
     });
     await nftBurn.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 10000,
-      isErc20: false,
-      erc20Address: ZERO,
+      tokenAddress: ZERO,
     });
 
     // mint some tokens
@@ -1176,8 +1167,7 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.02"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
-      isErc20: false,
-      erc20Address: ZERO,
+      tokenAddress: ZERO,
     });
 
     // mint tokens from owner to holder address
@@ -1225,8 +1215,7 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.00"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 5000,
-      isErc20: false,
-      erc20Address: ZERO,
+      tokenAddress: ZERO,
     });
 
     // mint tokens from owner to air drop list
@@ -1302,8 +1291,7 @@ describe("Factory", function () {
     //   price: ethers.utils.parseEther("0.00"),
     //   start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
     //   limit: 5000,
-    //   isErc20: false,
-    //   erc20Address: ZERO
+    //   tokenAddress: ZERO
     // });
 
     await expect((await nft.options()).royaltyEnforcementEnabled).to.be.equal(false);
@@ -1369,20 +1357,19 @@ describe("Factory", function () {
     const nft = NFT.attach(newCollectionAddress);
 
     const erc20 = await (await ethers.getContractFactory("TestErc20")).deploy();
-    const erc20Address = erc20.address;
+    const tokenAddress = erc20.address;
 
     const balanceBefore = await erc20.balanceOf(holder.address);
 
     console.log({ balanceBefore: balanceBefore.toString() });
 
-    const erc20PublicKey = ethers.utils.solidityKeccak256(["address"], [erc20Address])
+    const erc20PublicKey = ethers.utils.solidityKeccak256(["address"], [tokenAddress])
 
     await nft.connect(owner).setInvite(erc20PublicKey, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
-      isErc20: true,
-      erc20Address: erc20Address,
+      tokenAddress: tokenAddress,
     });
 
     // try to mint tokens without approval
@@ -1409,16 +1396,16 @@ describe("Factory", function () {
     await expect(await erc20.balanceOf(holder.address)).to.be.equal(0);
     await expect(await erc20.balanceOf(nft.address)).to.be.equal(ethers.utils.parseEther("3"));
 
-    await expect((await nft.ownerBalanceErc20(erc20.address)).owner).to.be.equal(
+    await expect((await nft.ownerBalanceToken(erc20.address)).owner).to.be.equal(
       ethers.utils.parseEther("2.85")
     ); // 95%
-    await expect((await nft.ownerBalanceErc20(erc20.address)).platform).to.be.equal(
+    await expect((await nft.ownerBalanceToken(erc20.address)).platform).to.be.equal(
       ethers.utils.parseEther("0.15")
     ); // 5%
 
-    await nft.connect(owner).withdrawErc20(erc20.address);
+    await nft.connect(owner).withdrawTokens([erc20.address]);
     await expect(await erc20.balanceOf(nft.address)).to.be.equal(ethers.utils.parseEther("0.15"));
-    await nft.connect(platform).withdrawErc20(erc20.address);
+    await nft.connect(platform).withdrawTokens([erc20.address]);
 
     await expect(await erc20.balanceOf(owner.address)).to.be.equal(ethers.utils.parseEther("2.85"));
     await expect(await erc20.balanceOf(platform.address)).to.be.equal(
