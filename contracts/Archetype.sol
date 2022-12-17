@@ -107,7 +107,6 @@ contract Archetype is
     uint128 price;
     uint32 start;
     uint32 limit;
-    bool isErc20;
     address erc20Address;
   }
 
@@ -613,7 +612,7 @@ contract Archetype is
     Invite memory i = invites[auth.key];
     address erc20Address = address(0);
     uint128 value = uint128(msg.value);
-    if (i.isErc20 && i.erc20Address != address(0)) {
+    if (i.erc20Address != address(0)) {
       erc20Address = i.erc20Address;
       value = uint128(computePrice(i.price, quantity, affiliate != address(0)));
     }
@@ -639,7 +638,7 @@ contract Archetype is
       platform: balance.platform + platformWad
     });
 
-    if (i.isErc20 && erc20Address != address(0)) {
+    if (erc20Address != address(0)) {
       IERC20Upgradeable erc20Token = IERC20Upgradeable(erc20Address);
       erc20Token.transferFrom(msg.sender, address(this), value);
     }
@@ -690,7 +689,7 @@ contract Archetype is
 
     uint256 cost = computePrice(i.price, quantity, affiliate != address(0));
 
-    if (i.isErc20 && i.erc20Address != address(0)) {
+    if (i.erc20Address != address(0)) {
       IERC20Upgradeable erc20Token = IERC20Upgradeable(i.erc20Address);
       if (erc20Token.allowance(msg.sender, address(this)) < cost) {
         revert NotApprovedToTransfer();
