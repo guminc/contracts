@@ -732,8 +732,12 @@ contract Archetype is
     }
   }
 
-  function verify(Auth calldata auth, address tokenAddress, address account) internal pure returns (bool) {
-    if(auth.key == "" || auth.key == keccak256(abi.encodePacked(tokenAddress))) {
+  function verify(
+    Auth calldata auth,
+    address tokenAddress,
+    address account
+  ) internal pure returns (bool) {
+    if (auth.key == "" || auth.key == keccak256(abi.encodePacked(tokenAddress))) {
       return true;
     }
 
@@ -741,7 +745,7 @@ contract Archetype is
   }
 
   modifier onlyPlatform() {
-    if(msg.sender != PLATFORM) {
+    if (msg.sender != PLATFORM) {
       revert NotPlatform();
     }
     _;
