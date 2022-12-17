@@ -1375,7 +1375,9 @@ describe("Factory", function () {
 
     console.log({ balanceBefore: balanceBefore.toString() });
 
-    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+    const erc20PublicKey = ethers.utils.solidityKeccak256(["address"], [erc20Address])
+
+    await nft.connect(owner).setInvite(erc20PublicKey, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
@@ -1385,14 +1387,14 @@ describe("Factory", function () {
 
     // try to mint tokens without approval
     await expect(
-      nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x")
+      nft.connect(holder).mint({ key: erc20PublicKey, proof: [] }, 3, ZERO, "0x")
     ).to.be.revertedWith("NotApprovedToTransfer");
 
     await erc20.connect(holder).approve(nft.address, ethers.constants.MaxUint256);
 
     // mint without enough erc20
     await expect(
-      nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x")
+      nft.connect(holder).mint({ key: erc20PublicKey, proof: [] }, 3, ZERO, "0x")
     ).to.be.revertedWith("Erc20BalanceTooLow");
 
     await erc20.connect(holder).mint(ethers.utils.parseEther("3"));
@@ -1401,7 +1403,7 @@ describe("Factory", function () {
 
     console.log({ balance: balance.toString() });
 
-    await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x");
+    await nft.connect(holder).mint({ key: erc20PublicKey, proof: [] }, 3, ZERO, "0x");
 
     await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
     await expect(await erc20.balanceOf(holder.address)).to.be.equal(0);

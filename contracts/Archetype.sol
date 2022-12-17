@@ -664,7 +664,7 @@ contract Archetype is
       revert MintingPaused();
     }
 
-    if (!verify(auth, msg.sender)) {
+    if (!verify(auth, i.erc20Address, msg.sender)) {
       revert WalletUnauthorizedToMint();
     }
 
@@ -729,8 +729,10 @@ contract Archetype is
     }
   }
 
-  function verify(Auth calldata auth, address account) internal pure returns (bool) {
-    if (auth.key == "") return true;
+  function verify(Auth calldata auth, address erc20Address, address account) internal pure returns (bool) {
+    if(auth.key == "" || auth.key == keccak256(abi.encodePacked(erc20Address))) {
+      return true;
+    }
 
     return MerkleProofLib.verify(auth.proof, auth.key, keccak256(abi.encodePacked(account)));
   }
