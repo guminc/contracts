@@ -545,6 +545,10 @@ contract Archetype is
     options.ownerAltPayoutLocked = true;
   }
 
+  function setMaxBatchSize(uint32 maxBatchSize) external onlyOwner {
+    config.maxBatchSize = maxBatchSize;
+  }
+
   function setInvites(Invitelist[] calldata invitelist) external onlyOwner {
     for (uint256 i = 0; i < invitelist.length; i++) {
       Invitelist calldata list = invitelist[i];
