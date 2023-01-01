@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-// Factory v0.3.2
+// Factory v0.4.0
 //
 // 8888888888                888
 // 888                       888
@@ -37,7 +37,7 @@ contract Factory is OwnableUpgradeable {
   ) external payable returns (address) {
     address clone = ClonesUpgradeable.clone(archetype);
     Archetype token = Archetype(clone);
-    token.initialize(name, symbol, config);
+    token.initialize(name, symbol, config, _receiver);
 
     token.transferOwnership(_receiver);
     if (msg.value > 0) {

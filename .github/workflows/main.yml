@@ -1,0 +1,23 @@
+name: CI
+on: [push]
+
+jobs:
+  tests:
+    env:
+      ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+      PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install packages
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.x"
+      - run: npm install
+        shell: bash
+      - name: Create local node and test
+        run: |
+          npx hardhat node &
+          npm test
