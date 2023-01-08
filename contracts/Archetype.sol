@@ -39,7 +39,6 @@ error InvalidSignature();
 error BalanceEmpty();
 error TransferFailed();
 error MaxBatchSizeExceeded();
-error BurnToMintDisabled();
 error NotTokenOwner();
 error NotPlatform();
 error NotApprovedToTransfer();
@@ -125,14 +124,6 @@ contract Archetype is
     uint128 platform;
   }
 
-  struct BurnConfig {
-    IERC721AUpgradeable archetype;
-    bool enabled;
-    uint16 ratio;
-    uint64 start;
-    uint64 limit;
-  }
-
   //
   // VARIABLES
   //
@@ -143,7 +134,6 @@ contract Archetype is
   mapping(uint256 => bytes) private _tokenMsg;
 
   Config public config;
-  BurnConfig public burnConfig;
   Options public options;
 
   string public provenance;
@@ -246,62 +236,6 @@ contract Archetype is
       _minted[msg.sender][auth.key] += quantity;
     }
     updateBalances(auth, affiliate, quantity);
-  }
-
-  function burnToMint(uint256[] calldata tokenIds) external {
-    if (!burnConfig.enabled) {
-      revert BurnToMintDisabled();
-    }
-
-    if (block.timestamp < burnConfig.start) {
-      revert MintNotYetStarted();
-    }
-
-    // check if msg.sender owns tokens and has correct approvals
-    for (uint256 i = 0; i < tokenIds.length; i++) {
-      if (burnConfig.archetype.ownerOf(tokenIds[i]) != msg.sender) {
-        revert NotTokenOwner();
-      }
-    }
-
-    if (!burnConfig.archetype.isApprovedForAll(msg.sender, address(this))) {
-      revert NotApprovedToTransfer();
-    }
-
-    if (tokenIds.length % burnConfig.ratio != 0) {
-      revert InvalidAmountOfTokens();
-    }
-
-    uint256 quantity = tokenIds.length / burnConfig.ratio;
-
-    if (quantity > config.maxBatchSize) {
-      revert MaxBatchSizeExceeded();
-    }
-
-    if (burnConfig.limit < config.maxSupply) {
-      uint256 totalAfterMint = _minted[msg.sender][bytes32("burn")] + quantity;
-
-      if (totalAfterMint > burnConfig.limit) {
-        revert NumberOfMintsExceeded();
-      }
-    }
-
-    if ((_totalMinted() + quantity) > config.maxSupply) {
-      revert MaxSupplyExceeded();
-    }
-
-    for (uint256 i = 0; i < tokenIds.length; i++) {
-      burnConfig.archetype.transferFrom(
-        msg.sender,
-        address(0x000000000000000000000000000000000000dEaD),
-        tokenIds[i]
-      );
-    }
-    _mint(msg.sender, quantity);
-
-    if (burnConfig.limit < config.maxSupply) {
-      _minted[msg.sender][bytes32("burn")] += quantity;
-    }
   }
 
   function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
@@ -603,31 +537,6 @@ contract Archetype is
     }
     invites[_key] = _dutchInvite;
     emit Invited(_key, _cid);
-  }
-
-  function enableBurnToMint(
-    address archetype,
-    uint16 ratio,
-    uint64 start,
-    uint64 limit
-  ) external onlyOwner {
-    burnConfig = BurnConfig({
-      archetype: IERC721AUpgradeable(archetype),
-      enabled: true,
-      ratio: ratio,
-      start: start,
-      limit: limit
-    });
-  }
-
-  function disableBurnToMint() external onlyOwner {
-    burnConfig = BurnConfig({
-      enabled: false,
-      ratio: 0,
-      archetype: IERC721AUpgradeable(address(0)),
-      start: 0,
-      limit: 0
-    });
   }
 
   //
