@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.4.0
+// Archetype v0.4.1
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -103,17 +103,21 @@ contract Archetype is
     bool provenanceHashLocked;
   }
 
+  struct DutchInvite {
+    uint128 price;
+    uint128 reservePrice;
+    uint32 start;
+    uint32 limit;
+    uint32 interval;
+    uint32 delta;
+    address tokenAddress;
+  }
+
   struct Invite {
     uint128 price;
     uint32 start;
     uint32 limit;
     address tokenAddress;
-  }
-
-  struct Invitelist {
-    bytes32 key;
-    bytes32 cid;
-    Invite invite;
   }
 
   struct OwnerBalance {
@@ -132,7 +136,7 @@ contract Archetype is
   //
   // VARIABLES
   //
-  mapping(bytes32 => Invite) public invites;
+  mapping(bytes32 => DutchInvite) public invites;
   mapping(address => mapping(bytes32 => uint256)) private _minted;
   mapping(address => OwnerBalance) private _ownerBalance;
   mapping(address => mapping(address => uint128)) private _affiliateBalance;
@@ -220,7 +224,7 @@ contract Archetype is
       _mint(toList[i], quantityList[i]);
     }
 
-    Invite memory invite = invites[auth.key];
+    DutchInvite memory invite = invites[auth.key];
     if (invite.limit < config.maxSupply) {
       _minted[msg.sender][auth.key] += quantity;
     }
@@ -237,7 +241,7 @@ contract Archetype is
     validateMint(auth, quantity, affiliate, signature);
     _mint(to, quantity);
 
-    Invite memory i = invites[auth.key];
+    DutchInvite memory i = invites[auth.key];
     if (i.limit < config.maxSupply) {
       _minted[msg.sender][auth.key] += quantity;
     }
@@ -377,10 +381,28 @@ contract Archetype is
 
   // calculate price based on affiliate usage and mint discounts
   function computePrice(
-    uint128 price,
+    DutchInvite memory invite,
     uint256 numTokens,
     bool affiliateUsed
   ) public view returns (uint256) {
+
+    uint256 price = invite.price;
+    if(invite.interval != 0) {
+      uint256 diff = (((block.timestamp - invite.start) / invite.interval) * invite.delta);
+      if(invite.reservePrice < invite.price) {
+        price = price - diff;
+        if(price < invite.reservePrice) {
+          price = invite.reservePrice;
+        }
+      } 
+      else if (invite.reservePrice > invite.price) {
+        price = price + diff;
+        if(price > invite.reservePrice) {
+          price = invite.reservePrice;
+        }
+      }
+    }
+
     uint256 cost = price * numTokens;
 
     if (affiliateUsed) {
@@ -553,20 +575,33 @@ contract Archetype is
     config.maxBatchSize = maxBatchSize;
   }
 
-  function setInvites(Invitelist[] calldata invitelist) external onlyOwner {
-    for (uint256 i = 0; i < invitelist.length; i++) {
-      Invitelist calldata list = invitelist[i];
-      invites[list.key] = list.invite;
-      emit Invited(list.key, list.cid);
-    }
-  }
 
   function setInvite(
     bytes32 _key,
     bytes32 _cid,
     Invite calldata _invite
   ) external onlyOwner {
-    invites[_key] = _invite;
+    invites[_key] = DutchInvite({
+      price: _invite.price,
+      reservePrice: _invite.price,
+      start: _invite.start,
+      limit: _invite.limit,
+      interval: 0,
+      delta: 0,
+      tokenAddress: _invite.tokenAddress
+    });
+    emit Invited(_key, _cid);
+  }
+
+  function setDutchInvite(
+    bytes32 _key,
+    bytes32 _cid,
+    DutchInvite memory _dutchInvite
+  ) external onlyOwner {
+    if (_dutchInvite.start < block.timestamp) {
+      _dutchInvite.start = uint32(block.timestamp);
+    }
+    invites[_key] = _dutchInvite;
     emit Invited(_key, _cid);
   }
 
@@ -614,11 +649,11 @@ contract Archetype is
     address affiliate,
     uint256 quantity
   ) internal {
-    Invite memory i = invites[auth.key];
+    DutchInvite memory i = invites[auth.key];
     address tokenAddress = i.tokenAddress;
     uint128 value = uint128(msg.value);
     if (tokenAddress != address(0)) {
-      value = uint128(computePrice(i.price, quantity, affiliate != address(0)));
+      value = uint128(computePrice(i, quantity, affiliate != address(0)));
     }
 
     uint128 affiliateWad = 0;
@@ -654,7 +689,7 @@ contract Archetype is
     address affiliate,
     bytes calldata signature
   ) internal view {
-    Invite memory i = invites[auth.key];
+    DutchInvite memory i = invites[auth.key];
 
     if (affiliate != address(0)) {
       if (affiliate == PLATFORM || affiliate == owner() || affiliate == msg.sender) {
@@ -691,7 +726,8 @@ contract Archetype is
       revert MaxSupplyExceeded();
     }
 
-    uint256 cost = computePrice(i.price, quantity, affiliate != address(0));
+
+    uint256 cost = computePrice(i, quantity, affiliate != address(0));
 
     if (i.tokenAddress != address(0)) {
       IERC20Upgradeable erc20Token = IERC20Upgradeable(i.tokenAddress);

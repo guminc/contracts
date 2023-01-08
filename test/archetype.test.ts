@@ -300,30 +300,24 @@ describe("Factory", function () {
     console.log({ toda: Math.floor(Date.now() / 1000) });
     console.log({ tomo: Math.floor(tomorrow / 1000) });
 
-    await nft.connect(owner).setInvites([
-      {
-        key: ethers.constants.HashZero,
-        cid: ipfsh.ctod(CID_ZERO),
-        invite: {
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO),
+        {
           price: ethers.utils.parseEther("0.1"),
           start: ethers.BigNumber.from(Math.floor(tomorrow / 1000)),
           limit: 1000,
           
           tokenAddress: ZERO,
         },
-      },
-      {
-        key: root,
-        cid: ipfsh.ctod(CID_DEFAULT),
-        invite: {
+    );
+    await nft.connect(owner).setInvite(root, ipfsh.ctod(CID_DEFAULT),
+        {
           price: price,
           start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
           limit: 10,
           
           tokenAddress: ZERO,
         },
-      },
-    ]);
+    );
 
     const invitePrivate = await nft.invites(root);
     const invitePublic = await nft.invites(ethers.constants.HashZero);
