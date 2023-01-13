@@ -105,10 +105,10 @@ contract Archetype is
   struct DutchInvite {
     uint128 price;
     uint128 reservePrice;
+    uint128 delta;
     uint32 start;
     uint32 limit;
     uint32 interval;
-    uint32 delta;
     address tokenAddress;
   }
 
@@ -323,16 +323,18 @@ contract Archetype is
     uint256 price = invite.price;
     if(invite.interval != 0) {
       uint256 diff = (((block.timestamp - invite.start) / invite.interval) * invite.delta);
-      if(invite.reservePrice < invite.price) {
-        price = price - diff;
-        if(price < invite.reservePrice) {
+      if(price > invite.reservePrice) {
+        if(diff > price - invite.reservePrice) {
           price = invite.reservePrice;
+        } else {
+          price = price - diff;
         }
       } 
-      else if (invite.reservePrice > invite.price) {
-        price = price + diff;
-        if(price > invite.reservePrice) {
+      else if (price < invite.reservePrice) {
+        if(diff > invite.reservePrice - price) {
           price = invite.reservePrice;
+        } else {
+          price = price + diff;
         }
       }
     }
@@ -518,10 +520,10 @@ contract Archetype is
     invites[_key] = DutchInvite({
       price: _invite.price,
       reservePrice: _invite.price,
+      delta: 0,
       start: _invite.start,
       limit: _invite.limit,
       interval: 0,
-      delta: 0,
       tokenAddress: _invite.tokenAddress
     });
     emit Invited(_key, _cid);

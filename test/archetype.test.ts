@@ -1406,6 +1406,130 @@ describe("Factory", function () {
       ethers.utils.parseEther("0.15")
     );
   });
+
+  it("test dutch Invite", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    const owner = accountOne;
+    const holder = accountZero;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+
+    const newCollectionAddress = result.events[0].address || "";
+
+    const NFT = await ethers.getContractFactory("Archetype");
+
+    const nft = NFT.attach(newCollectionAddress);
+
+    await nft.connect(owner).setDutchInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("1"),
+      reservePrice: ethers.utils.parseEther("0.1"),
+      start: 0,
+      limit: 300,
+      interval: 1000, // 1000s,
+      delta: ethers.utils.parseEther("0.1"),
+      tokenAddress: ZERO,
+    });
+
+
+    // mint at full price
+    await nft
+      .connect(holder)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: ethers.utils.parseEther("1"),
+      });
+
+    // forward time 5000s
+    await ethers.provider.send("evm_increaseTime", [5000]);
+
+    // mint at half price
+    await nft
+      .connect(holder)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: ethers.utils.parseEther("0.5"),
+      });
+
+    // forward a long time
+    await ethers.provider.send("evm_increaseTime", [50000]);
+
+    // mint at reserve price
+    await nft
+      .connect(holder)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: ethers.utils.parseEther("0.1"),
+      });
+
+    await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
+  });
+
+  it("test increasing dutch Invite", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    const owner = accountOne;
+    const holder = accountZero;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+
+    const newCollectionAddress = result.events[0].address || "";
+
+    const NFT = await ethers.getContractFactory("Archetype");
+
+    const nft = NFT.attach(newCollectionAddress);
+
+    await nft.connect(owner).setDutchInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("1"),
+      reservePrice: ethers.utils.parseEther("10"),
+      start: 0,
+      limit: 300,
+      interval: 1000, // 1000s,
+      delta: ethers.utils.parseEther("1"),
+      tokenAddress: ZERO,
+    });
+
+
+    // mint at full price
+    await nft
+      .connect(holder)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: ethers.utils.parseEther("1"),
+      });
+
+    // forward time 5000s
+    await ethers.provider.send("evm_increaseTime", [5000]);
+
+    // mint at half price
+    await nft
+      .connect(holder)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: ethers.utils.parseEther("6"),
+      });
+
+    // forward a long time
+    await ethers.provider.send("evm_increaseTime", [50000]);
+
+    // mint at reserve price
+    await nft
+      .connect(holder)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: ethers.utils.parseEther("10"),
+      });
+
+    await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
+  });
 });
 
 // todo: add test to ensure affiliate signer can't be zero address
