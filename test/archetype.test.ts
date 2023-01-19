@@ -1449,6 +1449,15 @@ describe("Factory", function () {
     // forward time 5000s
     await ethers.provider.send("evm_increaseTime", [5000]);
 
+      // try to mint at initial price, will revert
+      await expect(
+        nft
+          .connect(holder)
+          .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+            value: ethers.utils.parseEther("1"),
+          })
+      ).to.be.revertedWith("ExcessiveEthSent")
+
     // mint at half price
     await nft
       .connect(holder)
@@ -1510,6 +1519,15 @@ describe("Factory", function () {
 
     // forward time 5000s
     await ethers.provider.send("evm_increaseTime", [5000]);
+
+    // try to mint at initial price, will revert
+    await expect(
+      nft
+        .connect(holder)
+        .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+          value: ethers.utils.parseEther("1"),
+        })
+    ).to.be.revertedWith("InsufficientEthSent")
 
     // mint at half price
     await nft
