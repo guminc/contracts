@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.4.1
+// Archetype v0.4.1 - LAZYMINT
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -15,9 +15,9 @@
 
 pragma solidity ^0.8.4;
 
-import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
-import "erc721a-upgradeable/contracts/ERC721A__Initializable.sol";
-import "./ERC721A__OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "solady/src/utils/MerkleProofLib.sol";
 import "solady/src/utils/LibString.sol";
 import "solady/src/utils/ECDSA.sol";
@@ -45,12 +45,14 @@ error NotApprovedToTransfer();
 error InvalidAmountOfTokens();
 error WrongPassword();
 error LockedForever();
+error URIQueryForNonexistentToken();
+error InvalidTokenId();
 
 contract Archetype is
-  ERC721A__Initializable,
-  ERC721AUpgradeable,
+  Initializable,
+  ERC721Upgradeable,
   OperatorFilterer,
-  ERC721A__OwnableUpgradeable,
+  OwnableUpgradeable,
   ERC2981Upgradeable
 {
   //
@@ -133,6 +135,7 @@ contract Archetype is
   mapping(address => mapping(address => uint128)) private _affiliateBalance;
   mapping(uint256 => bytes) private _tokenMsg;
 
+  uint256 private _totalSupply;
   Config public config;
   Options public options;
 
@@ -150,8 +153,8 @@ contract Archetype is
     string memory symbol,
     Config calldata config_,
     address _receiver
-  ) external initializerERC721A {
-    __ERC721A_init(name, symbol);
+  ) external initializer {
+    __ERC721_init(name, symbol);
     // check max bps not reached and min platform fee.
     if (
       config_.affiliateFee > MAXBPS ||
@@ -187,54 +190,60 @@ contract Archetype is
   //
   function mint(
     Auth calldata auth,
-    uint256 quantity,
+    uint256[] calldata tokenIds,
     address affiliate,
     bytes calldata signature
   ) external payable {
-    mintTo(auth, quantity, msg.sender, affiliate, signature);
+    mintTo(auth, tokenIds, msg.sender, affiliate, signature);
   }
 
   function batchMintTo(
     Auth calldata auth,
     address[] calldata toList,
-    uint256[] calldata quantityList,
+    uint256[][] calldata tokenIdsList,
     address affiliate,
     bytes calldata signature
   ) external payable {
-    if (quantityList.length != toList.length) {
-      revert InvalidConfig();
-    }
-    uint256 quantity = 0;
-    for (uint256 i = 0; i < quantityList.length; i++) {
-      quantity += quantityList[i];
-    }
-    validateMint(auth, quantity, affiliate, signature);
 
-    for (uint256 i = 0; i < toList.length; i++) {
-      _mint(toList[i], quantityList[i]);
+    uint256 quantity = 0;
+    for (uint256 i = 0; i < tokenIdsList.length; i++) {
+      if (tokenIdsList[i].length != toList.length) {
+        revert InvalidConfig();
+      }
+      validateMint(auth, tokenIdsList[i], affiliate, signature);
+
+      for (uint256 j = 0; j < toList.length; j++) {
+        _safeMint(toList[i], tokenIdsList[i][j]);
+      }
+      quantity += tokenIdsList[i].length;
     }
 
     DutchInvite memory invite = invites[auth.key];
     if (invite.limit < config.maxSupply) {
       _minted[msg.sender][auth.key] += quantity;
     }
+    _totalSupply += quantity;
     updateBalances(auth, affiliate, quantity);
   }
 
   function mintTo(
     Auth calldata auth,
-    uint256 quantity,
+    uint256[] calldata tokenIds,
     address to,
     address affiliate,
     bytes calldata signature
   ) public payable {
-    validateMint(auth, quantity, affiliate, signature);
-    _mint(to, quantity);
+    validateMint(auth, tokenIds, affiliate, signature);
 
+    for (uint256 j = 0; j < tokenIds.length; j++) {
+      _safeMint(to, tokenIds[j]);
+    }
     DutchInvite memory i = invites[auth.key];
+    uint256 quantity = tokenIds.length;
     if (i.limit < config.maxSupply) {
       _minted[msg.sender][auth.key] += quantity;
     }
+    _totalSupply += quantity;
     updateBalances(auth, affiliate, quantity);
   }
 
@@ -373,6 +382,10 @@ contract Archetype is
     return _minted[minter][key];
   }
 
+  function totalSupply() external view returns (uint256) { 
+    return _totalSupply;
+  }
+
   //
   // OWNER ONLY
   //
@@ -405,7 +418,7 @@ contract Archetype is
       revert LockedForever();
     }
 
-    if (maxSupply < _totalMinted()) {
+    if (maxSupply < _totalSupply) {
       revert MaxSupplyExceeded();
     }
 
@@ -551,7 +564,7 @@ contract Archetype is
   //
   // INTERNAL
   //
-  function _startTokenId() internal view virtual override returns (uint256) {
+  function _startTokenId() internal view virtual returns (uint256) {
     return 1;
   }
 
@@ -596,11 +609,12 @@ contract Archetype is
 
   function validateMint(
     Auth calldata auth,
-    uint256 quantity,
+    uint256[] calldata tokenIds,
     address affiliate,
     bytes calldata signature
   ) internal view {
     DutchInvite memory i = invites[auth.key];
+    uint256 quantity = tokenIds.length;
 
     if (affiliate != address(0)) {
       if (affiliate == PLATFORM || affiliate == owner() || affiliate == msg.sender) {
@@ -633,8 +647,14 @@ contract Archetype is
       revert MaxBatchSizeExceeded();
     }
 
-    if ((_totalMinted() + quantity) > config.maxSupply) {
+    if ((_totalSupply + quantity) > config.maxSupply) {
       revert MaxSupplyExceeded();
+    }
+
+    for (uint256 j = 0; j < tokenIds.length; j++) {
+      if (tokenIds[j] < _startTokenId() || tokenIds[j] > config.maxSupply) {
+        revert InvalidTokenId();
+      }
     }
 
 
@@ -733,7 +753,6 @@ contract Archetype is
 
   function approve(address operator, uint256 tokenId)
     public
-    payable
     override
     onlyAllowedOperatorApproval(operator)
   {
@@ -744,7 +763,7 @@ contract Archetype is
     address from,
     address to,
     uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
+  ) public override onlyAllowedOperator(from) {
     super.transferFrom(from, to, tokenId);
   }
 
@@ -752,7 +771,7 @@ contract Archetype is
     address from,
     address to,
     uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
+  ) public override onlyAllowedOperator(from) {
     super.safeTransferFrom(from, to, tokenId);
   }
 
@@ -761,7 +780,7 @@ contract Archetype is
     address to,
     uint256 tokenId,
     bytes memory data
-  ) public payable override onlyAllowedOperator(from) {
+  ) public override onlyAllowedOperator(from) {
     super.safeTransferFrom(from, to, tokenId, data);
   }
 
@@ -774,7 +793,7 @@ contract Archetype is
     public
     view
     virtual
-    override(ERC721AUpgradeable, ERC2981Upgradeable)
+    override(ERC721Upgradeable, ERC2981Upgradeable)
     returns (bool)
   {
     // Supports the following `interfaceId`s:
@@ -783,7 +802,7 @@ contract Archetype is
     // - IERC721Metadata: 0x5b5e139f
     // - IERC2981: 0x2a55205a
     return
-      ERC721AUpgradeable.supportsInterface(interfaceId) ||
+      ERC721Upgradeable.supportsInterface(interfaceId) ||
       ERC2981Upgradeable.supportsInterface(interfaceId);
   }
 

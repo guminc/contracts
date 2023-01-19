@@ -257,7 +257,7 @@ describe("Factory", function () {
 
     console.log("current time", Math.floor(Date.now() / 1000));
 
-    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, [1], ZERO, "0x", {
       value: ethers.utils.parseEther("0.08"),
     });
 
@@ -326,22 +326,22 @@ describe("Factory", function () {
 
     // whitelisted wallet
     await expect(
-      nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
+      nft.mint({ key: root, proof: proof }, [1], ZERO, "0x", {
         value: ethers.utils.parseEther("0.07"),
       })
     ).to.be.revertedWith("InsufficientEthSent");
 
     await expect(
-      nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
+      nft.mint({ key: root, proof: proof }, [1], ZERO, "0x", {
         value: ethers.utils.parseEther("0.09"),
       })
     ).to.be.revertedWith("ExcessiveEthSent");
 
-    await nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
+    await nft.mint({ key: root, proof: proof }, [1], ZERO, "0x", {
       value: price,
     });
 
-    await nft.mint({ key: root, proof: proof }, 5, ZERO, "0x", {
+    await nft.mint({ key: root, proof: proof }, [2,3,4,5,6], ZERO, "0x", {
       value: price.mul(5),
     });
 
@@ -352,14 +352,14 @@ describe("Factory", function () {
     // non-whitelisted wallet
     // private mint rejection
     await expect(
-      nft.connect(accountTwo).mint({ key: root, proof: proofTwo }, 2, ZERO, "0x", {
+      nft.connect(accountTwo).mint({ key: root, proof: proofTwo }, [7,8], ZERO, "0x", {
         value: price.mul(2),
       })
     ).to.be.revertedWith("WalletUnauthorizedToMint");
 
     // public mint rejection
     await expect(
-      nft.connect(accountTwo).mint({ key: ethers.constants.HashZero, proof: [] }, 2, ZERO, "0x", {
+      nft.connect(accountTwo).mint({ key: ethers.constants.HashZero, proof: [] }, [7,8], ZERO, "0x", {
         value: price.mul(2),
       })
     ).to.be.revertedWith("MintNotYetStarted");
