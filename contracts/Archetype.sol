@@ -212,7 +212,7 @@ contract Archetype is
       }
       validateMint(auth, tokenIdsList[i], affiliate, signature);
 
-      for (uint256 j = 0; j < toList.length; j++) {
+      for (uint256 j = 0; j < tokenIdsList[i].length; j++) {
         _safeMint(toList[i], tokenIdsList[i][j]);
       }
       quantity += tokenIdsList[i].length;
