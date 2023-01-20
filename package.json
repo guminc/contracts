@@ -7,20 +7,20 @@
     "test": "hardhat test test/archetype.test",
     "test:specific": "hardhat test test/archetype.test --grep",
     "start": "concurrently \"cd api && npm start\" \"cd app && npm run dev\"",
-    "deploy": "npx hardhat run scripts/deployRemilia.ts --network localhost",
+    "deploy": "npx hardhat run scripts/deployFactory.ts --network goerli",
     "network": "npx hardhat node",
-    "verify": "npx hardhat verify 0xc078Aed674c230cDD7ADD602E077797d08d8f0c2 --network rinkeby"
+    "verify": "npx hardhat verify 0x272772e1Aee5D00CA2Be34bDd05f8347aB5f3a04 --network goerli"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/addy-the-young/scatter.git"
+    "url": "git+https://github.com/scatter-art/contracts.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/addy-the-young/scatter/issues"
+    "url": "https://github.com/scatter-art/contracts/issues"
   },
-  "homepage": "https://github.com/addy-the-young/scatter#readme",
+  "homepage": "https://github.com/scatter-art/contracts#readme",
   "dependencies": {
     "concurrently": "6.4.0",
     "ethereumjs-util": "7.1.4",
