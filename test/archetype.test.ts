@@ -1213,10 +1213,10 @@ describe("Factory", function () {
     });
 
     // mint tokens from owner to air drop list
-    const airDropList: [string, number][] = [];
+    const airDropList: [string, [number]][] = [];
     for (let i = 0; i < 100; i++) {
       /// 100 addresses
-      airDropList.push([ethers.Wallet.createRandom().address, 1]);
+      airDropList.push([ethers.Wallet.createRandom().address, [i+1]]);
     }
 
     // mint in n txs (can handle about 500 owners per tx with 3mil gas limit)

@@ -24,6 +24,8 @@ import "solady/src/utils/ECDSA.sol";
 import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "hardhat/console.sol";
+
 
 error InvalidConfig();
 error MintNotYetStarted();
@@ -206,10 +208,10 @@ contract Archetype is
   ) external payable {
 
     uint256 quantity = 0;
+    if (tokenIdsList.length != toList.length) {
+      revert InvalidConfig();
+    }
     for (uint256 i = 0; i < tokenIdsList.length; i++) {
-      if (tokenIdsList[i].length != toList.length) {
-        revert InvalidConfig();
-      }
       validateMint(auth, tokenIdsList[i], affiliate, signature);
 
       for (uint256 j = 0; j < tokenIdsList[i].length; j++) {
