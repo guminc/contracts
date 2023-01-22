@@ -78,9 +78,7 @@ import { artifacts, ethers, upgrades } from "hardhat";
 async function main() {
   // console.log({ accounts });
   const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
-  const ERC20TransferProxyTest = artifacts.require(
-    "ERC20TransferProxyTest.sol"
-  );
+  const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
   const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry.sol");
 
   const transferProxy = await TransferProxyTest.new();
@@ -160,7 +158,7 @@ async function main() {
 
 main()
   .then(() => process.exit(0))
-  .catch((error) => {
+  .catch(error => {
     console.error(error);
     process.exit(1);
   });
