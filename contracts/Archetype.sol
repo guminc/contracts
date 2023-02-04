@@ -15,37 +15,14 @@
 
 pragma solidity ^0.8.4;
 
+import "./ArchetypeLogic.sol";
 import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
 import "erc721a-upgradeable/contracts/ERC721A__Initializable.sol";
 import "./ERC721A__OwnableUpgradeable.sol";
-import "solady/src/utils/MerkleProofLib.sol";
 import "solady/src/utils/LibString.sol";
-import "solady/src/utils/ECDSA.sol";
 import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-
-error InvalidConfig();
-error MintNotYetStarted();
-error WalletUnauthorizedToMint();
-error InsufficientEthSent();
-error ExcessiveEthSent();
-error Erc20BalanceTooLow();
-error MaxSupplyExceeded();
-error NumberOfMintsExceeded();
-error MintingPaused();
-error InvalidReferral();
-error InvalidSignature();
-error BalanceEmpty();
-error TransferFailed();
-error MaxBatchSizeExceeded();
-error BurnToMintDisabled();
-error NotTokenOwner();
-error NotPlatform();
-error NotApprovedToTransfer();
-error InvalidAmountOfTokens();
-error WrongPassword();
-error LockedForever();
 
 contract Archetype is
   ERC721A__Initializable,
@@ -62,78 +39,6 @@ contract Archetype is
   event Withdrawal(address indexed src, address token, uint128 wad);
 
   //
-  // STRUCTS
-  //
-  struct Auth {
-    bytes32 key;
-    bytes32[] proof;
-  }
-
-  struct MintTier {
-    uint16 numMints;
-    uint16 mintDiscount; //BPS
-  }
-
-  struct Discount {
-    uint16 affiliateDiscount; //BPS
-    MintTier[] mintTiers;
-  }
-
-  struct Config {
-    string baseUri;
-    address affiliateSigner;
-    address ownerAltPayout; // optional alternative address for owner withdrawals.
-    address superAffiliatePayout; // optional super affiliate address, will receive half of platform fee if set.
-    uint32 maxSupply;
-    uint32 maxBatchSize;
-    uint16 affiliateFee; //BPS
-    uint16 platformFee; //BPS
-    uint16 defaultRoyalty; //BPS
-    Discount discounts;
-  }
-
-  struct Options {
-    bool uriLocked;
-    bool maxSupplyLocked;
-    bool affiliateFeeLocked;
-    bool discountsLocked;
-    bool ownerAltPayoutLocked;
-    bool royaltyEnforcementEnabled;
-    bool royaltyEnforcementLocked;
-    bool provenanceHashLocked;
-  }
-
-  struct DutchInvite {
-    uint128 price;
-    uint128 reservePrice;
-    uint128 delta;
-    uint32 start;
-    uint32 limit;
-    uint32 interval;
-    address tokenAddress;
-  }
-
-  struct Invite {
-    uint128 price;
-    uint32 start;
-    uint32 limit;
-    address tokenAddress;
-  }
-
-  struct OwnerBalance {
-    uint128 owner;
-    uint128 platform;
-  }
-
-  struct BurnConfig {
-    IERC721AUpgradeable archetype;
-    bool enabled;
-    uint16 ratio;
-    uint64 start;
-    uint64 limit;
-  }
-
-  //
   // VARIABLES
   //
   mapping(bytes32 => DutchInvite) public invites;
@@ -147,10 +52,6 @@ contract Archetype is
   Options public options;
 
   string public provenance;
-
-  address public constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
-  // address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
-  uint16 private constant MAXBPS = 5000; // max fee or discount is 50%
 
   //
   // METHODS
@@ -218,13 +119,16 @@ contract Archetype is
     for (uint256 i = 0; i < quantityList.length; i++) {
       quantity += quantityList[i];
     }
-    validateMint(auth, quantity, affiliate, signature);
+    
+    DutchInvite memory invite = invites[auth.key];
+    uint256 mintCount = _minted[msg.sender][auth.key];
+    uint256 curSupply = _totalMinted();
+    ArchetypeLogic.validateMint(invite, config, auth,  quantity,  owner(), affiliate, curSupply, mintCount, signature);
 
     for (uint256 i = 0; i < toList.length; i++) {
       _mint(toList[i], quantityList[i]);
     }
 
-    DutchInvite memory invite = invites[auth.key];
     if (invite.limit < config.maxSupply) {
       _minted[msg.sender][auth.key] += quantity;
     }
@@ -238,10 +142,14 @@ contract Archetype is
     address affiliate,
     bytes calldata signature
   ) public payable {
-    validateMint(auth, quantity, affiliate, signature);
-    _mint(to, quantity);
 
     DutchInvite memory i = invites[auth.key];
+    
+    uint256 mintCount = _minted[msg.sender][auth.key];
+    uint256 curSupply = _totalMinted();
+    ArchetypeLogic.validateMint(i, config, auth,  quantity,  owner(), affiliate, curSupply, mintCount, signature);
+    _mint(to, quantity);
+
     if (i.limit < config.maxSupply) {
       _minted[msg.sender][auth.key] += quantity;
     }
@@ -379,46 +287,6 @@ contract Archetype is
     return string(_tokenMsg[tokenId]);
   }
 
-  // calculate price based on affiliate usage and mint discounts
-  function computePrice(
-    DutchInvite memory invite,
-    uint256 numTokens,
-    bool affiliateUsed
-  ) public view returns (uint256) {
-
-    uint256 price = invite.price;
-    if(invite.interval != 0) {
-      uint256 diff = (((block.timestamp - invite.start) / invite.interval) * invite.delta);
-      if(price > invite.reservePrice) {
-        if(diff > price - invite.reservePrice) {
-          price = invite.reservePrice;
-        } else {
-          price = price - diff;
-        }
-      } 
-      else if (price < invite.reservePrice) {
-        if(diff > invite.reservePrice - price) {
-          price = invite.reservePrice;
-        } else {
-          price = price + diff;
-        }
-      }
-    }
-
-    uint256 cost = price * numTokens;
-
-    if (affiliateUsed) {
-      cost = cost - ((cost * config.discounts.affiliateDiscount) / 10000);
-    }
-
-    for (uint256 i = 0; i < config.discounts.mintTiers.length; i++) {
-      if (numTokens >= config.discounts.mintTiers[i].numMints) {
-        return cost = cost - ((cost * config.discounts.mintTiers[i].mintDiscount) / 10000);
-      }
-    }
-    return cost;
-  }
-
   function ownerBalance() external view returns (OwnerBalance memory) {
     return _ownerBalance[address(0)];
   }
@@ -437,6 +305,10 @@ contract Archetype is
 
   function minted(address minter, bytes32 key) external view returns (uint256) {
     return _minted[minter][key];
+  }
+
+  function platform() external pure returns (address) {
+    return PLATFORM;
   }
 
   //
@@ -577,7 +449,6 @@ contract Archetype is
     config.maxBatchSize = maxBatchSize;
   }
 
-
   function setInvite(
     bytes32 _key,
     bytes32 _cid,
@@ -655,7 +526,9 @@ contract Archetype is
     address tokenAddress = i.tokenAddress;
     uint128 value = uint128(msg.value);
     if (tokenAddress != address(0)) {
-      value = uint128(computePrice(i, quantity, affiliate != address(0)));
+      value = uint128(
+        ArchetypeLogic.computePrice(i, config.discounts, quantity, affiliate != address(0))
+      );
     }
 
     uint128 affiliateWad = 0;
@@ -683,103 +556,6 @@ contract Archetype is
       IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
       erc20Token.transferFrom(msg.sender, address(this), value);
     }
-  }
-
-  function validateMint(
-    Auth calldata auth,
-    uint256 quantity,
-    address affiliate,
-    bytes calldata signature
-  ) internal view {
-    DutchInvite memory i = invites[auth.key];
-
-    if (affiliate != address(0)) {
-      if (affiliate == PLATFORM || affiliate == owner() || affiliate == msg.sender) {
-        revert InvalidReferral();
-      }
-      validateAffiliate(affiliate, signature, config.affiliateSigner);
-    }
-
-    if (i.limit == 0) {
-      revert MintingPaused();
-    }
-
-    if (!verify(auth, i.tokenAddress, msg.sender)) {
-      revert WalletUnauthorizedToMint();
-    }
-
-    if (block.timestamp < i.start) {
-      revert MintNotYetStarted();
-    }
-
-    if (i.limit < config.maxSupply) {
-      uint256 totalAfterMint = _minted[msg.sender][auth.key] + quantity;
-
-      if (totalAfterMint > i.limit) {
-        revert NumberOfMintsExceeded();
-      }
-    }
-
-    if (quantity > config.maxBatchSize) {
-      revert MaxBatchSizeExceeded();
-    }
-
-    if ((_totalMinted() + quantity) > config.maxSupply) {
-      revert MaxSupplyExceeded();
-    }
-
-
-    uint256 cost = computePrice(i, quantity, affiliate != address(0));
-
-    if (i.tokenAddress != address(0)) {
-      IERC20Upgradeable erc20Token = IERC20Upgradeable(i.tokenAddress);
-      if (erc20Token.allowance(msg.sender, address(this)) < cost) {
-        revert NotApprovedToTransfer();
-      }
-
-      if (erc20Token.balanceOf(msg.sender) < cost) {
-        revert Erc20BalanceTooLow();
-      }
-
-      if (msg.value != 0) {
-        revert ExcessiveEthSent();
-      }
-    } else {
-      if (msg.value < cost) {
-        revert InsufficientEthSent();
-      }
-
-      if (msg.value > cost) {
-        revert ExcessiveEthSent();
-      }
-    }
-  }
-
-  function validateAffiliate(
-    address affiliate,
-    bytes calldata signature,
-    address affiliateSigner
-  ) internal view {
-    bytes32 signedMessagehash = ECDSA.toEthSignedMessageHash(
-      keccak256(abi.encodePacked(affiliate))
-    );
-    address signer = ECDSA.recover(signedMessagehash, signature);
-
-    if (signer != affiliateSigner) {
-      revert InvalidSignature();
-    }
-  }
-
-  function verify(
-    Auth calldata auth,
-    address tokenAddress,
-    address account
-  ) internal pure returns (bool) {
-    if (auth.key == "" || auth.key == keccak256(abi.encodePacked(tokenAddress))) {
-      return true;
-    }
-
-    return MerkleProofLib.verify(auth.proof, auth.key, keccak256(abi.encodePacked(account)));
   }
 
   modifier onlyPlatform() {
