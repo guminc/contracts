@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ArchetypeLogic v0.4.1
+// ArchetypeLogic v0.5.0
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -122,8 +122,8 @@ library ArchetypeLogic {
 
   // calculate price based on affiliate usage and mint discounts
   function computePrice(
-    DutchInvite memory invite,
-    Discount memory discounts,
+    DutchInvite storage invite,
+    Discount storage discounts,
     uint256 numTokens,
     bool affiliateUsed
   ) public view returns (uint256) {
@@ -160,8 +160,8 @@ library ArchetypeLogic {
   }
 
   function validateMint(
-    DutchInvite memory i,
-    Config memory config,
+    DutchInvite storage i,
+    Config storage config,
     Auth calldata auth,
     uint256 quantity,
     address owner,

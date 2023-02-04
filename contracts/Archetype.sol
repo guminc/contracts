@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.4.1
+// Archetype v0.5.0
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -120,7 +120,7 @@ contract Archetype is
       quantity += quantityList[i];
     }
     
-    DutchInvite memory invite = invites[auth.key];
+    DutchInvite storage invite = invites[auth.key];
     uint256 mintCount = _minted[msg.sender][auth.key];
     uint256 curSupply = _totalMinted();
     ArchetypeLogic.validateMint(invite, config, auth,  quantity,  owner(), affiliate, curSupply, mintCount, signature);
@@ -143,8 +143,7 @@ contract Archetype is
     bytes calldata signature
   ) public payable {
 
-    DutchInvite memory i = invites[auth.key];
-    
+    DutchInvite storage i = invites[auth.key];
     uint256 mintCount = _minted[msg.sender][auth.key];
     uint256 curSupply = _totalMinted();
     ArchetypeLogic.validateMint(i, config, auth,  quantity,  owner(), affiliate, curSupply, mintCount, signature);
@@ -522,7 +521,7 @@ contract Archetype is
     address affiliate,
     uint256 quantity
   ) internal {
-    DutchInvite memory i = invites[auth.key];
+    DutchInvite storage i = invites[auth.key];
     address tokenAddress = i.tokenAddress;
     uint128 value = uint128(msg.value);
     if (tokenAddress != address(0)) {
