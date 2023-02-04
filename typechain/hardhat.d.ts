@@ -81,6 +81,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ArchetypeBackup__factory>;
     getContractFactory(
+      name: "ArchetypeLogic",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ArchetypeLogic__factory>;
+    getContractFactory(
       name: "ContextUpgradeable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ContextUpgradeable__factory>;
@@ -238,6 +242,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ArchetypeBackup>;
+    getContractAt(
+      name: "ArchetypeLogic",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ArchetypeLogic>;
     getContractAt(
       name: "ContextUpgradeable",
       address: string,
