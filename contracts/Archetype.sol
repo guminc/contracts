@@ -119,11 +119,21 @@ contract Archetype is
     for (uint256 i = 0; i < quantityList.length; i++) {
       quantity += quantityList[i];
     }
-    
+
     DutchInvite storage invite = invites[auth.key];
     uint256 mintCount = _minted[msg.sender][auth.key];
     uint256 curSupply = _totalMinted();
-    ArchetypeLogic.validateMint(invite, config, auth,  quantity,  owner(), affiliate, curSupply, mintCount, signature);
+    ArchetypeLogic.validateMint(
+      invite,
+      config,
+      auth,
+      quantity,
+      owner(),
+      affiliate,
+      curSupply,
+      mintCount,
+      signature
+    );
 
     for (uint256 i = 0; i < toList.length; i++) {
       _mint(toList[i], quantityList[i]);
@@ -142,11 +152,20 @@ contract Archetype is
     address affiliate,
     bytes calldata signature
   ) public payable {
-
     DutchInvite storage i = invites[auth.key];
     uint256 mintCount = _minted[msg.sender][auth.key];
     uint256 curSupply = _totalMinted();
-    ArchetypeLogic.validateMint(i, config, auth,  quantity,  owner(), affiliate, curSupply, mintCount, signature);
+    ArchetypeLogic.validateMint(
+      i,
+      config,
+      auth,
+      quantity,
+      owner(),
+      affiliate,
+      curSupply,
+      mintCount,
+      signature
+    );
     _mint(to, quantity);
 
     if (i.limit < config.maxSupply) {
@@ -156,46 +175,9 @@ contract Archetype is
   }
 
   function burnToMint(uint256[] calldata tokenIds) external {
-    if (!burnConfig.enabled) {
-      revert BurnToMintDisabled();
-    }
-
-    if (block.timestamp < burnConfig.start) {
-      revert MintNotYetStarted();
-    }
-
-    // check if msg.sender owns tokens and has correct approvals
-    for (uint256 i = 0; i < tokenIds.length; i++) {
-      if (burnConfig.archetype.ownerOf(tokenIds[i]) != msg.sender) {
-        revert NotTokenOwner();
-      }
-    }
-
-    if (!burnConfig.archetype.isApprovedForAll(msg.sender, address(this))) {
-      revert NotApprovedToTransfer();
-    }
-
-    if (tokenIds.length % burnConfig.ratio != 0) {
-      revert InvalidAmountOfTokens();
-    }
-
-    uint256 quantity = tokenIds.length / burnConfig.ratio;
-
-    if (quantity > config.maxBatchSize) {
-      revert MaxBatchSizeExceeded();
-    }
-
-    if (burnConfig.limit < config.maxSupply) {
-      uint256 totalAfterMint = _minted[msg.sender][bytes32("burn")] + quantity;
-
-      if (totalAfterMint > burnConfig.limit) {
-        revert NumberOfMintsExceeded();
-      }
-    }
-
-    if ((_totalMinted() + quantity) > config.maxSupply) {
-      revert MaxSupplyExceeded();
-    }
+    uint256 mintCount = _minted[msg.sender][bytes32("burn")];
+    uint256 curSupply = _totalMinted();
+    ArchetypeLogic.validateBurnToMint(config, burnConfig, tokenIds, curSupply, mintCount);
 
     for (uint256 i = 0; i < tokenIds.length; i++) {
       burnConfig.archetype.transferFrom(
@@ -204,6 +186,8 @@ contract Archetype is
         tokenIds[i]
       );
     }
+
+    uint256 quantity = tokenIds.length / burnConfig.ratio;
     _mint(msg.sender, quantity);
 
     if (burnConfig.limit < config.maxSupply) {

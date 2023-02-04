@@ -119,7 +119,6 @@ address constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST 
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 
 library ArchetypeLogic {
-
   // calculate price based on affiliate usage and mint discounts
   function computePrice(
     DutchInvite storage invite,
@@ -205,12 +204,7 @@ library ArchetypeLogic {
       revert MaxSupplyExceeded();
     }
 
-    uint256 cost = computePrice(
-      i,
-      config.discounts,
-      quantity,
-      affiliate != address(0)
-    );
+    uint256 cost = computePrice(i, config.discounts, quantity, affiliate != address(0));
 
     if (i.tokenAddress != address(0)) {
       IERC20Upgradeable erc20Token = IERC20Upgradeable(i.tokenAddress);
@@ -233,6 +227,55 @@ library ArchetypeLogic {
       if (msg.value > cost) {
         revert ExcessiveEthSent();
       }
+    }
+  }
+
+  function validateBurnToMint(
+    Config storage config,
+    BurnConfig storage burnConfig,
+    uint256[] calldata tokenIds,
+    uint256 curSupply,
+    uint256 mintCount
+  ) public view {
+    if (!burnConfig.enabled) {
+      revert BurnToMintDisabled();
+    }
+
+    if (block.timestamp < burnConfig.start) {
+      revert MintNotYetStarted();
+    }
+
+    // check if msg.sender owns tokens and has correct approvals
+    for (uint256 i = 0; i < tokenIds.length; i++) {
+      if (burnConfig.archetype.ownerOf(tokenIds[i]) != msg.sender) {
+        revert NotTokenOwner();
+      }
+    }
+
+    if (!burnConfig.archetype.isApprovedForAll(msg.sender, address(this))) {
+      revert NotApprovedToTransfer();
+    }
+
+    if (tokenIds.length % burnConfig.ratio != 0) {
+      revert InvalidAmountOfTokens();
+    }
+
+    uint256 quantity = tokenIds.length / burnConfig.ratio;
+
+    if (quantity > config.maxBatchSize) {
+      revert MaxBatchSizeExceeded();
+    }
+
+    if (burnConfig.limit < config.maxSupply) {
+      uint256 totalAfterMint = mintCount + quantity;
+
+      if (totalAfterMint > burnConfig.limit) {
+        revert NumberOfMintsExceeded();
+      }
+    }
+
+    if ((curSupply + quantity) > config.maxSupply) {
+      revert MaxSupplyExceeded();
     }
   }
 
