@@ -27,6 +27,7 @@ error InsufficientEthSent();
 error ExcessiveEthSent();
 error Erc20BalanceTooLow();
 error MaxSupplyExceeded();
+error ListMaxSupplyExceeded();
 error NumberOfMintsExceeded();
 error MintingPaused();
 error InvalidReferral();
@@ -90,6 +91,7 @@ struct DutchInvite {
   uint128 delta;
   uint32 start;
   uint32 limit;
+  uint32 maxSupply;
   uint32 interval;
   address tokenAddress;
 }
@@ -98,6 +100,7 @@ struct Invite {
   uint128 price;
   uint32 start;
   uint32 limit;
+  uint32 maxSupply;
   address tokenAddress;
 }
 
@@ -166,7 +169,8 @@ library ArchetypeLogic {
     address owner,
     address affiliate,
     uint256 curSupply,
-    uint256 mintCount,
+    mapping(address => mapping(bytes32 => uint256)) storage minted,
+    mapping(bytes32 => uint256) storage listSupply,
     bytes calldata signature
   ) public view {
     if (affiliate != address(0)) {
@@ -188,11 +192,18 @@ library ArchetypeLogic {
       revert MintNotYetStarted();
     }
 
-    if (i.limit < config.maxSupply) {
-      uint256 totalAfterMint = mintCount + quantity;
+    if (i.limit < i.maxSupply) {
+      uint256 totalAfterMint = minted[msg.sender][auth.key] + quantity;
 
       if (totalAfterMint > i.limit) {
         revert NumberOfMintsExceeded();
+      }
+    }
+
+    if (i.maxSupply < config.maxSupply) {
+      uint256 totalAfterMint = listSupply[auth.key] + quantity;
+      if (totalAfterMint> i.limit) {
+        revert ListMaxSupplyExceeded();
       }
     }
 
@@ -235,7 +246,7 @@ library ArchetypeLogic {
     BurnConfig storage burnConfig,
     uint256[] calldata tokenIds,
     uint256 curSupply,
-    uint256 mintCount
+    mapping(address => mapping(bytes32 => uint256)) storage minted
   ) public view {
     if (!burnConfig.enabled) {
       revert BurnToMintDisabled();
@@ -267,7 +278,7 @@ library ArchetypeLogic {
     }
 
     if (burnConfig.limit < config.maxSupply) {
-      uint256 totalAfterMint = mintCount + quantity;
+      uint256 totalAfterMint = minted[msg.sender][bytes32("burn")] + quantity;
 
       if (totalAfterMint > burnConfig.limit) {
         revert NumberOfMintsExceeded();

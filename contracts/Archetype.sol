@@ -43,6 +43,7 @@ contract Archetype is
   //
   mapping(bytes32 => DutchInvite) public invites;
   mapping(address => mapping(bytes32 => uint256)) private _minted;
+  mapping(bytes32 => uint256) private _listSupply;
   mapping(address => OwnerBalance) private _ownerBalance;
   mapping(address => mapping(address => uint128)) private _affiliateBalance;
   mapping(uint256 => bytes) private _tokenMsg;
@@ -121,7 +122,6 @@ contract Archetype is
     }
 
     DutchInvite storage invite = invites[auth.key];
-    uint256 mintCount = _minted[msg.sender][auth.key];
     uint256 curSupply = _totalMinted();
     ArchetypeLogic.validateMint(
       invite,
@@ -131,7 +131,8 @@ contract Archetype is
       owner(),
       affiliate,
       curSupply,
-      mintCount,
+      _minted,
+      _listSupply,
       signature
     );
 
@@ -139,8 +140,11 @@ contract Archetype is
       _mint(toList[i], quantityList[i]);
     }
 
-    if (invite.limit < config.maxSupply) {
+    if (invite.limit < invite.maxSupply) {
       _minted[msg.sender][auth.key] += quantity;
+    }
+    if (invite.maxSupply < config.maxSupply) {
+      _listSupply[auth.key] += quantity;
     }
     updateBalances(auth, affiliate, quantity);
   }
@@ -153,7 +157,6 @@ contract Archetype is
     bytes calldata signature
   ) public payable {
     DutchInvite storage i = invites[auth.key];
-    uint256 mintCount = _minted[msg.sender][auth.key];
     uint256 curSupply = _totalMinted();
     ArchetypeLogic.validateMint(
       i,
@@ -163,21 +166,24 @@ contract Archetype is
       owner(),
       affiliate,
       curSupply,
-      mintCount,
+      _minted,
+      _listSupply,
       signature
     );
     _mint(to, quantity);
 
-    if (i.limit < config.maxSupply) {
+    if (i.limit < i.maxSupply) {
       _minted[msg.sender][auth.key] += quantity;
+    }
+    if (i.maxSupply < config.maxSupply) {
+      _listSupply[auth.key] += quantity;
     }
     updateBalances(auth, affiliate, quantity);
   }
 
   function burnToMint(uint256[] calldata tokenIds) external {
-    uint256 mintCount = _minted[msg.sender][bytes32("burn")];
     uint256 curSupply = _totalMinted();
-    ArchetypeLogic.validateBurnToMint(config, burnConfig, tokenIds, curSupply, mintCount);
+    ArchetypeLogic.validateBurnToMint(config, burnConfig, tokenIds, curSupply, _minted);
 
     for (uint256 i = 0; i < tokenIds.length; i++) {
       burnConfig.archetype.transferFrom(
@@ -288,6 +294,10 @@ contract Archetype is
 
   function minted(address minter, bytes32 key) external view returns (uint256) {
     return _minted[minter][key];
+  }
+
+  function listSupply(bytes32 key) external view returns (uint256) {
+    return _listSupply[key];
   }
 
   function platform() external pure returns (address) {
@@ -443,6 +453,7 @@ contract Archetype is
       delta: 0,
       start: _invite.start,
       limit: _invite.limit,
+      maxSupply: _invite.maxSupply,
       interval: 0,
       tokenAddress: _invite.tokenAddress
     });
