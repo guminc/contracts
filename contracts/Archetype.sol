@@ -193,7 +193,9 @@ contract Archetype is
       );
     }
 
-    uint256 quantity = tokenIds.length / burnConfig.ratio;
+    uint256 quantity = burnConfig.reversed
+      ? tokenIds.length * burnConfig.ratio
+      : tokenIds.length / burnConfig.ratio;
     _mint(msg.sender, quantity);
 
     if (burnConfig.limit < config.maxSupply) {
@@ -474,6 +476,7 @@ contract Archetype is
 
   function enableBurnToMint(
     address archetype,
+    bool reversed,
     uint16 ratio,
     uint64 start,
     uint64 limit
@@ -481,6 +484,7 @@ contract Archetype is
     burnConfig = BurnConfig({
       archetype: IERC721AUpgradeable(archetype),
       enabled: true,
+      reversed: reversed,
       ratio: ratio,
       start: start,
       limit: limit
@@ -490,6 +494,7 @@ contract Archetype is
   function disableBurnToMint() external onlyOwner {
     burnConfig = BurnConfig({
       enabled: false,
+      reversed: false,
       ratio: 0,
       archetype: IERC721AUpgradeable(address(0)),
       start: 0,

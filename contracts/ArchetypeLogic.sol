@@ -112,6 +112,7 @@ struct OwnerBalance {
 struct BurnConfig {
   IERC721AUpgradeable archetype;
   bool enabled;
+  bool reversed; // side of the ratio (false=burn {ratio} get 1, true=burn 1 get {ratio})
   uint16 ratio;
   uint64 start;
   uint64 limit;
@@ -202,7 +203,7 @@ library ArchetypeLogic {
 
     if (i.maxSupply < config.maxSupply) {
       uint256 totalAfterMint = listSupply[auth.key] + quantity;
-      if (totalAfterMint> i.limit) {
+      if (totalAfterMint > i.limit) {
         revert ListMaxSupplyExceeded();
       }
     }
@@ -267,11 +268,15 @@ library ArchetypeLogic {
       revert NotApprovedToTransfer();
     }
 
-    if (tokenIds.length % burnConfig.ratio != 0) {
-      revert InvalidAmountOfTokens();
+    uint256 quantity;
+    if (burnConfig.reversed) {
+      quantity = tokenIds.length * burnConfig.ratio;
+    } else {
+      if (tokenIds.length % burnConfig.ratio != 0) {
+        revert InvalidAmountOfTokens();
+      }
+      quantity = tokenIds.length / burnConfig.ratio;
     }
-
-    uint256 quantity = tokenIds.length / burnConfig.ratio;
 
     if (quantity > config.maxBatchSize) {
       revert MaxBatchSizeExceeded();
