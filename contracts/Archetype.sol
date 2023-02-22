@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.5.1
+// Archetype v0.5.1 - ERC1155
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -16,18 +16,18 @@
 pragma solidity ^0.8.4;
 
 import "./ArchetypeLogic.sol";
-import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
-import "erc721a-upgradeable/contracts/ERC721A__Initializable.sol";
-import "./ERC721A__OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
 
 contract Archetype is
-  ERC721A__Initializable,
-  ERC721AUpgradeable,
+  Initializable,
+  ERC1155Upgradeable,
   OperatorFilterer,
-  ERC721A__OwnableUpgradeable,
+  OwnableUpgradeable,
   ERC2981Upgradeable
 {
   //
@@ -47,22 +47,27 @@ contract Archetype is
   mapping(address => mapping(address => uint128)) private _affiliateBalance;
   mapping(uint256 => bytes) private _tokenMsg;
 
+  uint256[] private _tokenSupply;
+
   Config public config;
-  BurnConfig public burnConfig;
   Options public options;
 
+  string public name;
+  string public symbol;
   string public provenance;
 
   //
   // METHODS
   //
   function initialize(
-    string memory name,
-    string memory symbol,
+    string memory _name,
+    string memory _symbol,
     Config calldata config_,
     address _receiver
-  ) external initializerERC721A {
-    __ERC721A_init(name, symbol);
+  ) external initializer {
+    name = _name;
+    symbol = _symbol;
+    __ERC1155_init("");
     // check max bps not reached and min platform fee.
     if (
       config_.affiliateFee > MAXBPS ||
@@ -84,6 +89,7 @@ contract Archetype is
       }
     }
     config = config_;
+    _tokenSupply = new uint256[](config_.maxSupply.length);
     __Ownable_init();
 
     if (config.ownerAltPayout != address(0)) {
@@ -121,29 +127,31 @@ contract Archetype is
     }
 
     DutchInvite storage invite = invites[auth.key];
-    uint256 curSupply = _totalMinted();
-    ArchetypeLogic.validateMint(
-      invite,
-      config,
-      auth,
-      quantity,
-      owner(),
-      affiliate,
-      curSupply,
-      _minted,
-      _listSupply,
-      signature
-    );
-
     for (uint256 i = 0; i < toList.length; i++) {
-      _mint(toList[i], quantityList[i]);
-    }
+      ValidationArgs memory args;
+      {
+        // to avoid stack too deep errors
+        uint256[] memory tokenIds = ArchetypeLogic.getRandomTokenIds(_tokenSupply, config.maxSupply, quantityList[i]);
+        args = ValidationArgs({
+          owner: owner(),
+          affiliate: affiliate,
+          quantity: quantity,
+          tokenSupply: _tokenSupply,
+          tokenIds: tokenIds
+        });
+      }
+      ArchetypeLogic.validateMint(invite, config, auth, _minted, _listSupply, signature, args);
 
-    if (invite.limit < invite.maxSupply) {
-      _minted[msg.sender][auth.key] += quantity;
-    }
-    if (invite.maxSupply < config.maxSupply) {
-      _listSupply[auth.key] += quantity;
+      for (uint256 j = 0; j < args.tokenIds.length; j++) {
+        bytes memory _data;
+        _mint(toList[i], args.tokenIds[j], 1, _data);
+        _tokenSupply[args.tokenIds[j] - 1] += 1;
+      }
+
+      _listSupply[auth.key] += quantityList[i];
+      if (invite.limit < invite.maxSupply) {
+        _minted[msg.sender][auth.key] += quantityList[i];
+      }
     }
     ArchetypeLogic.updateBalances(
       invite,
@@ -163,27 +171,32 @@ contract Archetype is
     bytes calldata signature
   ) public payable {
     DutchInvite storage i = invites[auth.key];
-    uint256 curSupply = _totalMinted();
-    ArchetypeLogic.validateMint(
-      i,
-      config,
-      auth,
-      quantity,
-      owner(),
-      affiliate,
-      curSupply,
-      _minted,
-      _listSupply,
-      signature
-    );
-    _mint(to, quantity);
 
+    ValidationArgs memory args;
+    {
+      // to avoid stack too deep errors
+      uint256[] memory tokenIds = ArchetypeLogic.getRandomTokenIds(_tokenSupply, config.maxSupply, quantity);
+      args = ValidationArgs({
+        owner: owner(),
+        affiliate: affiliate,
+        quantity: quantity,
+        tokenSupply: _tokenSupply,
+        tokenIds: tokenIds
+      });
+    }
+    ArchetypeLogic.validateMint(i, config, auth, _minted, _listSupply, signature, args);
+
+    for (uint256 j = 0; j < args.tokenIds.length; j++) {
+      bytes memory _data;
+      _mint(to, args.tokenIds[j], 1, _data);
+      _tokenSupply[args.tokenIds[j] - 1] += 1;
+    }
+
+    _listSupply[auth.key] += quantity;
     if (i.limit < i.maxSupply) {
       _minted[msg.sender][auth.key] += quantity;
     }
-    if (i.maxSupply < config.maxSupply) {
-      _listSupply[auth.key] += quantity;
-    }
+
     ArchetypeLogic.updateBalances(
       i,
       config,
@@ -194,31 +207,8 @@ contract Archetype is
     );
   }
 
-  function burnToMint(uint256[] calldata tokenIds) external {
-    uint256 curSupply = _totalMinted();
-    ArchetypeLogic.validateBurnToMint(config, burnConfig, tokenIds, curSupply, _minted);
-
-    for (uint256 i = 0; i < tokenIds.length; i++) {
-      burnConfig.archetype.transferFrom(
-        msg.sender,
-        address(0x000000000000000000000000000000000000dEaD),
-        tokenIds[i]
-      );
-    }
-
-    uint256 quantity = burnConfig.reversed
-      ? tokenIds.length * burnConfig.ratio
-      : tokenIds.length / burnConfig.ratio;
-    _mint(msg.sender, quantity);
-
-    if (burnConfig.limit < config.maxSupply) {
-      _minted[msg.sender][bytes32("burn")] += quantity;
-    }
-  }
-
-  function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+  function tokenURI(uint256 tokenId) public view virtual returns (string memory) {
     if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
-
     return
       bytes(config.baseUri).length != 0
         ? string(abi.encodePacked(config.baseUri, LibString.toString(tokenId)))
@@ -233,19 +223,6 @@ contract Archetype is
 
   function withdrawTokens(address[] memory tokens) public {
     ArchetypeLogic.withdrawTokens(config, _ownerBalance, _affiliateBalance, owner(), tokens);
-  }
-
-  function setTokenMsg(uint256 tokenId, string calldata message) external {
-    if (msg.sender != ownerOf(tokenId)) {
-      revert NotTokenOwner();
-    }
-
-    _tokenMsg[tokenId] = bytes(message);
-  }
-
-  function getTokenMsg(uint256 tokenId) external view returns (string memory) {
-    if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
-    return string(_tokenMsg[tokenId]);
   }
 
   function ownerBalance() external view returns (OwnerBalance memory) {
@@ -276,6 +253,23 @@ contract Archetype is
     return PLATFORM;
   }
 
+  function tokenSupply(uint256 tokenId) external view returns (uint256) {
+    if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
+    return _tokenSupply[tokenId - 1];
+  }
+
+  function totalSupply() external view returns (uint256) {
+    uint256 supply = 0;
+    for (uint256 i = 0; i < _tokenSupply.length; i++) {
+      supply += _tokenSupply[i];
+    }
+    return supply;
+  }
+
+  function maxSupply() external view returns (uint32[] memory) {
+    return config.maxSupply;
+  }
+
   //
   // OWNER ONLY
   //
@@ -289,17 +283,8 @@ contract Archetype is
   }
 
   /// @notice the password is "forever"
-  function lockURI(string memory password) external onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
-    options.uriLocked = true;
-  }
-
-  /// @notice the password is "forever"
   // max supply cannot subceed total supply. Be careful changing.
-  function setMaxSupply(uint32 maxSupply, string memory password) external onlyOwner {
+  function setMaxSupply(uint32[] memory maxSupply, string memory password) external onlyOwner {
     if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
       revert WrongPassword();
     }
@@ -308,20 +293,13 @@ contract Archetype is
       revert LockedForever();
     }
 
-    if (maxSupply < _totalMinted()) {
-      revert MaxSupplyExceeded();
+    for (uint256 i = 0; i < _tokenSupply.length; i++) {
+      if (maxSupply[i] < _tokenSupply[i]) {
+        revert MaxSupplyExceeded();
+      }
     }
 
     config.maxSupply = maxSupply;
-  }
-
-  /// @notice the password is "forever"
-  function lockMaxSupply(string memory password) external onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
-    options.maxSupplyLocked = true;
   }
 
   function setAffiliateFee(uint16 affiliateFee) external onlyOwner {
@@ -333,15 +311,6 @@ contract Archetype is
     }
 
     config.affiliateFee = affiliateFee;
-  }
-
-  /// @notice the password is "forever"
-  function lockAffiliateFee(string memory password) external onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
-    options.affiliateFeeLocked = true;
   }
 
   function setDiscounts(Discount calldata discounts) external onlyOwner {
@@ -366,15 +335,6 @@ contract Archetype is
     config.discounts = discounts;
   }
 
-  /// @notice the password is "forever"
-  function lockDiscounts(string memory password) external onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
-    options.discountsLocked = true;
-  }
-
   /// @notice Set BAYC-style provenance once it's calculated
   function setProvenanceHash(string memory provenanceHash) external onlyOwner {
     if (options.provenanceHashLocked) {
@@ -382,15 +342,6 @@ contract Archetype is
     }
 
     provenance = provenanceHash;
-  }
-
-  /// @notice the password is "forever"
-  function lockProvenanceHash(string memory password) external onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
-    options.provenanceHashLocked = true;
   }
 
   function setOwnerAltPayout(address ownerAltPayout) external onlyOwner {
@@ -402,12 +353,35 @@ contract Archetype is
   }
 
   /// @notice the password is "forever"
-  function lockOwnerAltPayout(string memory password) external onlyOwner {
+  function lockOption(string memory password, string memory option) external onlyOwner {
     if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
       revert WrongPassword();
     }
 
-    options.ownerAltPayoutLocked = true;
+    if(keccak256(abi.encodePacked(option)) == keccak256(abi.encodePacked("uriLocked"))) {
+      options.uriLocked = true;
+    }
+    else if(keccak256(abi.encodePacked(option)) == keccak256(abi.encodePacked("maxSupplyLocked"))) {
+      options.maxSupplyLocked = true;
+    }
+    else if(keccak256(abi.encodePacked(option)) == keccak256(abi.encodePacked("affiliateFeeLocked"))) {
+      options.affiliateFeeLocked = true;
+    }
+    else if(keccak256(abi.encodePacked(option)) == keccak256(abi.encodePacked("discountsLocked"))) {
+      options.discountsLocked = true;
+    }
+    else if(keccak256(abi.encodePacked(option)) == keccak256(abi.encodePacked("ownerAltPayoutLocked"))) {
+      options.ownerAltPayoutLocked = true;
+    }
+    else if(keccak256(abi.encodePacked(option)) == keccak256(abi.encodePacked("provenanceHashLocked"))) {
+      options.provenanceHashLocked = true;
+    }
+    else if(keccak256(abi.encodePacked(option)) == keccak256(abi.encodePacked("royaltyEnforcementLocked"))) {
+      options.royaltyEnforcementLocked = true;
+    }
+    else {
+      revert WrongPassword();
+    }
   }
 
   function setMaxBatchSize(uint32 maxBatchSize) external onlyOwner {
@@ -428,6 +402,7 @@ contract Archetype is
       limit: _invite.limit,
       maxSupply: _invite.maxSupply,
       interval: 0,
+      tokenIds: _invite.tokenIds,
       tokenAddress: _invite.tokenAddress
     });
     emit Invited(_key, _cid);
@@ -445,34 +420,6 @@ contract Archetype is
     emit Invited(_key, _cid);
   }
 
-  function enableBurnToMint(
-    address archetype,
-    bool reversed,
-    uint16 ratio,
-    uint64 start,
-    uint64 limit
-  ) external onlyOwner {
-    burnConfig = BurnConfig({
-      archetype: IERC721AUpgradeable(archetype),
-      enabled: true,
-      reversed: reversed,
-      ratio: ratio,
-      start: start,
-      limit: limit
-    });
-  }
-
-  function disableBurnToMint() external onlyOwner {
-    burnConfig = BurnConfig({
-      enabled: false,
-      reversed: false,
-      ratio: 0,
-      archetype: IERC721AUpgradeable(address(0)),
-      start: 0,
-      limit: 0
-    });
-  }
-
   //
   // PLATFORM ONLY
   //
@@ -483,8 +430,12 @@ contract Archetype is
   //
   // INTERNAL
   //
-  function _startTokenId() internal view virtual override returns (uint256) {
+  function _startTokenId() internal view virtual returns (uint256) {
     return 1;
+  }
+
+  function _exists(uint256 tokenId) internal view returns (bool) {
+    return tokenId > 0 && tokenId <= _tokenSupply.length;
   }
 
   modifier onlyPlatform() {
@@ -510,15 +461,6 @@ contract Archetype is
     options.royaltyEnforcementEnabled = false;
   }
 
-  /// @notice the password is "forever"
-  function lockRoyaltyEnforcement(string memory password) external onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
-    options.royaltyEnforcementLocked = true;
-  }
-
   function setApprovalForAll(address operator, bool approved)
     public
     override
@@ -527,38 +469,24 @@ contract Archetype is
     super.setApprovalForAll(operator, approved);
   }
 
-  function approve(address operator, uint256 tokenId)
-    public
-    payable
-    override
-    onlyAllowedOperatorApproval(operator)
-  {
-    super.approve(operator, tokenId);
-  }
-
-  function transferFrom(
-    address from,
-    address to,
-    uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
-    super.transferFrom(from, to, tokenId);
-  }
-
-  function safeTransferFrom(
-    address from,
-    address to,
-    uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
-    super.safeTransferFrom(from, to, tokenId);
-  }
-
   function safeTransferFrom(
     address from,
     address to,
     uint256 tokenId,
+    uint256 amount,
     bytes memory data
-  ) public payable override onlyAllowedOperator(from) {
-    super.safeTransferFrom(from, to, tokenId, data);
+  ) public override onlyAllowedOperator(from) {
+    super.safeTransferFrom(from, to, tokenId, amount, data);
+  }
+
+  function safeBatchTransferFrom(
+    address from,
+    address to,
+    uint256[] memory ids,
+    uint256[] memory amounts,
+    bytes memory data
+  ) public override onlyAllowedOperator(from) {
+    super.safeBatchTransferFrom(from, to, ids, amounts, data);
   }
 
   function _operatorFilteringEnabled() internal view override returns (bool) {
@@ -570,7 +498,7 @@ contract Archetype is
     public
     view
     virtual
-    override(ERC721AUpgradeable, ERC2981Upgradeable)
+    override(ERC1155Upgradeable, ERC2981Upgradeable)
     returns (bool)
   {
     // Supports the following `interfaceId`s:
@@ -579,7 +507,7 @@ contract Archetype is
     // - IERC721Metadata: 0x5b5e139f
     // - IERC2981: 0x2a55205a
     return
-      ERC721AUpgradeable.supportsInterface(interfaceId) ||
+      ERC1155Upgradeable.supportsInterface(interfaceId) ||
       ERC2981Upgradeable.supportsInterface(interfaceId);
   }
 

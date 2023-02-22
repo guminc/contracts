@@ -44,7 +44,7 @@ describe("Factory", function () {
       affiliateSigner: AFFILIATE_SIGNER.address,
       ownerAltPayout: ZERO,
       superAffiliatePayout: ZERO,
-      maxSupply: 5000,
+      maxSupply: [5000],
       maxBatchSize: 20,
       affiliateFee: 1500,
       platformFee: 500,
@@ -230,7 +230,7 @@ describe("Factory", function () {
 
     const nft = Archetype.attach(newCollectionAddress);
 
-    await expect(nft.lockURI("forever")).to.be.revertedWith("Ownable: caller is not the owner");
+    await expect(nft.lockOption("forever", "uriLocked")).to.be.revertedWith("Ownable: caller is not the owner");
   });
 
   it("should mint if public sale is set", async function () {
@@ -256,7 +256,8 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
       limit: 300,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: 5000,
+      tokenIds: [1, 2, 3, 4, 5],
       tokenAddress: ZERO,
     });
 
@@ -272,7 +273,7 @@ describe("Factory", function () {
       value: ethers.utils.parseEther("0.08"),
     });
 
-    expect(await nft.balanceOf(accountZero.address)).to.equal(1);
+    expect(await nft.balanceOf(accountZero.address, 1)).to.equal(1);
   });
 
   it("should mint if user is on valid list, throw appropriate errors otherwise", async function () {
@@ -315,7 +316,8 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(tomorrow / 1000)),
       end: 0,
       limit: 1000,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: 5000,
+      tokenIds: [1, 2, 3, 4, 5],
       tokenAddress: ZERO,
     });
     await nft.connect(owner).setInvite(root, ipfsh.ctod(CID_DEFAULT), {
@@ -323,7 +325,8 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
       limit: 10,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: 5000,
+      tokenIds: [1, 2, 3, 4, 5],
       tokenAddress: ZERO,
     });
 
@@ -353,7 +356,7 @@ describe("Factory", function () {
       value: price.mul(5),
     });
 
-    expect(await nft.balanceOf(accountZero.address)).to.equal(6);
+    expect(await nft.balanceOf(accountZero.address, 1)).to.equal(6);
 
     const proofTwo = invitelist.proof(accountTwo.address);
 
@@ -388,7 +391,7 @@ describe("Factory", function () {
       })
     ).to.be.revertedWith("MintEnded");
 
-    expect(await nft.balanceOf(accountTwo.address)).to.equal(0);
+    expect(await nft.balanceOf(accountTwo.address, 1)).to.equal(0);
   });
 
   it("should fail to mint if public limit is 0", async function () {
@@ -451,7 +454,8 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
       limit: 300,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: 5000,
+      tokenIds: [1, 2, 3, 4, 5],
       tokenAddress: ZERO,
     });
 
@@ -566,7 +570,7 @@ describe("Factory", function () {
         affiliateSigner: AFFILIATE_SIGNER.address,
         ownerAltPayout: ZERO,
         superAffiliatePayout: ZERO,
-        maxSupply: 5000,
+        maxSupply: [5000],
         maxBatchSize: 20,
         affiliateFee: 1500,
         platformFee: 500,
@@ -602,7 +606,8 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
       limit: 300,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: 5000,
+      tokenIds: [1, 2, 3, 4, 5],
       tokenAddress: ZERO,
     });
 
@@ -660,7 +665,7 @@ describe("Factory", function () {
         affiliateSigner: AFFILIATE_SIGNER.address,
         ownerAltPayout: ZERO,
         superAffiliatePayout: superAffiliate.address,
-        maxSupply: 5000,
+        maxSupply: [5000],
         maxBatchSize: 20,
         affiliateFee: 1500,
         platformFee: 500,
@@ -683,7 +688,8 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
       limit: 300,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: 5000,
+      tokenIds: [1, 2, 3, 4, 5],
       tokenAddress: ZERO,
     });
 
@@ -753,7 +759,7 @@ describe("Factory", function () {
         affiliateSigner: AFFILIATE_SIGNER.address,
         ownerAltPayout: ownerAltPayout.address,
         superAffiliatePayout: ZERO,
-        maxSupply: 5000,
+        maxSupply: [5000],
         maxBatchSize: 20,
         affiliateFee: 1500,
         platformFee: 500,
@@ -776,7 +782,8 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
       limit: 300,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: 5000,
+      tokenIds: [1, 2, 3, 4, 5],
       tokenAddress: ZERO,
     });
 
@@ -816,53 +823,53 @@ describe("Factory", function () {
     expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.095")));
   });
 
-  it("allow token owner to store msg", async function () {
-    const [accountZero, accountOne] = await ethers.getSigners();
+  // it("allow token owner to store msg", async function () {
+  //   const [accountZero, accountOne] = await ethers.getSigners();
 
-    const owner = accountOne;
-    const holder = accountZero;
+  //   const owner = accountOne;
+  //   const holder = accountZero;
 
-    const newCollection = await factory.createCollection(
-      owner.address,
-      DEFAULT_NAME,
-      DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
-    );
+  //   const newCollection = await factory.createCollection(
+  //     owner.address,
+  //     DEFAULT_NAME,
+  //     DEFAULT_SYMBOL,
+  //     DEFAULT_CONFIG
+  //   );
 
-    const result = await newCollection.wait();
+  //   const result = await newCollection.wait();
 
-    const newCollectionAddress = result.events[0].address || "";
+  //   const newCollectionAddress = result.events[0].address || "";
 
-    const nft = Archetype.attach(newCollectionAddress);
+  //   const nft = Archetype.attach(newCollectionAddress);
 
-    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
-      price: ethers.utils.parseEther("0.02"),
-      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-      end: 0,
-      limit: 300,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
-      tokenAddress: ZERO,
-    });
+  //   await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+  //     price: ethers.utils.parseEther("0.02"),
+  //     start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+  //     limit: 300,
+  //     maxSupply: 5000,
+  //     tokenIds: [1,2,3,4,5],
+  //     tokenAddress: ZERO,
+  //   });
 
-    // mint tokens 1, 2, 3
-    await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x", {
-      value: ethers.utils.parseEther("0.06"),
-    });
+  //   // mint tokens 1, 2, 3
+  //   await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x", {
+  //     value: ethers.utils.parseEther("0.06"),
+  //   });
 
-    const msg = "Hi this is a test, I own this";
+  //   const msg = "Hi this is a test, I own this";
 
-    // try to set as non token owner - will fail
-    await expect(nft.connect(owner).setTokenMsg(3, msg)).to.be.revertedWith("NotTokenOwner");
+  //   // try to set as non token owner - will fail
+  //   await expect(nft.connect(owner).setTokenMsg(3, msg)).to.be.revertedWith("NotTokenOwner");
 
-    // try to set as token owner - will succeed
-    await nft.connect(holder).setTokenMsg(3, msg + msg + msg + msg + msg);
+  //   // try to set as token owner - will succeed
+  //   await nft.connect(holder).setTokenMsg(3, msg + msg + msg + msg + msg);
 
-    // try to set as token owner - will succeed
-    await nft.connect(holder).setTokenMsg(3, msg);
+  //   // try to set as token owner - will succeed
+  //   await nft.connect(holder).setTokenMsg(3, msg);
 
-    // check that msgs match
-    await expect(await nft.getTokenMsg(3)).to.be.equal(msg);
-  });
+  //   // check that msgs match
+  //   await expect(await nft.getTokenMsg(3)).to.be.equal(msg);
+  // });
 
   it("test config changes and locking", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();
@@ -886,25 +893,25 @@ describe("Factory", function () {
     // CHANGE URI
     await nft.connect(owner).setBaseURI("test uri");
     await expect((await nft.connect(owner).config()).baseUri).to.be.equal("test uri");
-    await nft.connect(owner).lockURI("forever");
+    await nft.connect(owner).lockOption("forever", "uriLocked");
     await expect(nft.connect(owner).setBaseURI("new test uri")).to.be.reverted;
 
     // CHANGE MAX SUPPLY
-    await nft.connect(owner).setMaxSupply(100, "forever");
-    await expect((await nft.connect(owner).config()).maxSupply).to.be.equal(100);
-    await nft.connect(owner).lockMaxSupply("forever");
-    await expect(nft.connect(owner).setMaxSupply(20, "forever")).to.be.reverted;
+    await nft.connect(owner).setMaxSupply([100], "forever");
+    await expect(await nft.connect(owner).maxSupply()).to.deep.equal([100]);
+    await nft.connect(owner).lockOption("forever", "maxSupplyLocked");
+    await expect(nft.connect(owner).setMaxSupply([20], "forever")).to.be.reverted;
 
     // CHANGE AFFILIATE FEE
     await nft.connect(owner).setAffiliateFee(1000);
     await expect((await nft.connect(owner).config()).affiliateFee).to.be.equal(1000);
-    await nft.connect(owner).lockAffiliateFee("forever");
+    await nft.connect(owner).lockOption("forever", "affiliateFeeLocked");
     await expect(nft.connect(owner).setAffiliateFee(20)).to.be.reverted;
 
     // CHANGE OWNER ALT PAYOUT
     await nft.connect(owner).setOwnerAltPayout(alt.address);
     await expect((await nft.connect(owner).config()).ownerAltPayout).to.be.equal(alt.address);
-    await nft.connect(owner).lockOwnerAltPayout("forever");
+    await nft.connect(owner).lockOption("forever", "ownerAltPayoutLocked");
     await expect(nft.connect(owner).setOwnerAltPayout(ZERO)).to.be.reverted;
 
     // CHANGE DISCOUNTS
@@ -927,114 +934,114 @@ describe("Factory", function () {
       _discount[1][i] = Object.values(obj);
     });
     await expect((await nft.connect(owner).config()).discounts).to.deep.equal(_discount);
-    await nft.connect(owner).lockDiscounts("forever");
+    await nft.connect(owner).lockOption("forever", "discountsLocked");
     await expect(nft.connect(owner).setDiscounts(discount)).to.be.reverted;
   });
 
-  it("test burn to mint functionality", async function () {
-    const [accountZero, accountOne] = await ethers.getSigners();
+  // it("test burn to mint functionality", async function () {
+  //   const [accountZero, accountOne] = await ethers.getSigners();
 
-    const owner = accountZero;
-    const minter = accountOne;
+  //   const owner = accountZero;
+  //   const minter = accountOne;
 
-    const newCollectionBurn = await factory.createCollection(
-      owner.address,
-      DEFAULT_NAME,
-      DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
-    );
-    const resultBurn = await newCollectionBurn.wait();
-    const newCollectionAddressBurn = resultBurn.events[0].address || "";
-    const nftBurn = Archetype.attach(newCollectionAddressBurn);
+  //   const newCollectionBurn = await factory.createCollection(
+  //     owner.address,
+  //     DEFAULT_NAME,
+  //     DEFAULT_SYMBOL,
+  //     DEFAULT_CONFIG
+  //   );
+  //   const resultBurn = await newCollectionBurn.wait();
+  //   const newCollectionAddressBurn = resultBurn.events[0].address || "";
+  //   const nftBurn = Archetype.attach(newCollectionAddressBurn);
 
-    const newCollectionMint = await factory.createCollection(
-      owner.address,
-      DEFAULT_NAME,
-      DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
-    );
-    const resultMint = await newCollectionMint.wait();
-    const newCollectionAddressMint = resultMint.events[0].address || "";
-    const nftMint = Archetype.attach(newCollectionAddressMint);
+  //   const newCollectionMint = await factory.createCollection(
+  //     owner.address,
+  //     DEFAULT_NAME,
+  //     DEFAULT_SYMBOL,
+  //     DEFAULT_CONFIG
+  //   );
+  //   const resultMint = await newCollectionMint.wait();
+  //   const newCollectionAddressMint = resultMint.events[0].address || "";
+  //   const nftMint = Archetype.attach(newCollectionAddressMint);
 
-    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 0, 5000);
-    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
-      price: 0,
-      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-      end: 0,
-      limit: 300,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
-      tokenAddress: ZERO,
-    });
+  //   await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 0, 5000);
+  //   await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+  //     price: 0,
+  //     start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+  //     limit: 300,
+  //     maxSupply: 5000,
+  //     tokenIds: [1,2,3,4,5],
+  //     tokenAddress: ZERO,
+  //   });
 
-    // mint 10 tokens
-    await nftMint
-      .connect(minter)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 12, ZERO, "0x", {
-        value: 0,
-      });
+  //   // mint 10 tokens
+  //   await nftMint
+  //     .connect(minter)
+  //     .mint({ key: ethers.constants.HashZero, proof: [] }, 12, ZERO, "0x", {
+  //       value: 0,
+  //     });
 
-    // approve nftBurn to transfer tokens
-    await nftMint.connect(minter).setApprovalForAll(nftBurn.address, true);
+  //   // approve nftBurn to transfer tokens
+  //   await nftMint.connect(minter).setApprovalForAll(nftBurn.address, true);
 
-    // transfer away a token
-    await nftMint.connect(minter).transferFrom(minter.address, owner.address, 10);
+  //   // transfer away a token
+  //   await nftMint.connect(minter).transferFrom(minter.address, owner.address, 10);
 
-    // try to burn unowned token
-    await expect(nftBurn.connect(minter).burnToMint([9, 10])).to.be.revertedWith("NotTokenOwner");
+  //   // try to burn unowned token
+  //   await expect(nftBurn.connect(minter).burnToMint([9, 10])).to.be.revertedWith("NotTokenOwner");
 
-    // try to burn invalid number of tokens
-    await expect(nftBurn.connect(minter).burnToMint([9])).to.be.revertedWith(
-      "InvalidAmountOfTokens"
-    );
+  //   // try to burn invalid number of tokens
+  //   await expect(nftBurn.connect(minter).burnToMint([9])).to.be.revertedWith(
+  //     "InvalidAmountOfTokens"
+  //   );
 
-    // burn 2 tokens and collect 1 token in new collection
-    await nftBurn.connect(minter).burnToMint([2, 4]);
+  //   // burn 2 tokens and collect 1 token in new collection
+  //   await nftBurn.connect(minter).burnToMint([2, 4]);
 
-    // burn 4 tokens and collect 2 tokens in new collection
-    await nftBurn.connect(minter).burnToMint([1, 3, 5, 8]);
+  //   // burn 4 tokens and collect 2 tokens in new collection
+  //   await nftBurn.connect(minter).burnToMint([1, 3, 5, 8]);
 
-    // disable burn to mint
-    await nftBurn.connect(owner).disableBurnToMint();
+  //   // disable burn to mint
+  //   await nftBurn.connect(owner).disableBurnToMint();
 
-    // burn will fail as burn is disabled
-    await expect(nftBurn.connect(minter).burnToMint([11, 12])).to.be.revertedWith(
-      "BurnToMintDisabled"
-    );
+  //   // burn will fail as burn is disabled
+  //   await expect(nftBurn.connect(minter).burnToMint([11, 12])).to.be.revertedWith(
+  //     "BurnToMintDisabled"
+  //   );
 
-    // re-enable with time set in future
-    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 10000000000, 5000);
+  //   // re-enable with time set in future
+  //   await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 10000000000, 5000);
 
-    // burn will fail as burn is time is set in future
-    await expect(nftBurn.connect(minter).burnToMint([11, 12])).to.be.revertedWith(
-      "MintNotYetStarted"
-    );
+  //   // burn will fail as burn is time is set in future
+  //   await expect(nftBurn.connect(minter).burnToMint([11, 12])).to.be.revertedWith(
+  //     "MintNotYetStarted"
+  //   );
 
-    // re-enable again with valid config
-    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 0, 5000);
+  //   // re-enable again with valid config
+  //   await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 0, 5000);
 
-    // burn 4 tokens and collect 2 tokens in new collection
-    await nftBurn.connect(minter).burnToMint([11, 12]);
+  //   // burn 4 tokens and collect 2 tokens in new collection
+  //   await nftBurn.connect(minter).burnToMint([11, 12]);
 
-    // re-enable again with valid reversed config
-    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, true, 4, 0, 5000);
+  //   // re-enable again with valid reversed config
+  //   await nftBurn.connect(owner).enableBurnToMint(nftMint.address, true, 4, 0, 5000);
 
-    // burn 1 tokens and collect 4 tokens in new collection
-    await nftBurn.connect(minter).burnToMint([7]);
+  //   // burn 1 tokens and collect 4 tokens in new collection
+  //   await nftBurn.connect(minter).burnToMint([7]);
 
-    await expect(await nftMint.ownerOf(1)).to.be.equal(BURN);
-    await expect(await nftMint.ownerOf(2)).to.be.equal(BURN);
-    await expect(await nftMint.ownerOf(3)).to.be.equal(BURN);
-    await expect(await nftMint.ownerOf(4)).to.be.equal(BURN);
-    await expect(await nftMint.ownerOf(5)).to.be.equal(BURN);
-    await expect(await nftMint.ownerOf(7)).to.be.equal(BURN);
-    await expect(await nftMint.ownerOf(8)).to.be.equal(BURN);
-    await expect(await nftMint.ownerOf(11)).to.be.equal(BURN);
-    await expect(await nftMint.ownerOf(12)).to.be.equal(BURN);
-    await expect(await nftMint.balanceOf(minter.address)).to.be.equal(2);
+  //   await expect(await nftMint.ownerOf(1)).to.be.equal(BURN);
+  //   await expect(await nftMint.ownerOf(2)).to.be.equal(BURN);
+  //   await expect(await nftMint.ownerOf(3)).to.be.equal(BURN);
+  //   await expect(await nftMint.ownerOf(4)).to.be.equal(BURN);
+  //   await expect(await nftMint.ownerOf(5)).to.be.equal(BURN);
+  //   await expect(await nftMint.ownerOf(7)).to.be.equal(BURN);
+  //   await expect(await nftMint.ownerOf(8)).to.be.equal(BURN);
+  //   await expect(await nftMint.ownerOf(11)).to.be.equal(BURN);
+  //   await expect(await nftMint.ownerOf(12)).to.be.equal(BURN);
+  //   await expect(await nftMint.balanceOf(minter.address)).to.be.equal(2);
 
-    await expect(await nftBurn.balanceOf(minter.address)).to.be.equal(8);
-  });
+  //   await expect(await nftBurn.balanceOf(minter.address)).to.be.equal(8);
+  // });
 
   it("test platform only modifier", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
@@ -1065,8 +1072,9 @@ describe("Factory", function () {
 
   it("test max supply checks", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();
-    DEFAULT_CONFIG.maxBatchSize = 5000;
-    DEFAULT_CONFIG.maxSupply = 5000;
+    let default_config = {...DEFAULT_CONFIG}
+    default_config.maxBatchSize = 5000;
+    default_config.maxSupply = [1000, 1000, 1000];
 
     const owner = accountZero;
     const minter = accountOne;
@@ -1075,7 +1083,7 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      default_config
     );
     const resultBurn = await newCollectionBurn.wait();
     const newCollectionAddressBurn = resultBurn.events[0].address || "";
@@ -1085,19 +1093,20 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      default_config
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
     const nftMint = Archetype.attach(newCollectionAddressMint);
 
-    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 0, 5000);
+    // await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 0, 5000);
     await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
       limit: 10000,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: 5000,
+      tokenIds: [1, 2, 3, 4, 5],
       tokenAddress: ZERO,
     });
     await nftBurn.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
@@ -1105,22 +1114,16 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
       limit: 10000,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: 5000,
+      tokenIds: [1, 2, 3, 4, 5],
       tokenAddress: ZERO,
     });
-
-    // mint some tokens
-    await nftMint
-      .connect(minter)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 10, ZERO, "0x", {
-        value: 0,
-      });
 
     // try to mint more than max tokens tokens
     await expect(
       nftMint
         .connect(minter)
-        .mint({ key: ethers.constants.HashZero, proof: [] }, 4991, ZERO, "0x", {
+        .mint({ key: ethers.constants.HashZero, proof: [] }, 3010, ZERO, "0x", {
           value: 0,
         })
     ).to.be.revertedWith("MaxSupplyExceeded");
@@ -1128,9 +1131,21 @@ describe("Factory", function () {
     // mint max tokens
     await nftMint
       .connect(minter)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 4990, ZERO, "0x", {
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 3000, ZERO, "0x", {
         value: 0,
       });
+    // // mint max tokens
+    // await nftMint
+    // .connect(minter)
+    // .mint({ key: ethers.constants.HashZero, proof: [] }, 1000, ZERO, "0x", {
+    //   value: 0,
+    // });
+    // // mint max tokens
+    // await nftMint
+    // .connect(minter)
+    // .mint({ key: ethers.constants.HashZero, proof: [] }, 1000, ZERO, "0x", {
+    //   value: 0,
+    // });
 
     // try to mint after max reached
     await expect(
@@ -1139,31 +1154,31 @@ describe("Factory", function () {
       })
     ).to.be.revertedWith("MaxSupplyExceeded");
 
-    // approve nftBurn to transfer tokens
-    await nftMint.connect(minter).setApprovalForAll(nftBurn.address, true);
+    // // approve nftBurn to transfer tokens
+    // await nftMint.connect(minter).setApprovalForAll(nftBurn.address, true);
 
-    // mint tokens on burn to mint
-    await nftBurn
-      .connect(minter)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 4990, ZERO, "0x", {
-        value: 0,
-      });
+    // // mint tokens on burn to mint
+    // await nftBurn
+    //   .connect(minter)
+    //   .mint({ key: ethers.constants.HashZero, proof: [] }, 4990, ZERO, "0x", {
+    //     value: 0,
+    //   });
 
-    // try burn to mint past max supply
-    await expect(
-      nftBurn.connect(minter).burnToMint(Array.from({ length: 40 }, (_, i) => i + 1))
-    ).to.be.revertedWith("MaxSupplyExceeded");
+    // // try burn to mint past max supply
+    // await expect(
+    //   nftBurn.connect(minter).burnToMint(Array.from({ length: 40 }, (_, i) => i + 1))
+    // ).to.be.revertedWith("MaxSupplyExceeded");
 
-    // burn to max
-    await nftBurn.connect(minter).burnToMint(Array.from({ length: 20 }, (_, i) => i + 1));
+    // // burn to max
+    // await nftBurn.connect(minter).burnToMint(Array.from({ length: 20 }, (_, i) => i + 1));
 
-    // try to burn past max supply
-    await expect(nftBurn.connect(minter).burnToMint([1000, 1001])).to.be.revertedWith(
-      "MaxSupplyExceeded"
-    );
+    // // try to burn past max supply
+    // await expect(nftBurn.connect(minter).burnToMint([1000, 1001])).to.be.revertedWith(
+    //   "MaxSupplyExceeded"
+    // );
 
-    await expect(await nftMint.totalSupply()).to.be.equal(DEFAULT_CONFIG.maxSupply);
-    await expect(await nftBurn.totalSupply()).to.be.equal(DEFAULT_CONFIG.maxSupply);
+    // await expect(await nftMint.totalSupply()).to.be.equal(5000);
+    // await expect(await nftBurn.totalSupply()).to.be.equal(5000);
   });
   it("test minting to another wallet", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();
@@ -1189,7 +1204,8 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
       limit: 300,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: 5000,
+      tokenIds: [1, 2, 3, 4, 5],
       tokenAddress: ZERO,
     });
 
@@ -1207,13 +1223,16 @@ describe("Factory", function () {
         .mintTo({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, ZERO, "0x", {
           value: ethers.utils.parseEther("0.02"),
         })
-    ).to.be.revertedWith("MintToZeroAddress");
+    ).to.be.revertedWith("ERC1155: mint to the zero address");
 
-    await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
-    await expect(await nft.balanceOf(owner.address)).to.be.equal(0);
+    await expect(await nft.balanceOf(holder.address, 1)).to.be.equal(3);
+    await expect(await nft.balanceOf(owner.address, 1)).to.be.equal(0);
   });
 
   it("test batchMintTo Airdrop", async function () {
+    let default_config = {...DEFAULT_CONFIG}
+    default_config.maxBatchSize = 5000;
+
     const [accountZero, accountOne] = await ethers.getSigners();
 
     const owner = accountOne;
@@ -1222,7 +1241,7 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      default_config
     );
 
     const result = await newCollection.wait();
@@ -1238,7 +1257,8 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
       limit: 5000,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: 5000,
+      tokenIds: [1, 2, 3, 4, 5],
       tokenAddress: ZERO,
     });
 
@@ -1274,11 +1294,14 @@ describe("Factory", function () {
     }
 
     await expect(await nft.totalSupply()).to.be.equal(airDropList.length);
-    await expect(await nft.ownerOf(1)).to.be.equal(airDropList[0][0]);
-    await expect(await nft.ownerOf(10)).to.be.equal(airDropList[9][0]);
-    await expect(await nft.ownerOf(20)).to.be.equal(airDropList[19][0]);
-    await expect(await nft.ownerOf(60)).to.be.equal(airDropList[59][0]);
-    await expect(await nft.ownerOf(100)).to.be.equal(airDropList[99][0]);
+    await expect(await nft.balanceOf(airDropList[0][0], 1)).to.be.equal(1);
+    await expect(await nft.balanceOf(airDropList[9][0], 1)).to.be.equal(1);
+    await expect(await nft.balanceOf(airDropList[99][0], 1)).to.be.equal(1);
+    // await expect(await nft.ownerOf(1)).to.be.equal(airDropList[0][0]);
+    // await expect(await nft.ownerOf(10)).to.be.equal(airDropList[9][0]);
+    // await expect(await nft.ownerOf(20)).to.be.equal(airDropList[19][0]);
+    // await expect(await nft.ownerOf(60)).to.be.equal(airDropList[59][0]);
+    // await expect(await nft.ownerOf(100)).to.be.equal(airDropList[99][0]);
   });
 
   it("test royalty enforcement enabling and lock", async function () {
@@ -1323,7 +1346,7 @@ describe("Factory", function () {
     await nft.connect(owner).disableRoyaltyEnforcement();
     await expect((await nft.options()).royaltyEnforcementEnabled).to.be.equal(false);
     await expect((await nft.options()).royaltyEnforcementLocked).to.be.equal(false);
-    await nft.connect(owner).lockRoyaltyEnforcement("forever");
+    await nft.connect(owner).lockOption("forever", "royaltyEnforcementLocked");
     await expect((await nft.options()).royaltyEnforcementLocked).to.be.equal(true);
     await expect(nft.connect(owner).enableRoyaltyEnforcement()).to.be.reverted;
   });
@@ -1391,8 +1414,9 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
       limit: 300,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: 5000,
       tokenAddress: tokenAddress,
+      tokenIds: [1, 2, 3, 4, 5],
     });
 
     // try to mint tokens without approval
@@ -1415,7 +1439,7 @@ describe("Factory", function () {
 
     await nft.connect(holder).mint({ key: erc20PublicKey, proof: [] }, 3, ZERO, "0x");
 
-    await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
+    await expect(await nft.balanceOf(holder.address, 1)).to.be.equal(3);
     await expect(await erc20.balanceOf(holder.address)).to.be.equal(0);
     await expect(await erc20.balanceOf(nft.address)).to.be.equal(ethers.utils.parseEther("3"));
 
@@ -1463,7 +1487,8 @@ describe("Factory", function () {
       limit: 300,
       interval: 1000, // 1000s,
       delta: ethers.utils.parseEther("0.1"),
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: 5000,
+      tokenIds: [1, 2, 3, 4, 5],
       tokenAddress: ZERO,
     });
 
@@ -1495,7 +1520,7 @@ describe("Factory", function () {
       value: ethers.utils.parseEther("0.1"),
     });
 
-    await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
+    await expect(await nft.balanceOf(holder.address, 1)).to.be.equal(3);
   });
 
   it("test increasing dutch Invite", async function () {
@@ -1524,7 +1549,8 @@ describe("Factory", function () {
       limit: 300,
       interval: 1000, // 1000s,
       delta: ethers.utils.parseEther("1"),
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: 5000,
+      tokenIds: [1, 2, 3, 4, 5],
       tokenAddress: ZERO,
     });
 
@@ -1556,12 +1582,15 @@ describe("Factory", function () {
       value: ethers.utils.parseEther("10"),
     });
 
-    await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
+    await expect(await nft.balanceOf(holder.address, 1)).to.be.equal(3);
   });
 
   it("test invite list max supply check", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
-    DEFAULT_CONFIG.maxSupply = 100;
+    let default_config = {...DEFAULT_CONFIG}
+    default_config.maxSupply = [1000, 1000, 1000, 1000, 1000];
+    default_config.maxBatchSize = 1000;
+
     const PublicMaxSupply = 90;
 
     const owner = accountZero;
@@ -1572,7 +1601,7 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      default_config
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1584,6 +1613,7 @@ describe("Factory", function () {
       end: 0,
       limit: PublicMaxSupply - 20,
       maxSupply: PublicMaxSupply,
+      tokenIds: [1, 2, 3, 4, 5],
       tokenAddress: ZERO,
     });
 
