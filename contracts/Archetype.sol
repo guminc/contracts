@@ -131,7 +131,7 @@ contract Archetype is
       ValidationArgs memory args;
       {
         // to avoid stack too deep errors
-        uint256[] memory tokenIds = ArchetypeLogic.getRandomTokenIds(_tokenSupply, config.maxSupply, quantityList[i]);
+        uint256[] memory tokenIds = ArchetypeLogic.getRandomTokenIds(_tokenSupply, config.maxSupply, invite.tokenIds, quantityList[i]);
         args = ValidationArgs({
           owner: owner(),
           affiliate: affiliate,
@@ -175,7 +175,7 @@ contract Archetype is
     ValidationArgs memory args;
     {
       // to avoid stack too deep errors
-      uint256[] memory tokenIds = ArchetypeLogic.getRandomTokenIds(_tokenSupply, config.maxSupply, quantity);
+      uint256[] memory tokenIds = ArchetypeLogic.getRandomTokenIds(_tokenSupply, config.maxSupply, i.tokenIds, quantity);
       args = ValidationArgs({
         owner: owner(),
         affiliate: affiliate,

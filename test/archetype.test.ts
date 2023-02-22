@@ -257,7 +257,7 @@ describe("Factory", function () {
       end: 0,
       limit: 300,
       maxSupply: 5000,
-      tokenIds: [1, 2, 3, 4, 5],
+      tokenIds: [],
       tokenAddress: ZERO,
     });
 
@@ -317,7 +317,7 @@ describe("Factory", function () {
       end: 0,
       limit: 1000,
       maxSupply: 5000,
-      tokenIds: [1, 2, 3, 4, 5],
+      tokenIds: [],
       tokenAddress: ZERO,
     });
     await nft.connect(owner).setInvite(root, ipfsh.ctod(CID_DEFAULT), {
@@ -326,7 +326,7 @@ describe("Factory", function () {
       end: 0,
       limit: 10,
       maxSupply: 5000,
-      tokenIds: [1, 2, 3, 4, 5],
+      tokenIds: [],
       tokenAddress: ZERO,
     });
 
@@ -455,7 +455,7 @@ describe("Factory", function () {
       end: 0,
       limit: 300,
       maxSupply: 5000,
-      tokenIds: [1, 2, 3, 4, 5],
+      tokenIds: [],
       tokenAddress: ZERO,
     });
 
@@ -607,7 +607,7 @@ describe("Factory", function () {
       end: 0,
       limit: 300,
       maxSupply: 5000,
-      tokenIds: [1, 2, 3, 4, 5],
+      tokenIds: [],
       tokenAddress: ZERO,
     });
 
@@ -689,7 +689,7 @@ describe("Factory", function () {
       end: 0,
       limit: 300,
       maxSupply: 5000,
-      tokenIds: [1, 2, 3, 4, 5],
+      tokenIds: [],
       tokenAddress: ZERO,
     });
 
@@ -783,7 +783,7 @@ describe("Factory", function () {
       end: 0,
       limit: 300,
       maxSupply: 5000,
-      tokenIds: [1, 2, 3, 4, 5],
+      tokenIds: [],
       tokenAddress: ZERO,
     });
 
@@ -1106,7 +1106,7 @@ describe("Factory", function () {
       end: 0,
       limit: 10000,
       maxSupply: 5000,
-      tokenIds: [1, 2, 3, 4, 5],
+      tokenIds: [],
       tokenAddress: ZERO,
     });
     await nftBurn.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
@@ -1115,7 +1115,7 @@ describe("Factory", function () {
       end: 0,
       limit: 10000,
       maxSupply: 5000,
-      tokenIds: [1, 2, 3, 4, 5],
+      tokenIds: [],
       tokenAddress: ZERO,
     });
 
@@ -1205,7 +1205,7 @@ describe("Factory", function () {
       end: 0,
       limit: 300,
       maxSupply: 5000,
-      tokenIds: [1, 2, 3, 4, 5],
+      tokenIds: [],
       tokenAddress: ZERO,
     });
 
@@ -1258,7 +1258,7 @@ describe("Factory", function () {
       end: 0,
       limit: 5000,
       maxSupply: 5000,
-      tokenIds: [1, 2, 3, 4, 5],
+      tokenIds: [],
       tokenAddress: ZERO,
     });
 
@@ -1416,7 +1416,7 @@ describe("Factory", function () {
       limit: 300,
       maxSupply: 5000,
       tokenAddress: tokenAddress,
-      tokenIds: [1, 2, 3, 4, 5],
+      tokenIds: [],
     });
 
     // try to mint tokens without approval
@@ -1488,7 +1488,7 @@ describe("Factory", function () {
       interval: 1000, // 1000s,
       delta: ethers.utils.parseEther("0.1"),
       maxSupply: 5000,
-      tokenIds: [1, 2, 3, 4, 5],
+      tokenIds: [],
       tokenAddress: ZERO,
     });
 
@@ -1550,7 +1550,7 @@ describe("Factory", function () {
       interval: 1000, // 1000s,
       delta: ethers.utils.parseEther("1"),
       maxSupply: 5000,
-      tokenIds: [1, 2, 3, 4, 5],
+      tokenIds: [],
       tokenAddress: ZERO,
     });
 
@@ -1613,7 +1613,7 @@ describe("Factory", function () {
       end: 0,
       limit: PublicMaxSupply - 20,
       maxSupply: PublicMaxSupply,
-      tokenIds: [1, 2, 3, 4, 5],
+      tokenIds: [],
       tokenAddress: ZERO,
     });
 
