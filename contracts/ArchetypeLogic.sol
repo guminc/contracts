@@ -203,7 +203,7 @@ library ArchetypeLogic {
 
     if (i.maxSupply < config.maxSupply) {
       uint256 totalAfterMint = listSupply[auth.key] + quantity;
-      if (totalAfterMint > i.limit) {
+      if (totalAfterMint > i.maxSupply) {
         revert ListMaxSupplyExceeded();
       }
     }
