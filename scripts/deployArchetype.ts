@@ -4,11 +4,11 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function main() {
   const ArchetypeLogic = await ethers.getContractFactory("ArchetypeLogic");
-  const archetypeLogic = await ArchetypeLogic.deploy()
+  const archetypeLogic = await ArchetypeLogic.deploy();
   const Archetype = await ethers.getContractFactory("Archetype", {
     libraries: {
-      ArchetypeLogic: archetypeLogic.address
-    }
+      ArchetypeLogic: archetypeLogic.address,
+    },
   });
 
   const archetype = await Archetype.deploy();
