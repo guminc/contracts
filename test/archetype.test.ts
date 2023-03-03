@@ -1,7 +1,12 @@
 import { ethers, upgrades } from "hardhat";
 
 import { expect } from "chai";
-import { Archetype__factory, Archetype as IArchetype, Factory__factory } from "../typechain";
+import {
+  Archetype__factory,
+  Archetype as IArchetype,
+  ArchetypeLogic__factory,
+  Factory__factory,
+} from "../typechain";
 import Invitelist from "../lib/invitelist";
 import { IArchetypeConfig } from "../lib/types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -27,6 +32,8 @@ const BURN = "0x000000000000000000000000000000000000dEaD";
 describe("Factory", function () {
   let Archetype: Archetype__factory;
   let archetype: IArchetype;
+  let ArchetypeLogic: ArchetypeLogic__factory;
+  let archetypeLogic: Contract;
   let Factory: Factory__factory;
   let factory: Contract;
 
@@ -52,7 +59,13 @@ describe("Factory", function () {
       },
     };
 
-    Archetype = await ethers.getContractFactory("Archetype");
+    ArchetypeLogic = await ethers.getContractFactory("ArchetypeLogic");
+    archetypeLogic = await ArchetypeLogic.deploy();
+    Archetype = await ethers.getContractFactory("Archetype", {
+      libraries: {
+        ArchetypeLogic: archetypeLogic.address,
+      },
+    });
 
     archetype = await Archetype.deploy();
 
@@ -72,7 +85,7 @@ describe("Factory", function () {
   it("should have platform set to test account", async function () {
     const [_, _accountOne, accountTwo] = await ethers.getSigners();
 
-    const contractPlatform = await archetype.PLATFORM();
+    const contractPlatform = await archetype.platform();
 
     console.log({ accountTwo, contractPlatform });
 
@@ -93,9 +106,7 @@ describe("Factory", function () {
 
     const newCollectionAddress = result.events[0].address || "";
 
-    const NFT = await ethers.getContractFactory("Archetype");
-
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     const symbol = await nft.symbol();
     const owner = await nft.owner();
@@ -132,9 +143,7 @@ describe("Factory", function () {
 
     const newCollectionAddress = result.events[0].address || "";
 
-    const NFT = await ethers.getContractFactory("Archetype");
-
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     const symbol = await nft.symbol();
     const owner = await nft.owner();
@@ -157,9 +166,7 @@ describe("Factory", function () {
 
     const newCollectionAddress = result.events[0].address || "";
 
-    const NFT = await ethers.getContractFactory("Archetype");
-
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     const symbol = await nft.symbol();
     const owner = await nft.owner();
@@ -167,7 +174,13 @@ describe("Factory", function () {
     expect(symbol).to.equal(DEFAULT_SYMBOL);
     expect(owner).to.equal(accountOne.address);
 
-    const NewArchetype = await ethers.getContractFactory("Archetype");
+    ArchetypeLogic = await ethers.getContractFactory("ArchetypeLogic");
+    archetypeLogic = await ArchetypeLogic.deploy();
+    const NewArchetype = await ethers.getContractFactory("Archetype", {
+      libraries: {
+        ArchetypeLogic: archetypeLogic.address,
+      },
+    });
 
     // const archetype = await upgrades.deployProxy(Archetype, []);
 
@@ -192,7 +205,7 @@ describe("Factory", function () {
 
     const anotherollectionAddress = result1.events[0].address || "";
 
-    const nft1 = NFT.attach(anotherollectionAddress);
+    const nft1 = Archetype.attach(anotherollectionAddress);
 
     const symbol1 = await nft1.symbol();
     const owner1 = await nft1.owner();
@@ -215,9 +228,7 @@ describe("Factory", function () {
 
     const newCollectionAddress = result.events[0].address || "";
 
-    const NFT = await ethers.getContractFactory("Archetype");
-
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     await expect(nft.lockURI("forever")).to.be.revertedWith("Ownable: caller is not the owner");
   });
@@ -238,14 +249,13 @@ describe("Factory", function () {
 
     const newCollectionAddress = result.events[0].address || "";
 
-    const NFT = await ethers.getContractFactory("Archetype");
-
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.08"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
       tokenAddress: ZERO,
     });
 
@@ -280,9 +290,7 @@ describe("Factory", function () {
 
     const newCollectionAddress = result.events[0].address || "";
 
-    const NFT = await ethers.getContractFactory("Archetype");
-
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     const addresses = [accountZero.address, accountOne.address];
     // const addresses = [...Array(5000).keys()].map(() => accountZero.address);
@@ -300,24 +308,22 @@ describe("Factory", function () {
     console.log({ toda: Math.floor(Date.now() / 1000) });
     console.log({ tomo: Math.floor(tomorrow / 1000) });
 
-    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO),
-        {
-          price: ethers.utils.parseEther("0.1"),
-          start: ethers.BigNumber.from(Math.floor(tomorrow / 1000)),
-          limit: 1000,
-          
-          tokenAddress: ZERO,
-        },
-    );
-    await nft.connect(owner).setInvite(root, ipfsh.ctod(CID_DEFAULT),
-        {
-          price: price,
-          start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-          limit: 10,
-          
-          tokenAddress: ZERO,
-        },
-    );
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("0.1"),
+      start: ethers.BigNumber.from(Math.floor(tomorrow / 1000)),
+      limit: 1000,
+
+      maxSupply: DEFAULT_CONFIG.maxSupply,
+      tokenAddress: ZERO,
+    });
+    await nft.connect(owner).setInvite(root, ipfsh.ctod(CID_DEFAULT), {
+      price: price,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 10,
+
+      maxSupply: DEFAULT_CONFIG.maxSupply,
+      tokenAddress: ZERO,
+    });
 
     const invitePrivate = await nft.invites(root);
     const invitePublic = await nft.invites(ethers.constants.HashZero);
@@ -383,9 +389,7 @@ describe("Factory", function () {
 
     const newCollectionAddress = result.events[0].address || "";
 
-    const NFT = await ethers.getContractFactory("Archetype");
-
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     // await nft.connect(owner).setPaused(false);
 
@@ -421,14 +425,13 @@ describe("Factory", function () {
 
     const newCollectionAddress = result.events[0].address || "";
 
-    const NFT = await ethers.getContractFactory("Archetype");
-
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.08"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
       tokenAddress: ZERO,
     });
 
@@ -572,14 +575,13 @@ describe("Factory", function () {
 
     const newCollectionAddress = result.events[0].address || "";
 
-    const NFT = await ethers.getContractFactory("Archetype");
-
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
       tokenAddress: ZERO,
     });
 
@@ -653,14 +655,13 @@ describe("Factory", function () {
 
     const newCollectionAddress = result.events[0].address || "";
 
-    const NFT = await ethers.getContractFactory("Archetype");
-
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
       tokenAddress: ZERO,
     });
 
@@ -746,14 +747,13 @@ describe("Factory", function () {
 
     const newCollectionAddress = result.events[0].address || "";
 
-    const NFT = await ethers.getContractFactory("Archetype");
-
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
       tokenAddress: ZERO,
     });
 
@@ -810,14 +810,13 @@ describe("Factory", function () {
 
     const newCollectionAddress = result.events[0].address || "";
 
-    const NFT = await ethers.getContractFactory("Archetype");
-
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.02"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
       tokenAddress: ZERO,
     });
 
@@ -858,9 +857,7 @@ describe("Factory", function () {
 
     const newCollectionAddress = result.events[0].address || "";
 
-    const NFT = await ethers.getContractFactory("Archetype");
-
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     // CHANGE URI
     await nft.connect(owner).setBaseURI("test uri");
@@ -910,103 +907,109 @@ describe("Factory", function () {
     await expect(nft.connect(owner).setDiscounts(discount)).to.be.reverted;
   });
 
-  // it("test burn to mint functionality", async function () {
-  //   const [accountZero, accountOne] = await ethers.getSigners();
+  it("test burn to mint functionality", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
 
-  //   const owner = accountZero;
-  //   const minter = accountOne;
+    const owner = accountZero;
+    const minter = accountOne;
 
-  //   const newCollectionBurn = await factory.createCollection(
-  //     owner.address,
-  //     DEFAULT_NAME,
-  //     DEFAULT_SYMBOL,
-  //     DEFAULT_CONFIG
-  //   );
-  //   const resultBurn = await newCollectionBurn.wait();
-  //   const newCollectionAddressBurn = resultBurn.events[0].address || "";
-  //   const NFTBurn = await ethers.getContractFactory("Archetype");
-  //   const nftBurn = NFTBurn.attach(newCollectionAddressBurn);
+    const newCollectionBurn = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+    const resultBurn = await newCollectionBurn.wait();
+    const newCollectionAddressBurn = resultBurn.events[0].address || "";
+    const nftBurn = Archetype.attach(newCollectionAddressBurn);
 
-  //   const newCollectionMint = await factory.createCollection(
-  //     owner.address,
-  //     DEFAULT_NAME,
-  //     DEFAULT_SYMBOL,
-  //     DEFAULT_CONFIG
-  //   );
-  //   const resultMint = await newCollectionMint.wait();
-  //   const newCollectionAddressMint = resultMint.events[0].address || "";
-  //   const NFTMint = await ethers.getContractFactory("Archetype");
-  //   const nftMint = NFTMint.attach(newCollectionAddressMint);
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const nftMint = Archetype.attach(newCollectionAddressMint);
 
-  //   await nftBurn.connect(owner).enableBurnToMint(nftMint.address, 2, 0, 5000);
-  //   await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
-  //     price: 0,
-  //     start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-  //     limit: 300,
-  //     tokenAddress: ZERO,
-  //   });
+    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 0, 5000);
+    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
+      tokenAddress: ZERO,
+    });
 
-  //   // mint 10 tokens
-  //   await nftMint
-  //     .connect(minter)
-  //     .mint({ key: ethers.constants.HashZero, proof: [] }, 12, ZERO, "0x", {
-  //       value: 0,
-  //     });
+    // mint 10 tokens
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 12, ZERO, "0x", {
+        value: 0,
+      });
 
-  //   // approve nftBurn to transfer tokens
-  //   await nftMint.connect(minter).setApprovalForAll(nftBurn.address, true);
+    // approve nftBurn to transfer tokens
+    await nftMint.connect(minter).setApprovalForAll(nftBurn.address, true);
 
-  //   // transfer away a token
-  //   await nftMint.connect(minter).transferFrom(minter.address, owner.address, 10);
+    // transfer away a token
+    await nftMint.connect(minter).transferFrom(minter.address, owner.address, 10);
 
-  //   // try to burn unowned token
-  //   await expect(nftBurn.connect(minter).burnToMint([9, 10])).to.be.revertedWith("NotTokenOwner");
+    // try to burn unowned token
+    await expect(nftBurn.connect(minter).burnToMint([9, 10])).to.be.revertedWith("NotTokenOwner");
 
-  //   // try to burn invalid number of tokens
-  //   await expect(nftBurn.connect(minter).burnToMint([9])).to.be.revertedWith(
-  //     "InvalidAmountOfTokens"
-  //   );
+    // try to burn invalid number of tokens
+    await expect(nftBurn.connect(minter).burnToMint([9])).to.be.revertedWith(
+      "InvalidAmountOfTokens"
+    );
 
-  //   // burn 2 tokens and collect 1 token in new collection
-  //   await nftBurn.connect(minter).burnToMint([2, 4]);
+    // burn 2 tokens and collect 1 token in new collection
+    await nftBurn.connect(minter).burnToMint([2, 4]);
 
-  //   // burn 4 tokens and collect 2 tokens in new collection
-  //   await nftBurn.connect(minter).burnToMint([1, 3, 5, 8]);
+    // burn 4 tokens and collect 2 tokens in new collection
+    await nftBurn.connect(minter).burnToMint([1, 3, 5, 8]);
 
-  //   // disable burn to mint
-  //   await nftBurn.connect(owner).disableBurnToMint();
+    // disable burn to mint
+    await nftBurn.connect(owner).disableBurnToMint();
 
-  //   // burn will fail as burn is disabled
-  //   await expect(nftBurn.connect(minter).burnToMint([11, 12])).to.be.revertedWith(
-  //     "BurnToMintDisabled"
-  //   );
+    // burn will fail as burn is disabled
+    await expect(nftBurn.connect(minter).burnToMint([11, 12])).to.be.revertedWith(
+      "BurnToMintDisabled"
+    );
 
-  //   // re-enable with time set in future
-  //   await nftBurn.connect(owner).enableBurnToMint(nftMint.address, 2, 10000000000, 5000);
+    // re-enable with time set in future
+    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 10000000000, 5000);
 
-  //   // burn will fail as burn is time is set in future
-  //   await expect(nftBurn.connect(minter).burnToMint([11, 12])).to.be.revertedWith(
-  //     "MintNotYetStarted"
-  //   );
+    // burn will fail as burn is time is set in future
+    await expect(nftBurn.connect(minter).burnToMint([11, 12])).to.be.revertedWith(
+      "MintNotYetStarted"
+    );
 
-  //   // re-enable again with valid config
-  //   await nftBurn.connect(owner).enableBurnToMint(nftMint.address, 2, 0, 5000);
+    // re-enable again with valid config
+    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 0, 5000);
 
-  //   // burn 4 tokens and collect 2 tokens in new collection
-  //   await nftBurn.connect(minter).burnToMint([11, 12]);
+    // burn 4 tokens and collect 2 tokens in new collection
+    await nftBurn.connect(minter).burnToMint([11, 12]);
 
-  //   await expect(await nftMint.ownerOf(1)).to.be.equal(BURN);
-  //   await expect(await nftMint.ownerOf(2)).to.be.equal(BURN);
-  //   await expect(await nftMint.ownerOf(3)).to.be.equal(BURN);
-  //   await expect(await nftMint.ownerOf(4)).to.be.equal(BURN);
-  //   await expect(await nftMint.ownerOf(5)).to.be.equal(BURN);
-  //   await expect(await nftMint.ownerOf(8)).to.be.equal(BURN);
-  //   await expect(await nftMint.ownerOf(11)).to.be.equal(BURN);
-  //   await expect(await nftMint.ownerOf(12)).to.be.equal(BURN);
-  //   await expect(await nftMint.balanceOf(minter.address)).to.be.equal(3);
+    // re-enable again with valid reversed config
+    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, true, 4, 0, 5000);
 
-  //   await expect(await nftBurn.balanceOf(minter.address)).to.be.equal(4);
-  // });
+    // burn 1 tokens and collect 4 tokens in new collection
+    await nftBurn.connect(minter).burnToMint([7]);
+
+    await expect(await nftMint.ownerOf(1)).to.be.equal(BURN);
+    await expect(await nftMint.ownerOf(2)).to.be.equal(BURN);
+    await expect(await nftMint.ownerOf(3)).to.be.equal(BURN);
+    await expect(await nftMint.ownerOf(4)).to.be.equal(BURN);
+    await expect(await nftMint.ownerOf(5)).to.be.equal(BURN);
+    await expect(await nftMint.ownerOf(7)).to.be.equal(BURN);
+    await expect(await nftMint.ownerOf(8)).to.be.equal(BURN);
+    await expect(await nftMint.ownerOf(11)).to.be.equal(BURN);
+    await expect(await nftMint.ownerOf(12)).to.be.equal(BURN);
+    await expect(await nftMint.balanceOf(minter.address)).to.be.equal(2);
+
+    await expect(await nftBurn.balanceOf(minter.address)).to.be.equal(8);
+  });
 
   it("test platform only modifier", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
@@ -1023,8 +1026,7 @@ describe("Factory", function () {
     );
     const result = await newCollection.wait();
     const newCollectionAddress = result.events[0].address || "";
-    const NFT = await ethers.getContractFactory("Archetype");
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     await expect(nft.connect(owner).setSuperAffiliatePayout(minter.address)).to.be.revertedWith(
       "NotPlatform"
@@ -1052,8 +1054,7 @@ describe("Factory", function () {
     );
     const resultBurn = await newCollectionBurn.wait();
     const newCollectionAddressBurn = resultBurn.events[0].address || "";
-    const NFTBurn = await ethers.getContractFactory("Archetype");
-    const nftBurn = NFTBurn.attach(newCollectionAddressBurn);
+    const nftBurn = Archetype.attach(newCollectionAddressBurn);
 
     const newCollectionMint = await factory.createCollection(
       owner.address,
@@ -1063,20 +1064,21 @@ describe("Factory", function () {
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
-    const NFTMint = await ethers.getContractFactory("Archetype");
-    const nftMint = NFTMint.attach(newCollectionAddressMint);
+    const nftMint = Archetype.attach(newCollectionAddressMint);
 
-    // await nftBurn.connect(owner).enableBurnToMint(nftMint.address, 2, 0, 5000);
+    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 0, 5000);
     await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 10000,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
       tokenAddress: ZERO,
     });
     await nftBurn.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 10000,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
       tokenAddress: ZERO,
     });
 
@@ -1120,21 +1122,21 @@ describe("Factory", function () {
         value: 0,
       });
 
-    // // try burn to mint past max supply
-    // await expect(
-    //   nftBurn.connect(minter).burnToMint(Array.from({ length: 40 }, (_, i) => i + 1))
-    // ).to.be.revertedWith("MaxSupplyExceeded");
+    // try burn to mint past max supply
+    await expect(
+      nftBurn.connect(minter).burnToMint(Array.from({ length: 40 }, (_, i) => i + 1))
+    ).to.be.revertedWith("MaxSupplyExceeded");
 
-    // // burn to max
-    // await nftBurn.connect(minter).burnToMint(Array.from({ length: 20 }, (_, i) => i + 1));
+    // burn to max
+    await nftBurn.connect(minter).burnToMint(Array.from({ length: 20 }, (_, i) => i + 1));
 
-    // // try to burn past max supply
-    // await expect(nftBurn.connect(minter).burnToMint([1000, 1001])).to.be.revertedWith(
-    //   "MaxSupplyExceeded"
-    // );
+    // try to burn past max supply
+    await expect(nftBurn.connect(minter).burnToMint([1000, 1001])).to.be.revertedWith(
+      "MaxSupplyExceeded"
+    );
 
     await expect(await nftMint.totalSupply()).to.be.equal(DEFAULT_CONFIG.maxSupply);
-    // await expect(await nftBurn.totalSupply()).to.be.equal(DEFAULT_CONFIG.maxSupply);
+    await expect(await nftBurn.totalSupply()).to.be.equal(DEFAULT_CONFIG.maxSupply);
   });
   it("test minting to another wallet", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();
@@ -1153,14 +1155,13 @@ describe("Factory", function () {
 
     const newCollectionAddress = result.events[0].address || "";
 
-    const NFT = await ethers.getContractFactory("Archetype");
-
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.02"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
       tokenAddress: ZERO,
     });
 
@@ -1198,8 +1199,7 @@ describe("Factory", function () {
 
     const result = await newCollection.wait();
     const newCollectionAddress = result.events[0].address || "";
-    const NFT = await ethers.getContractFactory("Archetype");
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     const invitelist = new Invitelist([owner.address]);
     const root = invitelist.root();
@@ -1209,6 +1209,7 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("0.00"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 5000,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
       tokenAddress: ZERO,
     });
 
@@ -1265,8 +1266,7 @@ describe("Factory", function () {
 
     const result = await newCollection.wait();
     const newCollectionAddress = result.events[0].address || "";
-    const NFT = await ethers.getContractFactory("Archetype");
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     // // mock opensea default block list addresses
     // ///The default OpenSea operator blocklist subscription.
@@ -1314,8 +1314,7 @@ describe("Factory", function () {
 
     const result = await newCollection.wait();
     const newCollectionAddress = result.events[0].address || "";
-    const NFT = await ethers.getContractFactory("Archetype");
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     // console.log(owner.address);
     // console.log(holder.address);
@@ -1347,8 +1346,7 @@ describe("Factory", function () {
 
     const result = await newCollection.wait();
     const newCollectionAddress = result.events[0].address || "";
-    const NFT = await ethers.getContractFactory("Archetype");
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     const erc20 = await (await ethers.getContractFactory("TestErc20")).deploy();
     const tokenAddress = erc20.address;
@@ -1357,12 +1355,13 @@ describe("Factory", function () {
 
     console.log({ balanceBefore: balanceBefore.toString() });
 
-    const erc20PublicKey = ethers.utils.solidityKeccak256(["address"], [tokenAddress])
+    const erc20PublicKey = ethers.utils.solidityKeccak256(["address"], [tokenAddress]);
 
     await nft.connect(owner).setInvite(erc20PublicKey, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
       tokenAddress: tokenAddress,
     });
 
@@ -1424,9 +1423,7 @@ describe("Factory", function () {
 
     const newCollectionAddress = result.events[0].address || "";
 
-    const NFT = await ethers.getContractFactory("Archetype");
-
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     await nft.connect(owner).setDutchInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("1"),
@@ -1435,45 +1432,37 @@ describe("Factory", function () {
       limit: 300,
       interval: 1000, // 1000s,
       delta: ethers.utils.parseEther("0.1"),
+      maxSupply: DEFAULT_CONFIG.maxSupply,
       tokenAddress: ZERO,
     });
 
-
     // mint at full price
-    await nft
-      .connect(holder)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
-        value: ethers.utils.parseEther("1"),
-      });
+    await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+      value: ethers.utils.parseEther("1"),
+    });
 
     // forward time 5000s
     await ethers.provider.send("evm_increaseTime", [5000]);
 
-      // try to mint at initial price, will revert
-      await expect(
-        nft
-          .connect(holder)
-          .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
-            value: ethers.utils.parseEther("1"),
-          })
-      ).to.be.revertedWith("ExcessiveEthSent")
+    // try to mint at initial price, will revert
+    await expect(
+      nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: ethers.utils.parseEther("1"),
+      })
+    ).to.be.revertedWith("ExcessiveEthSent");
 
     // mint at half price
-    await nft
-      .connect(holder)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
-        value: ethers.utils.parseEther("0.5"),
-      });
+    await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+      value: ethers.utils.parseEther("0.5"),
+    });
 
     // forward a long time
     await ethers.provider.send("evm_increaseTime", [50000]);
 
     // mint at reserve price
-    await nft
-      .connect(holder)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
-        value: ethers.utils.parseEther("0.1"),
-      });
+    await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+      value: ethers.utils.parseEther("0.1"),
+    });
 
     await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
   });
@@ -1494,10 +1483,7 @@ describe("Factory", function () {
     const result = await newCollection.wait();
 
     const newCollectionAddress = result.events[0].address || "";
-
-    const NFT = await ethers.getContractFactory("Archetype");
-
-    const nft = NFT.attach(newCollectionAddress);
+    const nft = Archetype.attach(newCollectionAddress);
 
     await nft.connect(owner).setDutchInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("1"),
@@ -1506,47 +1492,84 @@ describe("Factory", function () {
       limit: 300,
       interval: 1000, // 1000s,
       delta: ethers.utils.parseEther("1"),
+      maxSupply: DEFAULT_CONFIG.maxSupply,
       tokenAddress: ZERO,
     });
 
-
     // mint at full price
-    await nft
-      .connect(holder)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
-        value: ethers.utils.parseEther("1"),
-      });
+    await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+      value: ethers.utils.parseEther("1"),
+    });
 
     // forward time 5000s
     await ethers.provider.send("evm_increaseTime", [5000]);
 
     // try to mint at initial price, will revert
     await expect(
-      nft
-        .connect(holder)
-        .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
-          value: ethers.utils.parseEther("1"),
-        })
-    ).to.be.revertedWith("InsufficientEthSent")
+      nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: ethers.utils.parseEther("1"),
+      })
+    ).to.be.revertedWith("InsufficientEthSent");
 
     // mint at half price
-    await nft
-      .connect(holder)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
-        value: ethers.utils.parseEther("6"),
-      });
+    await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+      value: ethers.utils.parseEther("6"),
+    });
 
     // forward a long time
     await ethers.provider.send("evm_increaseTime", [50000]);
 
     // mint at reserve price
-    await nft
-      .connect(holder)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
-        value: ethers.utils.parseEther("10"),
-      });
+    await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+      value: ethers.utils.parseEther("10"),
+    });
 
     await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
+  });
+
+  it("test invite list max supply check", async function () {
+    const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
+    DEFAULT_CONFIG.maxSupply = 100;
+    const PublicMaxSupply = 90;
+
+    const owner = accountZero;
+    const minter = accountOne;
+    const minter2 = accountTwo;
+
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const nftMint = Archetype.attach(newCollectionAddressMint);
+
+    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: PublicMaxSupply - 20,
+      maxSupply: PublicMaxSupply,
+      tokenAddress: ZERO,
+    });
+
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 40, ZERO, "0x", { value: 0 });
+
+    // try to mint past invite list max
+    await expect(
+      nftMint.connect(minter2).mint({ key: ethers.constants.HashZero, proof: [] }, 60, ZERO, "0x", {
+        value: 0,
+      })
+    ).to.be.revertedWith("ListMaxSupplyExceeded");
+
+    await nftMint
+      .connect(minter2)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 50, ZERO, "0x", { value: 0 });
+
+    await expect(await nftMint.totalSupply()).to.be.equal(PublicMaxSupply);
   });
 });
 
