@@ -695,7 +695,7 @@ contract Archetype is
     if (i.limit < i.maxSupply) {
       uint256 totalAfterMint = _minted[msg.sender][auth.key] + quantity;
 
-      if (totalAfterMint > i.limit) {
+      if (totalAfterMint > i.maxSupply) {
         revert NumberOfMintsExceeded();
       }
     }
