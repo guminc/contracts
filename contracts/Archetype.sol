@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.4.0
+// Archetype v0.5.0
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -106,7 +106,7 @@ contract Archetype is
 
   struct Invite {
     uint128 price;
-    uint64 start;
+    uint32 start;
     uint32 limit;
     uint32 maxSupply;
     address tokenAddress;
