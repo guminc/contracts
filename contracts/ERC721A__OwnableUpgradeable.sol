@@ -45,8 +45,12 @@ abstract contract ERC721A__OwnableUpgradeable is ERC721A__Initializable, ERC721A
      * @dev Throws if called by any account other than the owner.
      */
     modifier onlyOwner() {
-        require(owner() == _msgSenderERC721A(), "Ownable: caller is not the owner");
+        _isOwner();
         _;
+    }
+
+    function _isOwner() internal view {
+        require(owner() == _msgSenderERC721A(), "Ownable: caller is not the owner");
     }
 
     /**
