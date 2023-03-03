@@ -33,6 +33,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20Upgradeable__factory>;
     getContractFactory(
+      name: "ERC721Upgradeable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC721Upgradeable__factory>;
+    getContractFactory(
       name: "IERC721MetadataUpgradeable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC721MetadataUpgradeable__factory>;
@@ -80,6 +84,10 @@ declare module "hardhat/types/runtime" {
       name: "ArchetypeBackup",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ArchetypeBackup__factory>;
+    getContractFactory(
+      name: "ArchetypeLogic",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ArchetypeLogic__factory>;
     getContractFactory(
       name: "ContextUpgradeable",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -179,6 +187,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IERC20Upgradeable>;
     getContractAt(
+      name: "ERC721Upgradeable",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC721Upgradeable>;
+    getContractAt(
       name: "IERC721MetadataUpgradeable",
       address: string,
       signer?: ethers.Signer
@@ -238,6 +251,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ArchetypeBackup>;
+    getContractAt(
+      name: "ArchetypeLogic",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ArchetypeLogic>;
     getContractAt(
       name: "ContextUpgradeable",
       address: string,

@@ -16,6 +16,7 @@
 pragma solidity ^0.8.4;
 
 import "./Archetype.sol";
+import "./ArchetypeLogic.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
@@ -33,7 +34,7 @@ contract Factory is OwnableUpgradeable {
     address _receiver,
     string memory name,
     string memory symbol,
-    Archetype.Config calldata config
+    Config calldata config
   ) external payable returns (address) {
     address clone = ClonesUpgradeable.clone(archetype);
     Archetype token = Archetype(clone);
