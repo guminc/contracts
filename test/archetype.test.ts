@@ -1528,12 +1528,13 @@ describe("Factory", function () {
   });
 
   it("test invite list max supply check", async function () {
-    const [accountZero, accountOne] = await ethers.getSigners();
+    const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
     DEFAULT_CONFIG.maxSupply = 100;
     const PublicMaxSupply = 90;
 
     const owner = accountZero;
     const minter = accountOne;
+    const minter2 = accountTwo;
 
     const newCollectionMint = await factory.createCollection(
       owner.address,
@@ -1548,25 +1549,25 @@ describe("Factory", function () {
     await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-      limit: PublicMaxSupply,
+      limit: PublicMaxSupply - 20,
       maxSupply: PublicMaxSupply,
       tokenAddress: ZERO,
     });
 
     await nftMint
       .connect(minter)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 20, ZERO, "0x", { value: 0 });
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 40, ZERO, "0x", { value: 0 });
 
     // try to mint past invite list max
     await expect(
-      nftMint.connect(minter).mint({ key: ethers.constants.HashZero, proof: [] }, 71, ZERO, "0x", {
+      nftMint.connect(minter2).mint({ key: ethers.constants.HashZero, proof: [] }, 60, ZERO, "0x", {
         value: 0,
       })
     ).to.be.revertedWith("ListMaxSupplyExceeded");
 
     await nftMint
-      .connect(minter)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 70, ZERO, "0x", { value: 0 });
+      .connect(minter2)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 50, ZERO, "0x", { value: 0 });
 
     await expect(await nftMint.totalSupply()).to.be.equal(PublicMaxSupply);
   });
