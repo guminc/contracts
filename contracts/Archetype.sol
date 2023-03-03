@@ -428,6 +428,10 @@ contract Archetype is
     return _minted[minter][key];
   }
 
+  function listMaxSupply(bytes32 key) external view returns (uint256) {
+    return _listSupply[key];
+  }
+
   //
   // OWNER ONLY
   //
