@@ -136,7 +136,7 @@ contract Archetype is
   //
   mapping(bytes32 => Invite) public invites;
   mapping(address => mapping(bytes32 => uint256)) private _minted;
-  mapping(bytes32 => uint256) private listSupply;
+  mapping(bytes32 => uint256) private _listSupply;
   mapping(address => OwnerBalance) private _ownerBalance;
   mapping(address => mapping(address => uint128)) private _affiliateBalance;
   mapping(uint256 => bytes) private _tokenMsg;
@@ -229,7 +229,7 @@ contract Archetype is
     }
 
     if (invite.maxSupply < config.maxSupply) {
-      listSupply[auth.key] += quantity;
+      _listSupply[auth.key] += quantity;
     }
 
     updateBalances(auth, affiliate, quantity);
@@ -251,7 +251,7 @@ contract Archetype is
     }
 
     if (i.maxSupply < config.maxSupply) {
-      listSupply[auth.key] += quantity;
+      _listSupply[auth.key] += quantity;
     }
 
     updateBalances(auth, affiliate, quantity);
@@ -697,7 +697,7 @@ contract Archetype is
     }
 
     if (i.maxSupply < config.maxSupply) {
-      uint256 totalAfterMint = listSupply[auth.key] + quantity;
+      uint256 totalAfterMint = _listSupply[auth.key] + quantity;
       if (totalAfterMint > i.limit) {
         revert ListMaxSupplyExceeded();
       }
