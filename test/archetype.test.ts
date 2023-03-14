@@ -1527,7 +1527,7 @@ describe("Factory", function () {
     await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
   });
 
-  it("test invite list max supply check", async function () {
+  it("test multiple public invite lists support in 0.5.1", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
     DEFAULT_CONFIG.maxSupply = 100;
     const PublicMaxSupply = 90;
@@ -1571,6 +1571,67 @@ describe("Factory", function () {
 
     await expect(await nftMint.totalSupply()).to.be.equal(PublicMaxSupply);
   });
+
+  it("test multiple public invite lists support in 0.5.1", async function () {
+    const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
+    DEFAULT_CONFIG.maxSupply = 100;
+
+    const owner = accountZero;
+    const minter = accountOne;
+    const minter2 = accountTwo;
+
+    const HASHONE = "0x0000000000000000000000000000000000000000000000000000000000000001";
+    const HASH256 = "0x00000000000000000000000000000000000000000000000000000000000000ff";
+
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const nftMint = Archetype.attach(newCollectionAddressMint);
+
+    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("1"),
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: DEFAULT_CONFIG.maxSupply,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
+      tokenAddress: ZERO,
+    });
+
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 40, ZERO, "0x", {
+        value: ethers.utils.parseEther("40"),
+      });
+
+    // set 2nd public list
+    await nftMint.connect(owner).setInvite(HASHONE, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 20,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
+      tokenAddress: ZERO,
+    });
+
+    await nftMint.connect(minter2).mint({ key: HASHONE, proof: [] }, 20, ZERO, "0x", { value: 0 });
+
+    // set 3rd public list
+    await nftMint.connect(owner).setInvite(HASH256, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 40,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
+      tokenAddress: ZERO,
+    });
+
+    await nftMint.connect(minter2).mint({ key: HASH256, proof: [] }, 40, ZERO, "0x", { value: 0 });
+
+    await expect(await nftMint.totalSupply()).to.be.equal(DEFAULT_CONFIG.maxSupply);
+  });
+
 });
 
 // todo: add test to ensure affiliate signer can't be zero address

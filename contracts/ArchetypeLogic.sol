@@ -315,7 +315,8 @@ library ArchetypeLogic {
     address tokenAddress,
     address account
   ) public pure returns (bool) {
-    if (auth.key == "" || auth.key == keccak256(abi.encodePacked(tokenAddress))) {
+    // keys 0-255 and tokenAddress are public
+    if (uint(auth.key) <= 0xff || auth.key == keccak256(abi.encodePacked(tokenAddress))) {
       return true;
     }
 
