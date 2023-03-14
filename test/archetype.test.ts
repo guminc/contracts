@@ -1527,7 +1527,7 @@ describe("Factory", function () {
     await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
   });
 
-  it("test multiple public invite lists support in 0.5.1", async function () {
+  it("test invite list max supply check", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
     DEFAULT_CONFIG.maxSupply = 100;
     const PublicMaxSupply = 90;
