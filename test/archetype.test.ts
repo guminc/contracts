@@ -1586,7 +1586,7 @@ describe("Factory", function () {
   });
 
   it("test invite list max supply check", async function () {
-    const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
+    const [accountZero, accountOne, accountTwo, accountTwo] = await ethers.getSigners();
     let default_config = {...DEFAULT_CONFIG}
     default_config.maxSupply = [1000, 1000, 1000, 1000, 1000];
     default_config.maxBatchSize = 1000;
