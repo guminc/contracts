@@ -216,7 +216,7 @@ library ArchetypeLogic {
       }
     }
 
-    for (uint256 j = 0; j < args.tokenIds.length; j++) { 
+    for (uint256 j = 0; j < args.tokenIds.length; j++) {
       if (i.maxSupply < config.maxSupply[args.tokenIds[j] - 1]) {
         uint256 totalAfterMint = listSupply[auth.key] + args.quantity;
         if (totalAfterMint > i.maxSupply) {
@@ -257,49 +257,6 @@ library ArchetypeLogic {
       if (msg.value > cost) {
         revert ExcessiveEthSent();
       }
-    }
-  }
-
-  event Referral(address indexed affiliate, address token, uint128 wad, uint256 numMints);
-
-  function updateBalances(
-    DutchInvite storage i,
-    Config storage config,
-    mapping(address => OwnerBalance) storage _ownerBalance,
-    mapping(address => mapping(address => uint128)) storage _affiliateBalance,
-    address affiliate,
-    uint256 quantity
-  ) public {
-    address tokenAddress = i.tokenAddress;
-    uint128 value = uint128(msg.value);
-    if (tokenAddress != address(0)) {
-      value = uint128(computePrice(i, config.discounts, quantity, affiliate != address(0)));
-    }
-
-    uint128 affiliateWad = 0;
-    if (affiliate != address(0)) {
-      affiliateWad = (value * config.affiliateFee) / 10000;
-      _affiliateBalance[affiliate][tokenAddress] += affiliateWad;
-      emit Referral(affiliate, tokenAddress, affiliateWad, quantity);
-    }
-
-    uint128 superAffiliateWad = 0;
-    if (config.superAffiliatePayout != address(0)) {
-      superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
-      _affiliateBalance[config.superAffiliatePayout][tokenAddress] += superAffiliateWad;
-    }
-
-    OwnerBalance memory balance = _ownerBalance[tokenAddress];
-    uint128 platformWad = ((value * config.platformFee) / 10000) - superAffiliateWad;
-    uint128 ownerWad = value - affiliateWad - platformWad - superAffiliateWad;
-    _ownerBalance[tokenAddress] = OwnerBalance({
-      owner: balance.owner + ownerWad,
-      platform: balance.platform + platformWad
-    });
-
-    if (tokenAddress != address(0)) {
-      IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
-      erc20Token.transferFrom(msg.sender, address(this), value);
     }
   }
 
@@ -425,32 +382,37 @@ library ArchetypeLogic {
     return MerkleProofLib.verify(auth.proof, auth.key, keccak256(abi.encodePacked(account)));
   }
 
-  function getRandomTokenIds(uint256[] memory tokenSupply, uint32[] memory maxSupply, uint32[] memory validIds, uint256 quantity) public view returns (uint256[] memory) {
-    if(validIds.length == 0) {
-      validIds =  new uint32[](maxSupply.length);
+  function getRandomTokenIds(
+    uint256[] memory tokenSupply,
+    uint32[] memory maxSupply,
+    uint32[] memory validIds,
+    uint256 quantity
+  ) public view returns (uint256[] memory) {
+    if (validIds.length == 0) {
+      validIds = new uint32[](maxSupply.length);
       for (uint256 i = 0; i < validIds.length; i++) {
-        validIds[i] = uint32(i)+1;
+        validIds[i] = uint32(i) + 1;
       }
     }
 
     uint256 tokenIdsAvailable = 0;
     for (uint256 i = 0; i < validIds.length; i++) {
-      tokenIdsAvailable += maxSupply[validIds[i] -1] - tokenSupply[validIds[i] -1];
+      tokenIdsAvailable += maxSupply[validIds[i] - 1] - tokenSupply[validIds[i] - 1];
     }
 
     uint256 seed = random();
     uint256[] memory tokenIds = new uint256[](quantity);
     for (uint256 i = 0; i < quantity; i++) {
-      if(tokenIdsAvailable == 0) {
+      if (tokenIdsAvailable == 0) {
         revert MaxSupplyExceeded();
       }
       uint256 rand = uint256(keccak256(abi.encode(seed, i)));
       uint256 num = (rand % tokenIdsAvailable) + 1;
       for (uint256 j = 0; j < validIds.length; j++) {
-        uint256 available = maxSupply[validIds[j] -1] - tokenSupply[validIds[j] -1];
+        uint256 available = maxSupply[validIds[j] - 1] - tokenSupply[validIds[j] - 1];
         if (num <= available) {
           tokenIds[i] = validIds[j];
-          tokenSupply[validIds[j] -1] += 1;
+          tokenSupply[validIds[j] - 1] += 1;
           tokenIdsAvailable -= 1;
           break;
         }

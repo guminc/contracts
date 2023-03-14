@@ -131,7 +131,12 @@ contract Archetype is
       ValidationArgs memory args;
       {
         // to avoid stack too deep errors
-        uint256[] memory tokenIds = ArchetypeLogic.getRandomTokenIds(_tokenSupply, config.maxSupply, invite.tokenIds, quantityList[i]);
+        uint256[] memory tokenIds = ArchetypeLogic.getRandomTokenIds(
+          _tokenSupply,
+          config.maxSupply,
+          invite.tokenIds,
+          quantityList[i]
+        );
         args = ValidationArgs({
           owner: owner(),
           affiliate: affiliate,
@@ -175,7 +180,12 @@ contract Archetype is
     ValidationArgs memory args;
     {
       // to avoid stack too deep errors
-      uint256[] memory tokenIds = ArchetypeLogic.getRandomTokenIds(_tokenSupply, config.maxSupply, i.tokenIds, quantity);
+      uint256[] memory tokenIds = ArchetypeLogic.getRandomTokenIds(
+        _tokenSupply,
+        config.maxSupply,
+        i.tokenIds,
+        quantity
+      );
       args = ValidationArgs({
         owner: owner(),
         affiliate: affiliate,
@@ -283,8 +293,17 @@ contract Archetype is
   }
 
   /// @notice the password is "forever"
+  function lockURI(string memory password) external onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+
+    options.uriLocked = true;
+  }
+
+  /// @notice the password is "forever"
   // max supply cannot subceed total supply. Be careful changing.
-  function setMaxSupply(uint32[] memory maxSupply, string memory password) external onlyOwner {
+  function setMaxSupply(uint32[] memory newMaxSupply, string memory password) external onlyOwner {
     if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
       revert WrongPassword();
     }
@@ -294,12 +313,21 @@ contract Archetype is
     }
 
     for (uint256 i = 0; i < _tokenSupply.length; i++) {
-      if (maxSupply[i] < _tokenSupply[i]) {
+      if (newMaxSupply[i] < _tokenSupply[i]) {
         revert MaxSupplyExceeded();
       }
     }
 
-    config.maxSupply = maxSupply;
+    config.maxSupply = newMaxSupply;
+  }
+
+  /// @notice the password is "forever"
+  function lockMaxSupply(string memory password) external onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+
+    options.maxSupplyLocked = true;
   }
 
   function setAffiliateFee(uint16 affiliateFee) external onlyOwner {
@@ -311,6 +339,15 @@ contract Archetype is
     }
 
     config.affiliateFee = affiliateFee;
+  }
+
+  /// @notice the password is "forever"
+  function lockAffiliateFee(string memory password) external onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+
+    options.affiliateFeeLocked = true;
   }
 
   function setDiscounts(Discount calldata discounts) external onlyOwner {
@@ -335,6 +372,15 @@ contract Archetype is
     config.discounts = discounts;
   }
 
+  /// @notice the password is "forever"
+  function lockDiscounts(string memory password) external onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+
+    options.discountsLocked = true;
+  }
+
   /// @notice Set BAYC-style provenance once it's calculated
   function setProvenanceHash(string memory provenanceHash) external onlyOwner {
     if (options.provenanceHashLocked) {
@@ -342,6 +388,15 @@ contract Archetype is
     }
 
     provenance = provenanceHash;
+  }
+
+  /// @notice the password is "forever"
+  function lockProvenanceHash(string memory password) external onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+
+    options.provenanceHashLocked = true;
   }
 
   function setOwnerAltPayout(address ownerAltPayout) external onlyOwner {
@@ -353,35 +408,11 @@ contract Archetype is
   }
 
   /// @notice the password is "forever"
-  function lockOption(string memory password, string memory option) external onlyOwner {
+  function lockOwnerAltPayout(string memory password) external onlyOwner {
     if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
       revert WrongPassword();
     }
-
-    if(keccak256(abi.encodePacked(option)) == keccak256(abi.encodePacked("uriLocked"))) {
-      options.uriLocked = true;
-    }
-    else if(keccak256(abi.encodePacked(option)) == keccak256(abi.encodePacked("maxSupplyLocked"))) {
-      options.maxSupplyLocked = true;
-    }
-    else if(keccak256(abi.encodePacked(option)) == keccak256(abi.encodePacked("affiliateFeeLocked"))) {
-      options.affiliateFeeLocked = true;
-    }
-    else if(keccak256(abi.encodePacked(option)) == keccak256(abi.encodePacked("discountsLocked"))) {
-      options.discountsLocked = true;
-    }
-    else if(keccak256(abi.encodePacked(option)) == keccak256(abi.encodePacked("ownerAltPayoutLocked"))) {
-      options.ownerAltPayoutLocked = true;
-    }
-    else if(keccak256(abi.encodePacked(option)) == keccak256(abi.encodePacked("provenanceHashLocked"))) {
-      options.provenanceHashLocked = true;
-    }
-    else if(keccak256(abi.encodePacked(option)) == keccak256(abi.encodePacked("royaltyEnforcementLocked"))) {
-      options.royaltyEnforcementLocked = true;
-    }
-    else {
-      revert WrongPassword();
-    }
+    options.ownerAltPayoutLocked = true;
   }
 
   function setMaxBatchSize(uint32 maxBatchSize) external onlyOwner {
@@ -459,6 +490,15 @@ contract Archetype is
       revert LockedForever();
     }
     options.royaltyEnforcementEnabled = false;
+  }
+
+  /// @notice the password is "forever"
+  function lockRoyaltyEnforcement(string memory password) external onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+
+    options.royaltyEnforcementLocked = true;
   }
 
   function setApprovalForAll(address operator, bool approved)

@@ -230,7 +230,7 @@ describe("Factory", function () {
 
     const nft = Archetype.attach(newCollectionAddress);
 
-    await expect(nft.lockOption("forever", "uriLocked")).to.be.revertedWith("Ownable: caller is not the owner");
+    await expect(nft.lockURI("forever")).to.be.revertedWith("Ownable: caller is not the owner");
   });
 
   it("should mint if public sale is set", async function () {
@@ -893,25 +893,25 @@ describe("Factory", function () {
     // CHANGE URI
     await nft.connect(owner).setBaseURI("test uri");
     await expect((await nft.connect(owner).config()).baseUri).to.be.equal("test uri");
-    await nft.connect(owner).lockOption("forever", "uriLocked");
+    await nft.connect(owner).lockURI("forever");
     await expect(nft.connect(owner).setBaseURI("new test uri")).to.be.reverted;
 
     // CHANGE MAX SUPPLY
     await nft.connect(owner).setMaxSupply([100], "forever");
     await expect(await nft.connect(owner).maxSupply()).to.deep.equal([100]);
-    await nft.connect(owner).lockOption("forever", "maxSupplyLocked");
+    await nft.connect(owner).lockMaxSupply("forever");
     await expect(nft.connect(owner).setMaxSupply([20], "forever")).to.be.reverted;
 
     // CHANGE AFFILIATE FEE
     await nft.connect(owner).setAffiliateFee(1000);
     await expect((await nft.connect(owner).config()).affiliateFee).to.be.equal(1000);
-    await nft.connect(owner).lockOption("forever", "affiliateFeeLocked");
+    await nft.connect(owner).lockAffiliateFee("forever");
     await expect(nft.connect(owner).setAffiliateFee(20)).to.be.reverted;
 
     // CHANGE OWNER ALT PAYOUT
     await nft.connect(owner).setOwnerAltPayout(alt.address);
     await expect((await nft.connect(owner).config()).ownerAltPayout).to.be.equal(alt.address);
-    await nft.connect(owner).lockOption("forever", "ownerAltPayoutLocked");
+    await nft.connect(owner).lockOwnerAltPayout("forever");
     await expect(nft.connect(owner).setOwnerAltPayout(ZERO)).to.be.reverted;
 
     // CHANGE DISCOUNTS
@@ -934,7 +934,7 @@ describe("Factory", function () {
       _discount[1][i] = Object.values(obj);
     });
     await expect((await nft.connect(owner).config()).discounts).to.deep.equal(_discount);
-    await nft.connect(owner).lockOption("forever", "discountsLocked");
+    await nft.connect(owner).lockDiscounts("forever");
     await expect(nft.connect(owner).setDiscounts(discount)).to.be.reverted;
   });
 
@@ -1072,7 +1072,7 @@ describe("Factory", function () {
 
   it("test max supply checks", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();
-    let default_config = {...DEFAULT_CONFIG}
+    let default_config = { ...DEFAULT_CONFIG };
     default_config.maxBatchSize = 5000;
     default_config.maxSupply = [1000, 1000, 1000];
 
@@ -1230,7 +1230,7 @@ describe("Factory", function () {
   });
 
   it("test batchMintTo Airdrop", async function () {
-    let default_config = {...DEFAULT_CONFIG}
+    let default_config = { ...DEFAULT_CONFIG };
     default_config.maxBatchSize = 5000;
 
     const [accountZero, accountOne] = await ethers.getSigners();
@@ -1346,7 +1346,7 @@ describe("Factory", function () {
     await nft.connect(owner).disableRoyaltyEnforcement();
     await expect((await nft.options()).royaltyEnforcementEnabled).to.be.equal(false);
     await expect((await nft.options()).royaltyEnforcementLocked).to.be.equal(false);
-    await nft.connect(owner).lockOption("forever", "royaltyEnforcementLocked");
+    await nft.connect(owner).lockRoyaltyEnforcement("forever");
     await expect((await nft.options()).royaltyEnforcementLocked).to.be.equal(true);
     await expect(nft.connect(owner).enableRoyaltyEnforcement()).to.be.reverted;
   });
@@ -1586,8 +1586,8 @@ describe("Factory", function () {
   });
 
   it("test invite list max supply check", async function () {
-    const [accountZero, accountOne, accountTwo, accountTwo] = await ethers.getSigners();
-    let default_config = {...DEFAULT_CONFIG}
+    const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
+    let default_config = { ...DEFAULT_CONFIG };
     default_config.maxSupply = [1000, 1000, 1000, 1000, 1000];
     default_config.maxBatchSize = 1000;
 
@@ -1637,7 +1637,9 @@ describe("Factory", function () {
 
   it("test multiple public invite lists support in 0.5.1", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
-    DEFAULT_CONFIG.maxSupply = 100;
+    let default_config = { ...DEFAULT_CONFIG };
+    default_config.maxSupply = [100];
+    default_config.maxBatchSize = 100;
 
     const owner = accountZero;
     const minter = accountOne;
@@ -1650,7 +1652,7 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      default_config
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1660,8 +1662,9 @@ describe("Factory", function () {
       price: ethers.utils.parseEther("1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
-      limit: DEFAULT_CONFIG.maxSupply,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      limit: default_config.maxSupply,
+      maxSupply: default_config.maxSupply,
+      tokenIds: [],
       tokenAddress: ZERO,
     });
 
@@ -1677,7 +1680,8 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
       limit: 20,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: default_config.maxSupply,
+      tokenIds: [],
       tokenAddress: ZERO,
     });
 
@@ -1689,13 +1693,14 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
       limit: 40,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: default_config.maxSupply,
+      tokenIds: [],
       tokenAddress: ZERO,
     });
 
     await nftMint.connect(minter2).mint({ key: HASH256, proof: [] }, 40, ZERO, "0x", { value: 0 });
 
-    await expect(await nftMint.totalSupply()).to.be.equal(DEFAULT_CONFIG.maxSupply);
+    await expect(await nftMint.totalSupply()).to.be.equal(100);
   });
 });
 
