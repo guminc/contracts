@@ -1631,7 +1631,6 @@ describe("Factory", function () {
 
     await expect(await nftMint.totalSupply()).to.be.equal(DEFAULT_CONFIG.maxSupply);
   });
-
 });
 
 // todo: add test to ensure affiliate signer can't be zero address

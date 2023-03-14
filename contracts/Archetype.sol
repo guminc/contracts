@@ -22,7 +22,6 @@ import "./ERC721A__OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 contract Archetype is
   ERC721A__Initializable,
@@ -146,7 +145,14 @@ contract Archetype is
     if (invite.maxSupply < config.maxSupply) {
       _listSupply[auth.key] += quantity;
     }
-    updateBalances(auth, affiliate, quantity);
+    ArchetypeLogic.updateBalances(
+      invites[auth.key],
+      config,
+      _ownerBalance,
+      _affiliateBalance,
+      affiliate,
+      quantity
+    );
   }
 
   function mintTo(
@@ -178,7 +184,14 @@ contract Archetype is
     if (i.maxSupply < config.maxSupply) {
       _listSupply[auth.key] += quantity;
     }
-    updateBalances(auth, affiliate, quantity);
+    ArchetypeLogic.updateBalances(
+      invites[auth.key],
+      config,
+      _ownerBalance,
+      _affiliateBalance,
+      affiliate,
+      quantity
+    );
   }
 
   function burnToMint(uint256[] calldata tokenIds) external {
@@ -219,50 +232,7 @@ contract Archetype is
   }
 
   function withdrawTokens(address[] memory tokens) public {
-    for (uint256 i = 0; i < tokens.length; i++) {
-      address tokenAddress = tokens[i];
-      uint128 wad = 0;
-
-      if (msg.sender == owner() || msg.sender == config.ownerAltPayout || msg.sender == PLATFORM) {
-        OwnerBalance memory balance = _ownerBalance[tokenAddress];
-        if (msg.sender == owner() || msg.sender == config.ownerAltPayout) {
-          wad = balance.owner;
-          _ownerBalance[tokenAddress] = OwnerBalance({ owner: 0, platform: balance.platform });
-        } else {
-          wad = balance.platform;
-          _ownerBalance[tokenAddress] = OwnerBalance({ owner: balance.owner, platform: 0 });
-        }
-      } else {
-        wad = _affiliateBalance[msg.sender][tokenAddress];
-        _affiliateBalance[msg.sender][tokenAddress] = 0;
-      }
-
-      if (wad == 0) {
-        revert BalanceEmpty();
-      }
-
-      if (tokenAddress == address(0)) {
-        bool success = false;
-        // send to ownerAltPayout if set and owner is withdrawing
-        if (msg.sender == owner() && config.ownerAltPayout != address(0)) {
-          (success, ) = payable(config.ownerAltPayout).call{ value: wad }("");
-        } else {
-          (success, ) = msg.sender.call{ value: wad }("");
-        }
-        if (!success) {
-          revert TransferFailed();
-        }
-      } else {
-        IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
-
-        if (msg.sender == owner() && config.ownerAltPayout != address(0)) {
-          erc20Token.transfer(config.ownerAltPayout, wad);
-        } else {
-          erc20Token.transfer(msg.sender, wad);
-        }
-      }
-      emit Withdrawal(msg.sender, tokenAddress, wad);
-    }
+    ArchetypeLogic.withdrawTokens(config, _ownerBalance, _affiliateBalance, owner(), tokens);
   }
 
   function setTokenMsg(uint256 tokenId, string calldata message) external {
@@ -514,47 +484,6 @@ contract Archetype is
   //
   function _startTokenId() internal view virtual override returns (uint256) {
     return 1;
-  }
-
-  function updateBalances(
-    Auth calldata auth,
-    address affiliate,
-    uint256 quantity
-  ) internal {
-    DutchInvite storage i = invites[auth.key];
-    address tokenAddress = i.tokenAddress;
-    uint128 value = uint128(msg.value);
-    if (tokenAddress != address(0)) {
-      value = uint128(
-        ArchetypeLogic.computePrice(i, config.discounts, quantity, affiliate != address(0))
-      );
-    }
-
-    uint128 affiliateWad = 0;
-    if (affiliate != address(0)) {
-      affiliateWad = (value * config.affiliateFee) / 10000;
-      _affiliateBalance[affiliate][tokenAddress] += affiliateWad;
-      emit Referral(affiliate, tokenAddress, affiliateWad, quantity);
-    }
-
-    uint128 superAffiliateWad = 0;
-    if (config.superAffiliatePayout != address(0)) {
-      superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
-      _affiliateBalance[config.superAffiliatePayout][tokenAddress] += superAffiliateWad;
-    }
-
-    OwnerBalance memory balance = _ownerBalance[tokenAddress];
-    uint128 platformWad = ((value * config.platformFee) / 10000) - superAffiliateWad;
-    uint128 ownerWad = value - affiliateWad - platformWad - superAffiliateWad;
-    _ownerBalance[tokenAddress] = OwnerBalance({
-      owner: balance.owner + ownerWad,
-      platform: balance.platform + platformWad
-    });
-
-    if (tokenAddress != address(0)) {
-      IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
-      erc20Token.transferFrom(msg.sender, address(this), value);
-    }
   }
 
   modifier onlyPlatform() {
