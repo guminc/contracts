@@ -146,7 +146,7 @@ contract Archetype is
       _listSupply[auth.key] += quantity;
     }
     ArchetypeLogic.updateBalances(
-      invites[auth.key],
+      invite,
       config,
       _ownerBalance,
       _affiliateBalance,
@@ -185,7 +185,7 @@ contract Archetype is
       _listSupply[auth.key] += quantity;
     }
     ArchetypeLogic.updateBalances(
-      invites[auth.key],
+      i,
       config,
       _ownerBalance,
       _affiliateBalance,
