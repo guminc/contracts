@@ -257,6 +257,7 @@ describe("Factory", function () {
       end: 0,
       limit: 300,
       maxSupply: 5000,
+      randomize: true,
       tokenIds: [],
       tokenAddress: ZERO,
     });
@@ -317,6 +318,7 @@ describe("Factory", function () {
       end: 0,
       limit: 1000,
       maxSupply: 5000,
+      randomize: true,
       tokenIds: [],
       tokenAddress: ZERO,
     });
@@ -326,6 +328,7 @@ describe("Factory", function () {
       end: 0,
       limit: 10,
       maxSupply: 5000,
+      randomize: true,
       tokenIds: [],
       tokenAddress: ZERO,
     });
@@ -412,7 +415,15 @@ describe("Factory", function () {
 
     const nft = Archetype.attach(newCollectionAddress);
 
-    // await nft.connect(owner).setPaused(false);
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("0.08"),
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 0,
+      maxSupply: 5000,
+      randomize: true,
+      tokenIds: [],
+      tokenAddress: ZERO,
+    });
 
     const invites = await nft.invites(ethers.constants.HashZero);
 
@@ -455,6 +466,7 @@ describe("Factory", function () {
       end: 0,
       limit: 300,
       maxSupply: 5000,
+      randomize: true,
       tokenIds: [],
       tokenAddress: ZERO,
     });
@@ -607,6 +619,7 @@ describe("Factory", function () {
       end: 0,
       limit: 300,
       maxSupply: 5000,
+      randomize: true,
       tokenIds: [],
       tokenAddress: ZERO,
     });
@@ -689,6 +702,7 @@ describe("Factory", function () {
       end: 0,
       limit: 300,
       maxSupply: 5000,
+      randomize: true,
       tokenIds: [],
       tokenAddress: ZERO,
     });
@@ -783,6 +797,7 @@ describe("Factory", function () {
       end: 0,
       limit: 300,
       maxSupply: 5000,
+      randomize: true,
       tokenIds: [],
       tokenAddress: ZERO,
     });
@@ -847,6 +862,7 @@ describe("Factory", function () {
   //     start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
   //     limit: 300,
   //     maxSupply: 5000,
+  //     randomize: true,
   //     tokenIds: [1,2,3,4,5],
   //     tokenAddress: ZERO,
   //   });
@@ -970,6 +986,7 @@ describe("Factory", function () {
   //     start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
   //     limit: 300,
   //     maxSupply: 5000,
+  //     randomize: true,
   //     tokenIds: [1,2,3,4,5],
   //     tokenAddress: ZERO,
   //   });
@@ -1073,21 +1090,21 @@ describe("Factory", function () {
   it("test max supply checks", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();
     let default_config = { ...DEFAULT_CONFIG };
-    default_config.maxBatchSize = 5000;
-    default_config.maxSupply = [1000, 1000, 1000];
+    default_config.maxBatchSize = 500;
+    default_config.maxSupply = [100, 100, 100];
 
     const owner = accountZero;
     const minter = accountOne;
 
-    const newCollectionBurn = await factory.createCollection(
-      owner.address,
-      DEFAULT_NAME,
-      DEFAULT_SYMBOL,
-      default_config
-    );
-    const resultBurn = await newCollectionBurn.wait();
-    const newCollectionAddressBurn = resultBurn.events[0].address || "";
-    const nftBurn = Archetype.attach(newCollectionAddressBurn);
+    // const newCollectionBurn = await factory.createCollection(
+    //   owner.address,
+    //   DEFAULT_NAME,
+    //   DEFAULT_SYMBOL,
+    //   default_config
+    // );
+    // const resultBurn = await newCollectionBurn.wait();
+    // const newCollectionAddressBurn = resultBurn.events[0].address || "";
+    // const nftBurn = Archetype.attach(newCollectionAddressBurn);
 
     const newCollectionMint = await factory.createCollection(
       owner.address,
@@ -1104,34 +1121,33 @@ describe("Factory", function () {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
-      limit: 10000,
-      maxSupply: 5000,
+      limit: 1000,
+      maxSupply: 1000,
+      randomize: true,
       tokenIds: [],
       tokenAddress: ZERO,
     });
-    await nftBurn.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
-      price: 0,
-      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-      end: 0,
-      limit: 10000,
-      maxSupply: 5000,
-      tokenIds: [],
-      tokenAddress: ZERO,
-    });
+    // await nftBurn.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+    //   price: 0,
+    //   start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+    //   limit: 1000,
+    //   maxSupply: 5000,
+    //   randomize: true,
+    //   tokenIds: [],
+    //   tokenAddress: ZERO,
+    // });
 
     // try to mint more than max tokens tokens
     await expect(
-      nftMint
-        .connect(minter)
-        .mint({ key: ethers.constants.HashZero, proof: [] }, 3010, ZERO, "0x", {
-          value: 0,
-        })
+      nftMint.connect(minter).mint({ key: ethers.constants.HashZero, proof: [] }, 301, ZERO, "0x", {
+        value: 0,
+      })
     ).to.be.revertedWith("MaxSupplyExceeded");
 
     // mint max tokens
     await nftMint
       .connect(minter)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 3000, ZERO, "0x", {
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 300, ZERO, "0x", {
         value: 0,
       });
     // // mint max tokens
@@ -1205,6 +1221,7 @@ describe("Factory", function () {
       end: 0,
       limit: 300,
       maxSupply: 5000,
+      randomize: true,
       tokenIds: [],
       tokenAddress: ZERO,
     });
@@ -1212,7 +1229,7 @@ describe("Factory", function () {
     // mint tokens from owner to holder address
     await nft
       .connect(owner)
-      .mintTo({ key: ethers.constants.HashZero, proof: [] }, 3, holder.address, ZERO, "0x", {
+      .mintTo({ key: ethers.constants.HashZero, proof: [] }, 3, holder.address, 0, ZERO, "0x", {
         value: ethers.utils.parseEther("0.06"),
       });
 
@@ -1220,7 +1237,7 @@ describe("Factory", function () {
     await expect(
       nft
         .connect(owner)
-        .mintTo({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, ZERO, "0x", {
+        .mintTo({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, 0, ZERO, "0x", {
           value: ethers.utils.parseEther("0.02"),
         })
     ).to.be.revertedWith("ERC1155: mint to the zero address");
@@ -1232,6 +1249,7 @@ describe("Factory", function () {
   it("test batchMintTo Airdrop", async function () {
     let default_config = { ...DEFAULT_CONFIG };
     default_config.maxBatchSize = 5000;
+    default_config.maxSupply = [5000];
 
     const [accountZero, accountOne] = await ethers.getSigners();
 
@@ -1258,15 +1276,16 @@ describe("Factory", function () {
       end: 0,
       limit: 5000,
       maxSupply: 5000,
+      randomize: false,
       tokenIds: [],
       tokenAddress: ZERO,
     });
 
     // mint tokens from owner to air drop list
-    const airDropList: [string, number][] = [];
+    const airDropList: [string, number, number][] = [];
     for (let i = 0; i < 100; i++) {
       /// 100 addresses
-      airDropList.push([ethers.Wallet.createRandom().address, 1]);
+      airDropList.push([ethers.Wallet.createRandom().address, 1, 1]);
     }
 
     // mint in n txs (can handle about 500 owners per tx with 3mil gas limit)
@@ -1285,6 +1304,7 @@ describe("Factory", function () {
         { key: root, proof: proof },
         split.map(list => list[0]),
         split.map(list => list[1]),
+        split.map(list => list[2]),
         ZERO,
         "0x",
         {
@@ -1416,6 +1436,7 @@ describe("Factory", function () {
       limit: 300,
       maxSupply: 5000,
       tokenAddress: tokenAddress,
+      randomize: true,
       tokenIds: [],
     });
 
@@ -1488,6 +1509,7 @@ describe("Factory", function () {
       interval: 1000, // 1000s,
       delta: ethers.utils.parseEther("0.1"),
       maxSupply: 5000,
+      randomize: true,
       tokenIds: [],
       tokenAddress: ZERO,
     });
@@ -1550,6 +1572,7 @@ describe("Factory", function () {
       interval: 1000, // 1000s,
       delta: ethers.utils.parseEther("1"),
       maxSupply: 5000,
+      randomize: true,
       tokenIds: [],
       tokenAddress: ZERO,
     });
@@ -1613,6 +1636,7 @@ describe("Factory", function () {
       end: 0,
       limit: PublicMaxSupply - 20,
       maxSupply: PublicMaxSupply,
+      randomize: true,
       tokenIds: [],
       tokenAddress: ZERO,
     });
@@ -1664,6 +1688,7 @@ describe("Factory", function () {
       end: 0,
       limit: default_config.maxSupply,
       maxSupply: default_config.maxSupply,
+      randomize: true,
       tokenIds: [],
       tokenAddress: ZERO,
     });
@@ -1681,6 +1706,7 @@ describe("Factory", function () {
       end: 0,
       limit: 20,
       maxSupply: default_config.maxSupply,
+      randomize: true,
       tokenIds: [],
       tokenAddress: ZERO,
     });
@@ -1694,6 +1720,7 @@ describe("Factory", function () {
       end: 0,
       limit: 40,
       maxSupply: default_config.maxSupply,
+      randomize: true,
       tokenIds: [],
       tokenAddress: ZERO,
     });

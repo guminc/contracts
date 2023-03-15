@@ -44,6 +44,7 @@ error WrongPassword();
 error LockedForever();
 error URIQueryForNonexistentToken();
 error InvalidTokenId();
+error notSupported();
 
 //
 // STRUCTS
@@ -96,6 +97,7 @@ struct DutchInvite {
   uint32 limit;
   uint32 maxSupply;
   uint32 interval;
+  bool randomize; // true for random tokenId, false for user selected
   uint32[] tokenIds; // token id mintable from this list
   address tokenAddress;
 }
@@ -106,6 +108,7 @@ struct Invite {
   uint32 end;
   uint32 limit;
   uint32 maxSupply;
+  bool randomize; // true for random tokenId, false for user selected
   uint32[] tokenIds; // token ids mintable from this list
   address tokenAddress;
 }
@@ -118,9 +121,9 @@ struct OwnerBalance {
 struct ValidationArgs {
   address owner;
   address affiliate;
-  uint256 quantity;
-  uint256[] tokenSupply;
+  uint256[] quantities;
   uint256[] tokenIds;
+  uint256[] tokenSupply;
 }
 
 address constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
@@ -208,33 +211,40 @@ library ArchetypeLogic {
       revert MintEnded();
     }
 
+    uint256 totalQuantity = 0;
+    for (uint256 j = 0; j < args.quantities.length; j++) {
+      totalQuantity += args.quantities[j];
+    }
+
+    uint256 totalAfterMint;
     if (i.limit < i.maxSupply) {
-      uint256 totalAfterMint = minted[msg.sender][auth.key] + args.quantity;
+      totalAfterMint = minted[msg.sender][auth.key] + totalQuantity;
 
       if (totalAfterMint > i.limit) {
         revert NumberOfMintsExceeded();
       }
     }
 
-    for (uint256 j = 0; j < args.tokenIds.length; j++) {
-      if (i.maxSupply < config.maxSupply[args.tokenIds[j] - 1]) {
-        uint256 totalAfterMint = listSupply[auth.key] + args.quantity;
-        if (totalAfterMint > i.maxSupply) {
-          revert ListMaxSupplyExceeded();
-        }
-      }
-
-      if ((args.tokenSupply[args.tokenIds[j] - 1] + 1) > config.maxSupply[args.tokenIds[j] - 1]) {
-        revert MaxSupplyExceeded();
-      }
-      args.tokenSupply[args.tokenIds[j] - 1] += 1;
+    totalAfterMint = listSupply[auth.key] + totalQuantity;
+    if (totalAfterMint > i.maxSupply) {
+      revert ListMaxSupplyExceeded();
     }
 
-    if (args.quantity > config.maxBatchSize) {
+    for (uint256 j = 0; j < args.tokenIds.length; j++) {
+      if (
+        (args.tokenSupply[args.tokenIds[j] - 1] + args.quantities[j]) >
+        config.maxSupply[args.tokenIds[j] - 1]
+      ) {
+        revert MaxSupplyExceeded();
+      }
+      args.tokenSupply[args.tokenIds[j] - 1] += args.quantities[j];
+    }
+
+    if (totalQuantity > config.maxBatchSize) {
       revert MaxBatchSizeExceeded();
     }
 
-    uint256 cost = computePrice(i, config.discounts, args.quantity, args.affiliate != address(0));
+    uint256 cost = computePrice(i, config.discounts, totalQuantity, args.affiliate != address(0));
 
     if (i.tokenAddress != address(0)) {
       IERC20Upgradeable erc20Token = IERC20Upgradeable(i.tokenAddress);

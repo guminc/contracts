@@ -102,62 +102,78 @@ contract Archetype is
   //
   // PUBLIC
   //
+
+  // use mintToken for non-random lists
   function mint(
     Auth calldata auth,
     uint256 quantity,
     address affiliate,
     bytes calldata signature
   ) external payable {
-    mintTo(auth, quantity, msg.sender, affiliate, signature);
+    DutchInvite storage invite = invites[auth.key];
+    if (!invite.randomize) {
+      revert notSupported();
+    }
+    mintTo(auth, quantity, msg.sender, 0, affiliate, signature);
   }
 
+  // tokenId is ignored in case of random list
+  function mintToken(
+    Auth calldata auth,
+    uint256 quantity,
+    uint256 tokenId,
+    address affiliate,
+    bytes calldata signature
+  ) external payable {
+    mintTo(auth, quantity, msg.sender, tokenId, affiliate, signature);
+  }
+
+  // batch mint only supported on non random lists
   function batchMintTo(
     Auth calldata auth,
     address[] calldata toList,
     uint256[] calldata quantityList,
+    uint256[] calldata tokenIdList,
     address affiliate,
     bytes calldata signature
   ) external payable {
-    if (quantityList.length != toList.length) {
+    if (quantityList.length != toList.length || quantityList.length != tokenIdList.length) {
       revert InvalidConfig();
     }
+
+    DutchInvite storage invite = invites[auth.key];
+    if (invite.randomize) {
+      revert notSupported();
+    }
+
+    ValidationArgs memory args;
+    {
+      args = ValidationArgs({
+        owner: owner(),
+        affiliate: affiliate,
+        quantities: quantityList,
+        tokenSupply: _tokenSupply,
+        tokenIds: tokenIdList
+      });
+    }
+    ArchetypeLogic.validateMint(invite, config, auth, _minted, _listSupply, signature, args);
+
+    for (uint256 i = 0; i < toList.length; i++) {
+      bytes memory _data;
+      _mint(toList[i], tokenIdList[i], quantityList[i], _data);
+      _tokenSupply[tokenIdList[i] - 1] += quantityList[i];
+    }
+
     uint256 quantity = 0;
     for (uint256 i = 0; i < quantityList.length; i++) {
       quantity += quantityList[i];
     }
 
-    DutchInvite storage invite = invites[auth.key];
-    for (uint256 i = 0; i < toList.length; i++) {
-      ValidationArgs memory args;
-      {
-        // to avoid stack too deep errors
-        uint256[] memory tokenIds = ArchetypeLogic.getRandomTokenIds(
-          _tokenSupply,
-          config.maxSupply,
-          invite.tokenIds,
-          quantityList[i]
-        );
-        args = ValidationArgs({
-          owner: owner(),
-          affiliate: affiliate,
-          quantity: quantity,
-          tokenSupply: _tokenSupply,
-          tokenIds: tokenIds
-        });
-      }
-      ArchetypeLogic.validateMint(invite, config, auth, _minted, _listSupply, signature, args);
-
-      for (uint256 j = 0; j < args.tokenIds.length; j++) {
-        bytes memory _data;
-        _mint(toList[i], args.tokenIds[j], 1, _data);
-        _tokenSupply[args.tokenIds[j] - 1] += 1;
-      }
-
-      _listSupply[auth.key] += quantityList[i];
-      if (invite.limit < invite.maxSupply) {
-        _minted[msg.sender][auth.key] += quantityList[i];
-      }
+    _listSupply[auth.key] += quantity;
+    if (invite.limit < invite.maxSupply) {
+      _minted[msg.sender][auth.key] += quantity;
     }
+
     ArchetypeLogic.updateBalances(
       invite,
       config,
@@ -172,6 +188,7 @@ contract Archetype is
     Auth calldata auth,
     uint256 quantity,
     address to,
+    uint256 tokenId, // only used if randomizer=false
     address affiliate,
     bytes calldata signature
   ) public payable {
@@ -179,17 +196,30 @@ contract Archetype is
 
     ValidationArgs memory args;
     {
-      // to avoid stack too deep errors
-      uint256[] memory tokenIds = ArchetypeLogic.getRandomTokenIds(
-        _tokenSupply,
-        config.maxSupply,
-        i.tokenIds,
-        quantity
-      );
+      uint256[] memory tokenIds;
+      uint256[] memory quantities;
+      if (i.randomize) {
+        // to avoid stack too deep errors
+        tokenIds = ArchetypeLogic.getRandomTokenIds(
+          _tokenSupply,
+          config.maxSupply,
+          i.tokenIds,
+          quantity
+        );
+        quantities = new uint256[](tokenIds.length);
+        for (uint256 j = 0; j < tokenIds.length; j++) {
+          quantities[j] = 1;
+        }
+      } else {
+        tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        quantities = new uint256[](1);
+        quantities[0] = quantity;
+      }
       args = ValidationArgs({
         owner: owner(),
         affiliate: affiliate,
-        quantity: quantity,
+        quantities: quantities,
         tokenSupply: _tokenSupply,
         tokenIds: tokenIds
       });
@@ -198,8 +228,8 @@ contract Archetype is
 
     for (uint256 j = 0; j < args.tokenIds.length; j++) {
       bytes memory _data;
-      _mint(to, args.tokenIds[j], 1, _data);
-      _tokenSupply[args.tokenIds[j] - 1] += 1;
+      _mint(to, args.tokenIds[j], args.quantities[j], _data);
+      _tokenSupply[args.tokenIds[j] - 1] += args.quantities[j];
     }
 
     _listSupply[auth.key] += quantity;
@@ -433,6 +463,7 @@ contract Archetype is
       limit: _invite.limit,
       maxSupply: _invite.maxSupply,
       interval: 0,
+      randomize: _invite.randomize,
       tokenIds: _invite.tokenIds,
       tokenAddress: _invite.tokenAddress
     });
