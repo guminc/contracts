@@ -1791,17 +1791,78 @@ describe("Factory", function () {
     // try to use mint method on non random tokenid list
     await expect(
       nftMint.connect(minter2).mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: 0 })
-    ).to.be.revertedWith("NotSupported");
+    ).to.be.revertedWith("InvalidTokenId");
 
-    await nftMint
-      .connect(minter2)
-      .mintToken({ key: HASHONE, proof: [] }, 2, 4, ZERO, "0x", {
-        value: ethers.utils.parseEther("2"),
-      });
+    await nftMint.connect(minter2).mintToken({ key: HASHONE, proof: [] }, 2, 4, ZERO, "0x", {
+      value: ethers.utils.parseEther("2"),
+    });
 
     await expect(await nftMint.tokenSupply(1)).to.be.equal(15);
     await expect(await nftMint.tokenSupply(4)).to.be.equal(2);
     await expect(await nftMint.totalSupply()).to.be.equal(17);
+  });
+
+  it("test erc115 random tokenId mints", async function () {
+    const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
+    let default_config = { ...DEFAULT_CONFIG };
+    default_config.maxSupply = [15, 10, 5, 2, 20];
+    default_config.maxBatchSize = 1000;
+    const owner = accountZero;
+    const minter = accountOne;
+    const minter2 = accountTwo;
+
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      default_config
+    );
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const nftMint = Archetype.attach(newCollectionAddressMint);
+
+    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 100,
+      maxSupply: 2 ** 32 - 1,
+      randomize: true,
+      tokenIds: [1, 2, 4, 5],
+      tokenAddress: ZERO,
+    });
+
+    // mint 15 random tokenIds
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 15, ZERO, "0x", { value: 0 });
+
+    await expect(await nftMint.totalSupply()).to.be.equal(15);
+
+    // mint 10 more random tokenIds
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 10, ZERO, "0x", { value: 0 });
+
+    await expect(await nftMint.totalSupply()).to.be.equal(25);
+
+    // mint last 22 tokenIds
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 22, ZERO, "0x", { value: 0 });
+
+    // try to mint past max supply
+    await expect(
+      nftMint.connect(minter2).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: 0,
+      })
+    ).to.be.revertedWith("MaxSupplyExceeded");
+
+    await expect(await nftMint.totalSupply()).to.be.equal(47);
+    await expect(await nftMint.tokenSupply(1)).to.be.equal(15);
+    await expect(await nftMint.tokenSupply(2)).to.be.equal(10);
+    await expect(await nftMint.tokenSupply(3)).to.be.equal(0); // not included in list
+    await expect(await nftMint.tokenSupply(4)).to.be.equal(2);
+    await expect(await nftMint.tokenSupply(5)).to.be.equal(20);
   });
 });
 

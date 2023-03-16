@@ -110,10 +110,6 @@ contract Archetype is
     address affiliate,
     bytes calldata signature
   ) external payable {
-    DutchInvite storage invite = invites[auth.key];
-    if (!invite.randomize) {
-      revert NotSupported();
-    }
     mintTo(auth, quantity, msg.sender, 0, affiliate, signature);
   }
 
