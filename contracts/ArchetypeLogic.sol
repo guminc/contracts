@@ -44,7 +44,7 @@ error WrongPassword();
 error LockedForever();
 error URIQueryForNonexistentToken();
 error InvalidTokenId();
-error notSupported();
+error NotSupported();
 
 //
 // STRUCTS
@@ -225,12 +225,29 @@ library ArchetypeLogic {
       }
     }
 
-    totalAfterMint = listSupply[auth.key] + totalQuantity;
-    if (totalAfterMint > i.maxSupply) {
-      revert ListMaxSupplyExceeded();
+    if (i.maxSupply < 2**32 - 1) {
+      totalAfterMint = listSupply[auth.key] + totalQuantity;
+      if (totalAfterMint > i.maxSupply) {
+        revert ListMaxSupplyExceeded();
+      }
     }
 
     for (uint256 j = 0; j < args.tokenIds.length; j++) {
+      if (!i.randomize) {
+        if (i.tokenIds.length != 0) {
+          bool isValid = false;
+          for (uint256 k = 0; k < i.tokenIds.length; k++) {
+            if (args.tokenIds[j] == i.tokenIds[k]) {
+              isValid = true;
+              break;
+            }
+          }
+          if (!isValid) {
+            revert InvalidTokenId();
+          }
+        }
+      }
+
       if (
         (args.tokenSupply[args.tokenIds[j] - 1] + args.quantities[j]) >
         config.maxSupply[args.tokenIds[j] - 1]

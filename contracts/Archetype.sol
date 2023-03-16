@@ -112,7 +112,7 @@ contract Archetype is
   ) external payable {
     DutchInvite storage invite = invites[auth.key];
     if (!invite.randomize) {
-      revert notSupported();
+      revert NotSupported();
     }
     mintTo(auth, quantity, msg.sender, 0, affiliate, signature);
   }
@@ -143,7 +143,7 @@ contract Archetype is
 
     DutchInvite storage invite = invites[auth.key];
     if (invite.randomize) {
-      revert notSupported();
+      revert NotSupported();
     }
 
     ValidationArgs memory args;
@@ -169,9 +169,11 @@ contract Archetype is
       quantity += quantityList[i];
     }
 
-    _listSupply[auth.key] += quantity;
     if (invite.limit < invite.maxSupply) {
       _minted[msg.sender][auth.key] += quantity;
+    }
+    if (invite.maxSupply < 2**32 - 1) {
+      _listSupply[auth.key] += quantity;
     }
 
     ArchetypeLogic.updateBalances(
@@ -232,19 +234,14 @@ contract Archetype is
       _tokenSupply[args.tokenIds[j] - 1] += args.quantities[j];
     }
 
-    _listSupply[auth.key] += quantity;
     if (i.limit < i.maxSupply) {
       _minted[msg.sender][auth.key] += quantity;
     }
+    if (i.maxSupply < 2**32 - 1) {
+      _listSupply[auth.key] += quantity;
+    }
 
-    ArchetypeLogic.updateBalances(
-      i,
-      config,
-      _ownerBalance,
-      _affiliateBalance,
-      affiliate,
-      quantity
-    );
+    ArchetypeLogic.updateBalances(i, config, _ownerBalance, _affiliateBalance, affiliate, quantity);
   }
 
   function tokenURI(uint256 tokenId) public view virtual returns (string memory) {

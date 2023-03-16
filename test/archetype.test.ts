@@ -28,6 +28,8 @@ const CID_ZERO = "bafkreiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 const ZERO = "0x0000000000000000000000000000000000000000";
 const BURN = "0x000000000000000000000000000000000000dEaD";
+const HASHONE = "0x0000000000000000000000000000000000000000000000000000000000000001";
+const HASH256 = "0x00000000000000000000000000000000000000000000000000000000000000ff";
 
 describe("Factory", function () {
   let Archetype: Archetype__factory;
@@ -1669,9 +1671,6 @@ describe("Factory", function () {
     const minter = accountOne;
     const minter2 = accountTwo;
 
-    const HASHONE = "0x0000000000000000000000000000000000000000000000000000000000000001";
-    const HASH256 = "0x00000000000000000000000000000000000000000000000000000000000000ff";
-
     const newCollectionMint = await factory.createCollection(
       owner.address,
       DEFAULT_NAME,
@@ -1728,6 +1727,81 @@ describe("Factory", function () {
     await nftMint.connect(minter2).mint({ key: HASH256, proof: [] }, 40, ZERO, "0x", { value: 0 });
 
     await expect(await nftMint.totalSupply()).to.be.equal(100);
+  });
+
+  it("test erc115 specific tokenId mints", async function () {
+    const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
+    let default_config = { ...DEFAULT_CONFIG };
+    default_config.maxSupply = [15, 10, 5, 2, 20];
+    default_config.maxBatchSize = 1000;
+    const owner = accountZero;
+    const minter = accountOne;
+    const minter2 = accountTwo;
+
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      default_config
+    );
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const nftMint = Archetype.attach(newCollectionAddressMint);
+
+    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 100,
+      maxSupply: 2 ** 32 - 1,
+      randomize: false,
+      tokenIds: [1, 2, 5],
+      tokenAddress: ZERO,
+    });
+
+    await nftMint.connect(owner).setInvite(HASHONE, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("1"),
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      limit: 100,
+      maxSupply: 2 ** 32 - 1,
+      randomize: false,
+      tokenIds: [3, 4],
+      tokenAddress: ZERO,
+    });
+
+    await nftMint
+      .connect(minter)
+      .mintToken({ key: ethers.constants.HashZero, proof: [] }, 15, 1, ZERO, "0x", { value: 0 });
+
+    // try to mint unallowed token
+    await expect(
+      nftMint
+        .connect(minter2)
+        .mintToken({ key: ethers.constants.HashZero, proof: [] }, 1, 3, ZERO, "0x", {
+          value: 0,
+        })
+    ).to.be.revertedWith("InvalidTokenId");
+
+    // try to mint past max supply of list 2 token 4
+    await expect(
+      nftMint
+        .connect(minter2)
+        .mintToken({ key: HASHONE, proof: [] }, 3, 4, ZERO, "0x", { value: 0 })
+    ).to.be.revertedWith("MaxSupplyExceeded");
+
+    // try to use mint method on non random tokenid list
+    await expect(
+      nftMint.connect(minter2).mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: 0 })
+    ).to.be.revertedWith("NotSupported");
+
+    await nftMint
+      .connect(minter2)
+      .mintToken({ key: HASHONE, proof: [] }, 2, 4, ZERO, "0x", {
+        value: ethers.utils.parseEther("2"),
+      });
+
+    await expect(await nftMint.tokenSupply(1)).to.be.equal(15);
+    await expect(await nftMint.tokenSupply(4)).to.be.equal(2);
+    await expect(await nftMint.totalSupply()).to.be.equal(17);
   });
 });
 
