@@ -385,7 +385,9 @@ describe("Factory", function () {
       start: 0,
       end:  ethers.BigNumber.from(Math.floor(yesterday/1000)),
       limit: 1000,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: 5000,
+      randomize: true,
+      tokenIds: [],
       tokenAddress: ZERO,
     });
 
@@ -420,6 +422,7 @@ describe("Factory", function () {
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.08"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      end: 0,
       limit: 0,
       maxSupply: 5000,
       randomize: true,
@@ -1751,6 +1754,7 @@ describe("Factory", function () {
     await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      end: 0,
       limit: 100,
       maxSupply: 2 ** 32 - 1,
       randomize: false,
@@ -1761,6 +1765,7 @@ describe("Factory", function () {
     await nftMint.connect(owner).setInvite(HASHONE, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("1"),
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      end: 0,
       limit: 100,
       maxSupply: 2 ** 32 - 1,
       randomize: false,
@@ -1824,6 +1829,7 @@ describe("Factory", function () {
     await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      end: 0,
       limit: 100,
       maxSupply: 2 ** 32 - 1,
       randomize: true,
