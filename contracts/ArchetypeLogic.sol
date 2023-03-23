@@ -22,6 +22,7 @@ import "solady/src/utils/ECDSA.sol";
 
 error InvalidConfig();
 error MintNotYetStarted();
+error MintEnded();
 error WalletUnauthorizedToMint();
 error InsufficientEthSent();
 error ExcessiveEthSent();
@@ -90,6 +91,7 @@ struct DutchInvite {
   uint128 reservePrice;
   uint128 delta;
   uint32 start;
+  uint32 end;
   uint32 limit;
   uint32 maxSupply;
   uint32 interval;
@@ -99,6 +101,7 @@ struct DutchInvite {
 struct Invite {
   uint128 price;
   uint32 start;
+  uint32 end;
   uint32 limit;
   uint32 maxSupply;
   address tokenAddress;
@@ -198,6 +201,10 @@ library ArchetypeLogic {
 
     if (block.timestamp < i.start) {
       revert MintNotYetStarted();
+    }
+
+    if (i.end > i.start && block.timestamp > i.end) {
+      revert MintEnded();
     }
 
     if (i.limit < i.maxSupply) {

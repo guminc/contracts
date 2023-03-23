@@ -424,6 +424,7 @@ contract Archetype is
       reservePrice: _invite.price,
       delta: 0,
       start: _invite.start,
+      end: _invite.end,
       limit: _invite.limit,
       maxSupply: _invite.maxSupply,
       interval: 0,
