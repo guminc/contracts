@@ -240,7 +240,7 @@ contract Archetype is
     ArchetypeLogic.updateBalances(i, config, _ownerBalance, _affiliateBalance, affiliate, quantity);
   }
 
-  function tokenURI(uint256 tokenId) public view virtual returns (string memory) {
+  function uri(uint256 tokenId) public view override returns (string memory) {
     if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
     return
       bytes(config.baseUri).length != 0
