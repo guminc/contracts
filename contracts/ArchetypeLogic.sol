@@ -95,6 +95,7 @@ struct DutchInvite {
   uint32 limit;
   uint32 maxSupply;
   uint32 interval;
+  uint32 unitSize; // mint 1 get x
   address tokenAddress;
 }
 
@@ -104,6 +105,7 @@ struct Invite {
   uint32 end;
   uint32 limit;
   uint32 maxSupply;
+  uint32 unitSize; // mint 1 get x
   address tokenAddress;
 }
 

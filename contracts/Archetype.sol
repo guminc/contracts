@@ -115,12 +115,20 @@ contract Archetype is
     if (quantityList.length != toList.length) {
       revert InvalidConfig();
     }
-    uint256 quantity = 0;
-    for (uint256 i = 0; i < quantityList.length; i++) {
-      quantity += quantityList[i];
-    }
 
     DutchInvite storage invite = invites[auth.key];
+    uint256 quantity = 0;
+    {
+      uint32 unitSize = invite.unitSize;
+      for (uint256 i = 0; i < quantityList.length; i++) {
+        if (unitSize > 1) {
+          quantity += quantityList[i] * unitSize;
+        } else {
+          quantity += quantityList[i];
+        }
+      }
+    }
+
     uint256 curSupply = _totalMinted();
     ArchetypeLogic.validateMint(
       invite,
@@ -135,8 +143,15 @@ contract Archetype is
       signature
     );
 
-    for (uint256 i = 0; i < toList.length; i++) {
-      _mint(toList[i], quantityList[i]);
+    {
+      uint32 unitSize = invite.unitSize;
+      for (uint256 i = 0; i < toList.length; i++) {
+        if (unitSize > 1) {
+          _mint(toList[i], quantityList[i] * unitSize);
+        } else {
+          _mint(toList[i], quantityList[i]);
+        }
+      }
     }
 
     if (invite.limit < invite.maxSupply) {
@@ -163,6 +178,11 @@ contract Archetype is
     bytes calldata signature
   ) public payable {
     DutchInvite storage i = invites[auth.key];
+
+    if (i.unitSize > 1) {
+      quantity = quantity * i.unitSize;
+    }
+
     uint256 curSupply = _totalMinted();
     ArchetypeLogic.validateMint(
       i,
@@ -184,14 +204,7 @@ contract Archetype is
     if (i.maxSupply < config.maxSupply) {
       _listSupply[auth.key] += quantity;
     }
-    ArchetypeLogic.updateBalances(
-      i,
-      config,
-      _ownerBalance,
-      _affiliateBalance,
-      affiliate,
-      quantity
-    );
+    ArchetypeLogic.updateBalances(i, config, _ownerBalance, _affiliateBalance, affiliate, quantity);
   }
 
   function burnToMint(uint256[] calldata tokenIds) external {
@@ -428,6 +441,7 @@ contract Archetype is
       limit: _invite.limit,
       maxSupply: _invite.maxSupply,
       interval: 0,
+      unitSize: _invite.unitSize,
       tokenAddress: _invite.tokenAddress
     });
     emit Invited(_key, _cid);
