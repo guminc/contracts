@@ -45,7 +45,6 @@ contract Archetype is
   mapping(bytes32 => uint256) private _listSupply;
   mapping(address => OwnerBalance) private _ownerBalance;
   mapping(address => mapping(address => uint128)) private _affiliateBalance;
-  mapping(uint256 => bytes) private _tokenMsg;
 
   uint256[] private _tokenSupply;
 
@@ -124,7 +123,7 @@ contract Archetype is
     mintTo(auth, quantity, msg.sender, tokenId, affiliate, signature);
   }
 
-  // batch mint only supported on non random lists
+  // batch mint only supported on non random and non booster lists 
   function batchMintTo(
     Auth calldata auth,
     address[] calldata toList,
@@ -138,22 +137,12 @@ contract Archetype is
     }
 
     DutchInvite storage invite = invites[auth.key];
-    if (invite.randomize) {
+    if (invite.randomize || invite.unitSize > 1) {
       revert NotSupported();
     }
 
     ValidationArgs memory args;
     {
-      uint32 unitSize = invite.unitSize;
-      uint256[] memory quantities;
-      if (unitSize > 1) {
-        quantities = new uint256[](quantityList.length);
-        for (uint256 i = 0; i < quantityList.length; i++) {
-          quantities[i] = quantityList[i] * unitSize;
-        }
-      } else {
-        quantities = quantityList;
-      }
       args = ValidationArgs({
         owner: owner(),
         affiliate: affiliate,
@@ -171,15 +160,8 @@ contract Archetype is
     }
 
     uint256 quantity = 0;
-    {
-      uint32 unitSize = invite.unitSize;
-      for (uint256 i = 0; i < quantityList.length; i++) {
-        if (unitSize > 1) {
-          quantity += quantityList[i] * unitSize;
-        } else {
-          quantity += quantityList[i];
-        }
-      }
+    for (uint256 i = 0; i < quantityList.length; i++) {
+      quantity += quantityList[i];
     }
 
     if (invite.limit < invite.maxSupply) {

@@ -261,7 +261,7 @@ describe("Factory", function () {
       unitSize: 0,
       randomize: true,
       tokenIds: [],
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: 500,
       tokenAddress: ZERO,
     });
 
@@ -1895,6 +1895,9 @@ describe("Factory", function () {
 
   it("test unit size mint 1 get x functionality", async function () {
     const [accountZero, accountOne, accountTwo, accountThree] = await ethers.getSigners();
+    let default_config = { ...DEFAULT_CONFIG };
+    default_config.maxSupply = [12, 12, 12];
+    default_config.maxBatchSize = 50;
 
     const owner = accountZero;
     const minter = accountOne;
@@ -1905,7 +1908,7 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      default_config
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1916,7 +1919,7 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
       limit: 24,
-      maxSupply: 36,
+      maxSupply: 100,
       unitSize: 12,
       randomize: true,
       tokenIds: [],
@@ -1945,10 +1948,8 @@ describe("Factory", function () {
       nftMint.connect(minter3).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
         value: 0,
       })
-    ).to.be.revertedWith("ListMaxSupplyExceeded");
+    ).to.be.revertedWith("MaxSupplyExceeded");
 
-    await expect(await nftMint.balanceOf(minter.address, 1)).to.be.equal(12);
-    await expect(await nftMint.balanceOf(minter2.address, 1)).to.be.equal(24);
     await expect(await nftMint.totalSupply()).to.be.equal(36);
   });
 });
