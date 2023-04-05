@@ -99,6 +99,7 @@ struct DutchInvite {
   uint32 interval;
   bool randomize; // true for random tokenId, false for user selected
   uint32[] tokenIds; // token id mintable from this list
+  uint32 unitSize; // mint 1 get x
   address tokenAddress;
 }
 
@@ -110,6 +111,7 @@ struct Invite {
   uint32 maxSupply;
   bool randomize; // true for random tokenId, false for user selected
   uint32[] tokenIds; // token ids mintable from this list
+  uint32 unitSize; // mint 1 get x
   address tokenAddress;
 }
 

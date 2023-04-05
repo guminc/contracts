@@ -261,6 +261,7 @@ describe("Factory", function () {
       maxSupply: 5000,
       randomize: true,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
 
@@ -322,6 +323,7 @@ describe("Factory", function () {
       maxSupply: 5000,
       randomize: true,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
     await nft.connect(owner).setInvite(root, ipfsh.ctod(CID_DEFAULT), {
@@ -332,6 +334,7 @@ describe("Factory", function () {
       maxSupply: 5000,
       randomize: true,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
 
@@ -383,11 +386,12 @@ describe("Factory", function () {
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.1"),
       start: 0,
-      end:  ethers.BigNumber.from(Math.floor(yesterday/1000)),
+      end: ethers.BigNumber.from(Math.floor(yesterday / 1000)),
       limit: 1000,
       maxSupply: 5000,
       randomize: true,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
 
@@ -439,7 +443,6 @@ describe("Factory", function () {
         value: ethers.utils.parseEther("0.08"),
       })
     ).to.be.revertedWith("MintingPaused");
-
   });
 
   // reminder: If this test is failing with BalanceEmpty() errors, first ensure
@@ -473,6 +476,7 @@ describe("Factory", function () {
       maxSupply: 5000,
       randomize: true,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
 
@@ -626,6 +630,7 @@ describe("Factory", function () {
       maxSupply: 5000,
       randomize: true,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
 
@@ -709,6 +714,7 @@ describe("Factory", function () {
       maxSupply: 5000,
       randomize: true,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
 
@@ -804,6 +810,7 @@ describe("Factory", function () {
       maxSupply: 5000,
       randomize: true,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
 
@@ -870,6 +877,7 @@ describe("Factory", function () {
   //     randomize: true,
   //     tokenIds: [1,2,3,4,5],
   //     tokenAddress: ZERO,
+  //     unitSize: 0,
   //   });
 
   //   // mint tokens 1, 2, 3
@@ -992,6 +1000,7 @@ describe("Factory", function () {
   //     limit: 300,
   //     maxSupply: 5000,
   //     randomize: true,
+  //     unitSize: 0,
   //     tokenIds: [1,2,3,4,5],
   //     tokenAddress: ZERO,
   //   });
@@ -1130,6 +1139,7 @@ describe("Factory", function () {
       maxSupply: 1000,
       randomize: true,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
     // await nftBurn.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
@@ -1228,6 +1238,7 @@ describe("Factory", function () {
       maxSupply: 5000,
       randomize: true,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
 
@@ -1283,6 +1294,7 @@ describe("Factory", function () {
       maxSupply: 5000,
       randomize: false,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
 
@@ -1362,10 +1374,11 @@ describe("Factory", function () {
     //   price: ethers.utils.parseEther("0.00"),
     //   start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
     //   limit: 5000,
-      //   tokenAddress: ZERO
-      // });
+    //   unitSize:0,
+    // tokenAddress: ZERO
+    // });
 
-      await expect((await nft.options()).royaltyEnforcementEnabled).to.be.equal(false);
+    await expect((await nft.options()).royaltyEnforcementEnabled).to.be.equal(false);
     await nft.connect(owner).enableRoyaltyEnforcement();
     await expect((await nft.options()).royaltyEnforcementEnabled).to.be.equal(true);
     await nft.connect(owner).disableRoyaltyEnforcement();
@@ -1440,6 +1453,7 @@ describe("Factory", function () {
       end: 0,
       limit: 300,
       maxSupply: 5000,
+      unitSize: 0,
       tokenAddress: tokenAddress,
       randomize: true,
       tokenIds: [],
@@ -1516,6 +1530,7 @@ describe("Factory", function () {
       maxSupply: 5000,
       randomize: true,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
 
@@ -1579,6 +1594,7 @@ describe("Factory", function () {
       maxSupply: 5000,
       randomize: true,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
 
@@ -1643,6 +1659,7 @@ describe("Factory", function () {
       maxSupply: PublicMaxSupply,
       randomize: true,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
 
@@ -1692,6 +1709,7 @@ describe("Factory", function () {
       maxSupply: default_config.maxSupply,
       randomize: true,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
 
@@ -1710,6 +1728,7 @@ describe("Factory", function () {
       maxSupply: default_config.maxSupply,
       randomize: true,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
 
@@ -1724,6 +1743,7 @@ describe("Factory", function () {
       maxSupply: default_config.maxSupply,
       randomize: true,
       tokenIds: [],
+      unitSize: 0,
       tokenAddress: ZERO,
     });
 
@@ -1869,6 +1889,63 @@ describe("Factory", function () {
     await expect(await nftMint.tokenSupply(3)).to.be.equal(0); // not included in list
     await expect(await nftMint.tokenSupply(4)).to.be.equal(2);
     await expect(await nftMint.tokenSupply(5)).to.be.equal(20);
+  });
+
+  it("test unit size mint 1 get x functionality", async function () {
+    const [accountZero, accountOne, accountTwo, accountThree] = await ethers.getSigners();
+
+    const owner = accountZero;
+    const minter = accountOne;
+    const minter2 = accountTwo;
+    const minter3 = accountThree;
+
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const nftMint = Archetype.attach(newCollectionAddressMint);
+
+    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      end: 0,
+      limit: 24,
+      maxSupply: 36,
+      unitSize: 12,
+      tokenAddress: ZERO,
+    });
+
+    // mint 1 get 12
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", { value: 0 });
+
+    // try to mint past invite list limit
+    await expect(
+      nftMint.connect(minter).mint({ key: ethers.constants.HashZero, proof: [] }, 2, ZERO, "0x", {
+        value: 0,
+      })
+    ).to.be.revertedWith("NumberOfMintsExceeded");
+
+    // mint 2 get 24
+    await nftMint
+      .connect(minter2)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 2, ZERO, "0x", { value: 0 });
+
+    // try to mint past invite list max
+    await expect(
+      nftMint.connect(minter3).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: 0,
+      })
+    ).to.be.revertedWith("ListMaxSupplyExceeded");
+
+    await expect(await nftMint.balanceOf(minter.address)).to.be.equal(12);
+    await expect(await nftMint.balanceOf(minter2.address)).to.be.equal(24);
+    await expect(await nftMint.totalSupply()).to.be.equal(36);
   });
 });
 

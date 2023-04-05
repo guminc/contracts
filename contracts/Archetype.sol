@@ -156,13 +156,24 @@ contract Archetype is
 
     for (uint256 i = 0; i < toList.length; i++) {
       bytes memory _data;
-      _mint(toList[i], tokenIdList[i], quantityList[i], _data);
-      _tokenSupply[tokenIdList[i] - 1] += quantityList[i];
+
+      if (unitSize > 1) {
+        _mint(toList[i], tokenIdList[i], quantityList[i] * unitSize, _data);
+        _tokenSupply[tokenIdList[i] - 1] += quantityList[i] * unitSize;
+      } else {
+        _mint(toList[i], tokenIdList[i], quantityList[i], _data);
+        _tokenSupply[tokenIdList[i] - 1] += quantityList[i];
+      }
     }
 
     uint256 quantity = 0;
     for (uint256 i = 0; i < quantityList.length; i++) {
-      quantity += quantityList[i];
+      if (unitSize > 1) {
+        quantity += quantityList[i] * unitSize;
+      } else {
+        quantity += quantityList[i];
+      }
+
     }
 
     if (invite.limit < invite.maxSupply) {
@@ -192,17 +203,24 @@ contract Archetype is
   ) public payable {
     DutchInvite storage i = invites[auth.key];
 
+<<<<<<< HEAD
     ValidationArgs memory args;
     {
       uint256[] memory tokenIds;
       uint256[] memory quantities;
+      uint256 totalQuantity = quantity;
+
+      if (i.unitSize > 1) {
+        totalQuantity = quantity * unitSize;
+      }
+
       if (i.randomize) {
         // to avoid stack too deep errors
         tokenIds = ArchetypeLogic.getRandomTokenIds(
           _tokenSupply,
           config.maxSupply,
           i.tokenIds,
-          quantity
+          totalQuantity
         );
         quantities = new uint256[](tokenIds.length);
         for (uint256 j = 0; j < tokenIds.length; j++) {
@@ -212,7 +230,7 @@ contract Archetype is
         tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
         quantities = new uint256[](1);
-        quantities[0] = quantity;
+        quantities[0] = totalQuantity;
       }
       args = ValidationArgs({
         owner: owner(),
@@ -229,6 +247,26 @@ contract Archetype is
       _mint(to, args.tokenIds[j], args.quantities[j], _data);
       _tokenSupply[args.tokenIds[j] - 1] += args.quantities[j];
     }
+=======
+    if (i.unitSize > 1) {
+      quantity = quantity * i.unitSize;
+    }
+
+    uint256 curSupply = _totalMinted();
+    ArchetypeLogic.validateMint(
+      i,
+      config,
+      auth,
+      quantity,
+      owner(),
+      affiliate,
+      curSupply,
+      _minted,
+      _listSupply,
+      signature
+    );
+    _mint(to, quantity);
+>>>>>>> 0.5.1
 
     if (i.limit < i.maxSupply) {
       _minted[msg.sender][auth.key] += quantity;
@@ -456,8 +494,12 @@ contract Archetype is
       limit: _invite.limit,
       maxSupply: _invite.maxSupply,
       interval: 0,
+<<<<<<< HEAD
       randomize: _invite.randomize,
       tokenIds: _invite.tokenIds,
+=======
+      unitSize: _invite.unitSize,
+>>>>>>> 0.5.1
       tokenAddress: _invite.tokenAddress
     });
     emit Invited(_key, _cid);
