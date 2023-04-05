@@ -415,21 +415,21 @@ library ArchetypeLogic {
     uint256[] memory tokenSupply,
     uint32[] memory maxSupply,
     uint32[] memory validIds,
-    uint256 quantity
-  ) public view returns (uint256[] memory) {
-    if (validIds.length == 0) {
-      validIds = new uint32[](maxSupply.length);
+    uint256 quantity,
+    uint256 seed
+  ) public pure returns (uint256[] memory) {
+
+    uint256 tokenIdsAvailable = 0;
+    if(validIds.length > 0) {
       for (uint256 i = 0; i < validIds.length; i++) {
-        validIds[i] = uint32(i) + 1;
+        tokenIdsAvailable += maxSupply[validIds[i] - 1] - tokenSupply[validIds[i] - 1];
+      }
+    } else {
+      for (uint256 i = 0; i < maxSupply.length; i++) {
+        tokenIdsAvailable += maxSupply[i] - tokenSupply[i];
       }
     }
 
-    uint256 tokenIdsAvailable = 0;
-    for (uint256 i = 0; i < validIds.length; i++) {
-      tokenIdsAvailable += maxSupply[validIds[i] - 1] - tokenSupply[validIds[i] - 1];
-    }
-
-    uint256 seed = random();
     uint256[] memory tokenIds = new uint256[](quantity);
     for (uint256 i = 0; i < quantity; i++) {
       if (tokenIdsAvailable == 0) {
@@ -437,15 +437,28 @@ library ArchetypeLogic {
       }
       uint256 rand = uint256(keccak256(abi.encode(seed, i)));
       uint256 num = (rand % tokenIdsAvailable) + 1;
-      for (uint256 j = 0; j < validIds.length; j++) {
-        uint256 available = maxSupply[validIds[j] - 1] - tokenSupply[validIds[j] - 1];
-        if (num <= available) {
-          tokenIds[i] = validIds[j];
-          tokenSupply[validIds[j] - 1] += 1;
-          tokenIdsAvailable -= 1;
-          break;
+      if(validIds.length > 0) {
+        for (uint256 j = 0; j < validIds.length; j++) {
+          uint256 available = maxSupply[validIds[j] - 1] - tokenSupply[validIds[j] - 1];
+          if (num <= available) {
+            tokenIds[i] = validIds[j];
+            tokenSupply[validIds[j] - 1] += 1;
+            tokenIdsAvailable -= 1;
+            break;
+          }
+          num -= available;
         }
-        num -= available;
+      } else {
+        for (uint256 j = 0; j < maxSupply.length; j++) {
+          uint256 available = maxSupply[j] - tokenSupply[j];
+          if (num <= available) {
+            tokenIds[i] = j+1;
+            tokenSupply[j] += 1;
+            tokenIdsAvailable -= 1;
+            break;
+          }
+          num -= available;
+        }
       }
     }
     return tokenIds;

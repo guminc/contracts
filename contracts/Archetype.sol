@@ -201,11 +201,13 @@ contract Archetype is
       uint256[] memory quantities;
       if (i.randomize) {
         // to avoid stack too deep errors
+        uint256 seed = ArchetypeLogic.random();
         tokenIds = ArchetypeLogic.getRandomTokenIds(
           _tokenSupply,
           config.maxSupply,
           i.tokenIds,
-          quantity
+          quantity,
+          seed
         );
         quantities = new uint256[](tokenIds.length);
         for (uint256 j = 0; j < tokenIds.length; j++) {
