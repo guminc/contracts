@@ -144,6 +144,16 @@ contract Archetype is
 
     ValidationArgs memory args;
     {
+      uint32 unitSize = invite.unitSize;
+      uint256[] memory quantities;
+      if (unitSize > 1) {
+        quantities = new uint256[](quantityList.length);
+        for (uint256 i = 0; i < quantityList.length; i++) {
+          quantities[i] = quantityList[i] * unitSize;
+        }
+      } else {
+        quantities = quantityList;
+      }
       args = ValidationArgs({
         owner: owner(),
         affiliate: affiliate,
@@ -161,8 +171,15 @@ contract Archetype is
     }
 
     uint256 quantity = 0;
-    for (uint256 i = 0; i < quantityList.length; i++) {
-      quantity += quantityList[i];
+    {
+      uint32 unitSize = invite.unitSize;
+      for (uint256 i = 0; i < quantityList.length; i++) {
+        if (unitSize > 1) {
+          quantity += quantityList[i] * unitSize;
+        } else {
+          quantity += quantityList[i];
+        }
+      }
     }
 
     if (invite.limit < invite.maxSupply) {
@@ -191,6 +208,10 @@ contract Archetype is
     bytes calldata signature
   ) public payable {
     DutchInvite storage i = invites[auth.key];
+
+    if (i.unitSize > 1) {
+      quantity = quantity * i.unitSize;
+    }
 
     ValidationArgs memory args;
     {
@@ -456,6 +477,7 @@ contract Archetype is
       limit: _invite.limit,
       maxSupply: _invite.maxSupply,
       interval: 0,
+      unitSize: _invite.unitSize,
       randomize: _invite.randomize,
       tokenIds: _invite.tokenIds,
       tokenAddress: _invite.tokenAddress
