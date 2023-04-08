@@ -123,7 +123,7 @@ contract Archetype is
     mintTo(auth, quantity, msg.sender, tokenId, affiliate, signature);
   }
 
-  // batch mint only supported on non random and non booster lists 
+  // batch mint only supported on non random and non booster lists
   function batchMintTo(
     Auth calldata auth,
     address[] calldata toList,
@@ -346,6 +346,10 @@ contract Archetype is
       }
     }
 
+    // increase size of token supply array to match new max supply
+    for (uint256 i = _tokenSupply.length; i < newMaxSupply.length; i++) {
+      _tokenSupply.push(0);
+    }
     config.maxSupply = newMaxSupply;
   }
 

@@ -1952,6 +1952,65 @@ describe("Factory", function () {
 
     await expect(await nftMint.totalSupply()).to.be.equal(36);
   });
+
+  it("test erc115 increasing max supply", async function () {
+    const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
+    let default_config = { ...DEFAULT_CONFIG };
+    default_config.maxSupply = [200];
+    default_config.maxBatchSize = 1000;
+    const owner = accountZero;
+    const minter = accountOne;
+    const minter2 = accountTwo;
+
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      default_config
+    );
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const nftMint = Archetype.attach(newCollectionAddressMint);
+
+    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      end: 0,
+      limit: 2 ** 32 - 1,
+      maxSupply: 2 ** 32 - 1,
+      unitSize: 0,
+      randomize: false,
+      tokenIds: [],
+      tokenAddress: ZERO,
+    });
+
+    // mint 15 tokenId 1
+    await nftMint
+      .connect(minter)
+      .mintToken({ key: ethers.constants.HashZero, proof: [] }, 15, 1, ZERO, "0x", { value: 0 });
+
+    await expect(await nftMint.totalSupply()).to.be.equal(15);
+
+    // update max supply to have 2 tokenIds
+    await nftMint.connect(owner).setMaxSupply([200, 100], "forever");
+
+    // mint 100 tokenId 2
+    await nftMint
+      .connect(minter)
+      .mintToken({ key: ethers.constants.HashZero, proof: [] }, 100, 2, ZERO, "0x", { value: 0 });
+
+    await expect(await nftMint.tokenSupply(2)).to.be.equal(100);
+
+    // update max supply to have 5 tokenIds
+    await nftMint.connect(owner).setMaxSupply([200, 100, 10, 10, 10], "forever");
+
+    // mint 10 tokenId 5
+    await nftMint
+      .connect(minter2)
+      .mintToken({ key: ethers.constants.HashZero, proof: [] }, 10, 3, ZERO, "0x", { value: 0 });
+
+    await expect(await nftMint.tokenSupply(3)).to.be.equal(10);
+  });
 });
 
 // todo: add test to ensure affiliate signer can't be zero address
