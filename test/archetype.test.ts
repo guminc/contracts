@@ -27,7 +27,7 @@ const CID_DEFAULT = "Qmbro8pnECVvjwWH6J9KyFXR8isquPFNgbUiHDGXhYnmFn";
 const CID_ZERO = "bafkreiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 const ZERO = "0x0000000000000000000000000000000000000000";
-const BURN = "0x000000000000000000000000000000000000dEaD";
+// const BURN = "0x000000000000000000000000000000000000dEaD";
 const HASHONE = "0x0000000000000000000000000000000000000000000000000000000000000001";
 const HASH256 = "0x00000000000000000000000000000000000000000000000000000000000000ff";
 
@@ -1102,9 +1102,7 @@ describe("Factory", function () {
 
   it("test max supply checks", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();
-    let default_config = { ...DEFAULT_CONFIG };
-    default_config.maxBatchSize = 500;
-    default_config.maxSupply = [100, 100, 100];
+    const default_config = { ...DEFAULT_CONFIG, maxBatchSize: 500, maxSupply: [100, 100, 100] };
 
     const owner = accountZero;
     const minter = accountOne;
@@ -1262,9 +1260,7 @@ describe("Factory", function () {
   });
 
   it("test batchMintTo Airdrop", async function () {
-    let default_config = { ...DEFAULT_CONFIG };
-    default_config.maxBatchSize = 5000;
-    default_config.maxSupply = [5000];
+    const default_config = { ...DEFAULT_CONFIG, maxBatchSize: 5000, maxSupply: [5000] };
 
     const [accountZero, accountOne] = await ethers.getSigners();
 
@@ -1630,9 +1626,11 @@ describe("Factory", function () {
 
   it("test invite list max supply check", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
-    let default_config = { ...DEFAULT_CONFIG };
-    default_config.maxSupply = [1000, 1000, 1000, 1000, 1000];
-    default_config.maxBatchSize = 1000;
+    const default_config = {
+      ...DEFAULT_CONFIG,
+      maxSupply: [1000, 1000, 1000, 1000, 1000],
+      maxBatchSize: 1000,
+    };
 
     const PublicMaxSupply = 90;
 
@@ -1682,9 +1680,7 @@ describe("Factory", function () {
 
   it("test multiple public invite lists support in 0.5.1", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
-    let default_config = { ...DEFAULT_CONFIG };
-    default_config.maxSupply = [100];
-    default_config.maxBatchSize = 100;
+    const default_config = { ...DEFAULT_CONFIG, maxSupply: [100], maxBatchSize: 100 };
 
     const owner = accountZero;
     const minter = accountOne;
@@ -1753,9 +1749,8 @@ describe("Factory", function () {
 
   it("test erc115 specific tokenId mints", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
-    let default_config = { ...DEFAULT_CONFIG };
-    default_config.maxSupply = [15, 10, 5, 2, 20];
-    default_config.maxBatchSize = 1000;
+    const default_config = { ...DEFAULT_CONFIG, maxSupply: [15, 10, 5, 2, 20], maxBatchSize: 1000 };
+
     const owner = accountZero;
     const minter = accountOne;
     const minter2 = accountTwo;
@@ -1830,9 +1825,8 @@ describe("Factory", function () {
 
   it("test erc115 random tokenId mints", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
-    let default_config = { ...DEFAULT_CONFIG };
-    default_config.maxSupply = [15, 10, 5, 2, 20];
-    default_config.maxBatchSize = 1000;
+    const default_config = { ...DEFAULT_CONFIG, maxSupply: [15, 10, 5, 2, 20], maxBatchSize: 1000 };
+
     const owner = accountZero;
     const minter = accountOne;
     const minter2 = accountTwo;
@@ -1895,9 +1889,7 @@ describe("Factory", function () {
 
   it("test unit size mint 1 get x functionality", async function () {
     const [accountZero, accountOne, accountTwo, accountThree] = await ethers.getSigners();
-    let default_config = { ...DEFAULT_CONFIG };
-    default_config.maxSupply = [12, 12, 12];
-    default_config.maxBatchSize = 50;
+    const default_config = { ...DEFAULT_CONFIG, maxSupply: [12, 12, 12], maxBatchSize: 50 };
 
     const owner = accountZero;
     const minter = accountOne;
@@ -1955,9 +1947,8 @@ describe("Factory", function () {
 
   it("test erc115 increasing max supply", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
-    let default_config = { ...DEFAULT_CONFIG };
-    default_config.maxSupply = [200];
-    default_config.maxBatchSize = 1000;
+    const default_config = { ...DEFAULT_CONFIG, maxSupply: [200], maxBatchSize: 1000 };
+
     const owner = accountZero;
     const minter = accountOne;
     const minter2 = accountTwo;
@@ -2013,13 +2004,15 @@ describe("Factory", function () {
   });
 
   it("test erc115 large max supply of 200 tokens", async function () {
-    const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
-    let default_config = { ...DEFAULT_CONFIG };
-    default_config.maxSupply = new Array(500).fill(10); // 500 tokenIds, 10 each
-    default_config.maxBatchSize = 1000;
+    const [accountZero, accountOne] = await ethers.getSigners();
+    const default_config = {
+      ...DEFAULT_CONFIG,
+      maxSupply: new Array(500).fill(10),
+      maxBatchSize: 1000,
+    };
+
     const owner = accountZero;
     const minter = accountOne;
-    const minter2 = accountTwo;
 
     const newCollectionMint = await factory.createCollection(
       owner.address,
@@ -2067,9 +2060,11 @@ describe("Factory", function () {
 
   it("test erc115 test batch mint verification", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
-    let default_config = { ...DEFAULT_CONFIG };
-    default_config.maxSupply = new Array(500).fill(10); // 500 tokenIds, 10 each
-    default_config.maxBatchSize = 1000;
+    const default_config = {
+      ...DEFAULT_CONFIG,
+      maxSupply: new Array(500).fill(10),
+      maxBatchSize: 1000,
+    };
     const owner = accountZero;
     const minter = accountOne;
     const minter2 = accountTwo;
@@ -2098,21 +2093,30 @@ describe("Factory", function () {
 
     // expect validation to pickup that tokenId 5 is minting past its max supply
     await expect(
-    nftMint
-      .connect(minter)
-      .batchMintTo({ key: ethers.constants.HashZero, proof: [] }, 
-        [minter.address, minter2.address, minter.address, owner.address], 
-        [10, 10, 10, 10],
-        [1, 5, 240, 5],
-        ZERO, "0x", { value: 0 })).to.be.revertedWith("MaxSupplyExceeded");
+      nftMint
+        .connect(minter)
+        .batchMintTo(
+          { key: ethers.constants.HashZero, proof: [] },
+          [minter.address, minter2.address, minter.address, owner.address],
+          [10, 10, 10, 10],
+          [1, 5, 240, 5],
+          ZERO,
+          "0x",
+          { value: 0 }
+        )
+    ).to.be.revertedWith("MaxSupplyExceeded");
 
     await nftMint
-    .connect(minter)
-    .batchMintTo({ key: ethers.constants.HashZero, proof: [] }, 
-      [minter.address, minter2.address, minter.address, owner.address], 
-      [10, 10, 10, 10],
-      [1, 5, 240, 6],
-      ZERO, "0x", { value: 0 });
+      .connect(minter)
+      .batchMintTo(
+        { key: ethers.constants.HashZero, proof: [] },
+        [minter.address, minter2.address, minter.address, owner.address],
+        [10, 10, 10, 10],
+        [1, 5, 240, 6],
+        ZERO,
+        "0x",
+        { value: 0 }
+      );
 
     await expect(await nftMint.totalSupply()).to.be.equal(40);
   });

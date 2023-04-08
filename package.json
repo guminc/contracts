@@ -1,6 +1,9 @@
 {
   "name": "scatter",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=8.3.0"
+  },
   "description": "Get client ready:",
   "main": "index.js",
   "scripts": {
