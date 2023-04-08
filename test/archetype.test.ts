@@ -2015,7 +2015,7 @@ describe("Factory", function () {
   it("test erc115 large max supply of 200 tokens", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
     let default_config = { ...DEFAULT_CONFIG };
-    default_config.maxSupply = new Array(500).fill(10); // 200 tokenIds, 10 each
+    default_config.maxSupply = new Array(500).fill(10); // 500 tokenIds, 10 each
     default_config.maxBatchSize = 1000;
     const owner = accountZero;
     const minter = accountOne;
@@ -2063,6 +2063,58 @@ describe("Factory", function () {
     await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: 0 });
 
     await expect(await nftMint.totalSupply()).to.be.equal(2);
+  });
+
+  it("test erc115 test batch mint verification", async function () {
+    const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
+    let default_config = { ...DEFAULT_CONFIG };
+    default_config.maxSupply = new Array(500).fill(10); // 500 tokenIds, 10 each
+    default_config.maxBatchSize = 1000;
+    const owner = accountZero;
+    const minter = accountOne;
+    const minter2 = accountTwo;
+
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      default_config
+    );
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const nftMint = Archetype.attach(newCollectionAddressMint);
+
+    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      end: 0,
+      limit: 2 ** 32 - 1,
+      maxSupply: 2 ** 32 - 1,
+      unitSize: 0,
+      randomize: false,
+      tokenIds: [],
+      tokenAddress: ZERO,
+    });
+
+    // expect validation to pickup that tokenId 5 is minting past its max supply
+    await expect(
+    nftMint
+      .connect(minter)
+      .batchMintTo({ key: ethers.constants.HashZero, proof: [] }, 
+        [minter.address, minter2.address, minter.address, owner.address], 
+        [10, 10, 10, 10],
+        [1, 5, 240, 5],
+        ZERO, "0x", { value: 0 })).to.be.revertedWith("MaxSupplyExceeded");
+
+    await nftMint
+    .connect(minter)
+    .batchMintTo({ key: ethers.constants.HashZero, proof: [] }, 
+      [minter.address, minter2.address, minter.address, owner.address], 
+      [10, 10, 10, 10],
+      [1, 5, 240, 6],
+      ZERO, "0x", { value: 0 });
+
+    await expect(await nftMint.totalSupply()).to.be.equal(40);
   });
 });
 

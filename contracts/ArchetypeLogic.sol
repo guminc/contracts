@@ -234,12 +234,14 @@ library ArchetypeLogic {
       }
     }
 
+    uint256[] memory checked = new uint256[](tokenSupply.length);
     for (uint256 j = 0; j < args.tokenIds.length; j++) {
+      uint256 tokenId = args.tokenIds[j];
       if (!i.randomize) {
         if (i.tokenIds.length != 0) {
           bool isValid = false;
           for (uint256 k = 0; k < i.tokenIds.length; k++) {
-            if (args.tokenIds[j] == i.tokenIds[k]) {
+            if (tokenId == i.tokenIds[k]) {
               isValid = true;
               break;
             }
@@ -251,11 +253,12 @@ library ArchetypeLogic {
       }
 
       if (
-        (tokenSupply[args.tokenIds[j] - 1] + args.quantities[j]) >
-        config.maxSupply[args.tokenIds[j] - 1]
+        (tokenSupply[tokenId - 1] + checked[tokenId - 1] + args.quantities[j]) >
+        config.maxSupply[tokenId - 1]
       ) {
         revert MaxSupplyExceeded();
       }
+      checked[tokenId - 1] += args.quantities[j];
     }
 
     if (totalQuantity > config.maxBatchSize) {
@@ -417,9 +420,8 @@ library ArchetypeLogic {
     uint256 quantity,
     uint256 seed
   ) public pure returns (uint256[] memory) {
-
     uint256 tokenIdsAvailable = 0;
-    if(validIds.length > 0) {
+    if (validIds.length > 0) {
       for (uint256 i = 0; i < validIds.length; i++) {
         tokenIdsAvailable += maxSupply[validIds[i] - 1] - tokenSupply[validIds[i] - 1];
       }
@@ -436,7 +438,7 @@ library ArchetypeLogic {
       }
       uint256 rand = uint256(keccak256(abi.encode(seed, i)));
       uint256 num = (rand % tokenIdsAvailable) + 1;
-      if(validIds.length > 0) {
+      if (validIds.length > 0) {
         for (uint256 j = 0; j < validIds.length; j++) {
           uint256 available = maxSupply[validIds[j] - 1] - tokenSupply[validIds[j] - 1];
           if (num <= available) {
@@ -451,7 +453,7 @@ library ArchetypeLogic {
         for (uint256 j = 0; j < maxSupply.length; j++) {
           uint256 available = maxSupply[j] - tokenSupply[j];
           if (num <= available) {
-            tokenIds[i] = j+1;
+            tokenIds[i] = j + 1;
             tokenSupply[j] += 1;
             tokenIdsAvailable -= 1;
             break;
