@@ -147,11 +147,19 @@ contract Archetype is
         owner: owner(),
         affiliate: affiliate,
         quantities: quantityList,
-        tokenSupply: _tokenSupply,
         tokenIds: tokenIdList
       });
     }
-    ArchetypeLogic.validateMint(invite, config, auth, _minted, _listSupply, signature, args);
+    ArchetypeLogic.validateMint(
+      invite,
+      config,
+      auth,
+      _minted,
+      _listSupply,
+      _tokenSupply,
+      signature,
+      args
+    );
 
     for (uint256 i = 0; i < toList.length; i++) {
       bytes memory _data;
@@ -223,11 +231,19 @@ contract Archetype is
         owner: owner(),
         affiliate: affiliate,
         quantities: quantities,
-        tokenSupply: _tokenSupply,
         tokenIds: tokenIds
       });
     }
-    ArchetypeLogic.validateMint(i, config, auth, _minted, _listSupply, signature, args);
+    ArchetypeLogic.validateMint(
+      i,
+      config,
+      auth,
+      _minted,
+      _listSupply,
+      _tokenSupply,
+      signature,
+      args
+    );
 
     for (uint256 j = 0; j < args.tokenIds.length; j++) {
       bytes memory _data;

@@ -125,7 +125,6 @@ struct ValidationArgs {
   address affiliate;
   uint256[] quantities;
   uint256[] tokenIds;
-  uint256[] tokenSupply;
 }
 
 address constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
@@ -185,6 +184,7 @@ library ArchetypeLogic {
     Auth calldata auth,
     mapping(address => mapping(bytes32 => uint256)) storage minted,
     mapping(bytes32 => uint256) storage listSupply,
+    uint256[] storage tokenSupply,
     bytes calldata signature,
     ValidationArgs memory args
   ) public view {
@@ -251,12 +251,11 @@ library ArchetypeLogic {
       }
 
       if (
-        (args.tokenSupply[args.tokenIds[j] - 1] + args.quantities[j]) >
+        (tokenSupply[args.tokenIds[j] - 1] + args.quantities[j]) >
         config.maxSupply[args.tokenIds[j] - 1]
       ) {
         revert MaxSupplyExceeded();
       }
-      args.tokenSupply[args.tokenIds[j] - 1] += args.quantities[j];
     }
 
     if (totalQuantity > config.maxBatchSize) {
