@@ -12,7 +12,7 @@
     "start": "concurrently \"cd api && npm start\" \"cd app && npm run dev\"",
     "deploy": "npx hardhat run scripts/deployArchetype.ts --network sepolia",
     "network": "npx hardhat node",
-    "verify": "npx hardhat verify 0xc078Aed674c230cDD7ADD602E077797d08d8f0c2 --network sepolia"
+    "verify": "npx hardhat verify 0xE1ab75C9a140d2dc521D45F2CdbD9D39903d3297 --network sepolia"
   },
   "repository": {
     "type": "git",
@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "2.0.5",
-    "@nomiclabs/hardhat-etherscan": "3.0.3",
+    "@nomiclabs/hardhat-etherscan": "3.1.7",
     "@nomiclabs/hardhat-truffle5": "2.0.3",
     "@nomiclabs/hardhat-waffle": "2.0.1",
     "@nomiclabs/hardhat-web3": "2.0.0",
