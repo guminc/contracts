@@ -13,8 +13,6 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import ipfsh from "ipfsh";
 import { Contract } from "ethers";
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 const DEFAULT_NAME = "Pookie";
 const DEFAULT_SYMBOL = "POOKIE";
 let AFFILIATE_SIGNER: SignerWithAddress;
@@ -255,7 +253,7 @@ describe("Factory", function () {
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.08"),
-      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000) - 60), // one minute ago
       end: 0,
       limit: 300,
       unitSize: 0,
@@ -268,8 +266,6 @@ describe("Factory", function () {
     const invites = await nft.invites(ethers.constants.HashZero);
 
     console.log({ invites });
-
-    await sleep(1000);
 
     console.log("current time", Math.floor(Date.now() / 1000));
 
