@@ -1006,6 +1006,9 @@ describe("Factory", function () {
     // disable burn to mint
     await nftBurn.connect(owner).disableBurnToMint();
 
+    const minted = await nftBurn.minted(minter.address, ethers.utils.formatBytes32String("burn"));
+    console.log({ minted, mintedNum: minted.toNumber(), mintedString: minted.toString() });
+
     // burn will fail as burn is disabled
     await expect(nftBurn.connect(minter).burnToMint([11, 12])).to.be.revertedWith(
       "BurnToMintDisabled"

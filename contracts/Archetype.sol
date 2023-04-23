@@ -22,6 +22,7 @@ import "./ERC721A__OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
+import "hardhat/console.sol";
 
 contract Archetype is
   ERC721A__Initializable,
@@ -224,9 +225,10 @@ contract Archetype is
       : tokenIds.length / burnConfig.ratio;
     _mint(msg.sender, quantity);
 
-    if (burnConfig.limit < config.maxSupply) {
+    if (burnConfig.limit <= config.maxSupply) {
       _minted[msg.sender][bytes32("burn")] += quantity;
     }
+    // console.log("minted", _minted[msg.sender]);
   }
 
   function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {

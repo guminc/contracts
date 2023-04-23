@@ -1,0 +1,80 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x0f7a413996C49F39A05a0e2AE514d1b55066cC54",
+    "txHash": "0x8f095c0c95e04a876c0232f5a956ced02dafd6b266afe1ff09b609f077924245"
+  },
+  "proxies": [
+    {
+      "address": "0xe654652F59082B9F16ee26019333844dE7178415",
+      "txHash": "0x755f25fd99f0727a397e4f54b013d891d9fc63bec6822da486dc4098eef29e8e",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "6f0995f27d8ee6a81b34692d49ff9bf8bed5094382b21e8bf64aa406949cf55f": {
+      "address": "0xdAC45a380CD52Ba1bd8D6F687221eB631e8a1F5e",
+      "txHash": "0x859508a44f9811f01e430c4a24b9aff4c23767d0b25a641bc2fd85287e48cdba",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_uint8",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "contract": "Factory",
+            "label": "archetype",
+            "type": "t_address",
+            "src": "contracts/Factory.sol:25"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
+    }
+  }
+}
