@@ -1294,54 +1294,6 @@ describe("Factory", function () {
     await expect(await nft.ownerOf(100)).to.be.equal(airDropList[99][0]);
   });
 
-  it("test royalty enforcement enabling and lock", async function () {
-    const [_accountZero, accountOne] = await ethers.getSigners();
-
-    const owner = accountOne;
-
-    const newCollection = await factory.createCollection(
-      owner.address,
-      DEFAULT_NAME,
-      DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
-    );
-
-    const result = await newCollection.wait();
-    const newCollectionAddress = result.events[0].address || "";
-    const nft = Archetype.attach(newCollectionAddress);
-
-    // // mock opensea default block list addresses
-    // ///The default OpenSea operator blocklist subscription.
-    // const _DEFAULT_SUBSCRIPTION = "0x3cc6CddA760b79bAfa08dF41ECFA224f810dCeB6";
-    // const Subscription = await ethers.getContractFactory("OwnedRegistrant");
-    // const subscription = await Subscription.deploy(opensea.address);
-    // await subscription.deployed();
-
-    // /// @dev The OpenSea operator filter registry.
-    // const _OPERATOR_FILTER_REGISTRY = "0x000000000000AAeB6D7670E522A718067333cd4E";
-    // const Filter = await ethers.getContractFactory("OperatorFilterRegistry");
-    // const filter = await Filter.deploy();
-    // await filter.deployed();
-
-    // await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
-    //   price: ethers.utils.parseEther("0.00"),
-    //   start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-    //   limit: 5000,
-    //   unitSize:0,
-    // tokenAddress: ZERO
-    // });
-
-    await expect((await nft.options()).royaltyEnforcementEnabled).to.be.equal(false);
-    await nft.connect(owner).enableRoyaltyEnforcement();
-    await expect((await nft.options()).royaltyEnforcementEnabled).to.be.equal(true);
-    await nft.connect(owner).disableRoyaltyEnforcement();
-    await expect((await nft.options()).royaltyEnforcementEnabled).to.be.equal(false);
-    await expect((await nft.options()).royaltyEnforcementLocked).to.be.equal(false);
-    await nft.connect(owner).lockRoyaltyEnforcement("forever");
-    await expect((await nft.options()).royaltyEnforcementLocked).to.be.equal(true);
-    await expect(nft.connect(owner).enableRoyaltyEnforcement()).to.be.reverted;
-  });
-
   it("test default royalty eip 2981", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.5.1
+// Archetype v0.5.2
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -20,13 +20,11 @@ import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
 import "erc721a-upgradeable/contracts/ERC721A__Initializable.sol";
 import "./ERC721A__OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
-import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
 
 contract Archetype is
   ERC721A__Initializable,
   ERC721AUpgradeable,
-  OperatorFilterer,
   ERC721A__OwnableUpgradeable,
   ERC2981Upgradeable
 {
@@ -506,77 +504,6 @@ contract Archetype is
       revert NotPlatform();
     }
     _;
-  }
-
-  // OPTIONAL ROYALTY ENFORCEMENT WITH OPENSEA
-  function enableRoyaltyEnforcement() external onlyOwner {
-    if (options.royaltyEnforcementLocked) {
-      revert LockedForever();
-    }
-    _registerForOperatorFiltering();
-    options.royaltyEnforcementEnabled = true;
-  }
-
-  function disableRoyaltyEnforcement() external onlyOwner {
-    if (options.royaltyEnforcementLocked) {
-      revert LockedForever();
-    }
-    options.royaltyEnforcementEnabled = false;
-  }
-
-  /// @notice the password is "forever"
-  function lockRoyaltyEnforcement(string memory password) external onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
-    options.royaltyEnforcementLocked = true;
-  }
-
-  function setApprovalForAll(address operator, bool approved)
-    public
-    override
-    onlyAllowedOperatorApproval(operator)
-  {
-    super.setApprovalForAll(operator, approved);
-  }
-
-  function approve(address operator, uint256 tokenId)
-    public
-    payable
-    override
-    onlyAllowedOperatorApproval(operator)
-  {
-    super.approve(operator, tokenId);
-  }
-
-  function transferFrom(
-    address from,
-    address to,
-    uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
-    super.transferFrom(from, to, tokenId);
-  }
-
-  function safeTransferFrom(
-    address from,
-    address to,
-    uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
-    super.safeTransferFrom(from, to, tokenId);
-  }
-
-  function safeTransferFrom(
-    address from,
-    address to,
-    uint256 tokenId,
-    bytes memory data
-  ) public payable override onlyAllowedOperator(from) {
-    super.safeTransferFrom(from, to, tokenId, data);
-  }
-
-  function _operatorFilteringEnabled() internal view override returns (bool) {
-    return options.royaltyEnforcementEnabled;
   }
 
   //ERC2981 ROYALTY
