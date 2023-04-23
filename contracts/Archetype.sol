@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.5.1 - ERC1155
+// Archetype v0.5.2 - ERC1155
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -524,63 +524,6 @@ contract Archetype is
       revert NotPlatform();
     }
     _;
-  }
-
-  // OPTIONAL ROYALTY ENFORCEMENT WITH OPENSEA
-  function enableRoyaltyEnforcement() external onlyOwner {
-    if (options.royaltyEnforcementLocked) {
-      revert LockedForever();
-    }
-    _registerForOperatorFiltering();
-    options.royaltyEnforcementEnabled = true;
-  }
-
-  function disableRoyaltyEnforcement() external onlyOwner {
-    if (options.royaltyEnforcementLocked) {
-      revert LockedForever();
-    }
-    options.royaltyEnforcementEnabled = false;
-  }
-
-  /// @notice the password is "forever"
-  function lockRoyaltyEnforcement(string memory password) external onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
-    options.royaltyEnforcementLocked = true;
-  }
-
-  function setApprovalForAll(address operator, bool approved)
-    public
-    override
-    onlyAllowedOperatorApproval(operator)
-  {
-    super.setApprovalForAll(operator, approved);
-  }
-
-  function safeTransferFrom(
-    address from,
-    address to,
-    uint256 tokenId,
-    uint256 amount,
-    bytes memory data
-  ) public override onlyAllowedOperator(from) {
-    super.safeTransferFrom(from, to, tokenId, amount, data);
-  }
-
-  function safeBatchTransferFrom(
-    address from,
-    address to,
-    uint256[] memory ids,
-    uint256[] memory amounts,
-    bytes memory data
-  ) public override onlyAllowedOperator(from) {
-    super.safeBatchTransferFrom(from, to, ids, amounts, data);
-  }
-
-  function _operatorFilteringEnabled() internal view override returns (bool) {
-    return options.royaltyEnforcementEnabled;
   }
 
   //ERC2981 ROYALTY

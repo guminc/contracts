@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ArchetypeLogic v0.5.1 - ERC1155
+// ArchetypeLogic v0.5.2 - ERC1155
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -83,8 +83,6 @@ struct Options {
   bool affiliateFeeLocked;
   bool discountsLocked;
   bool ownerAltPayoutLocked;
-  bool royaltyEnforcementEnabled;
-  bool royaltyEnforcementLocked;
   bool provenanceHashLocked;
 }
 
