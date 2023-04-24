@@ -10,7 +10,6 @@ import "@nomiclabs/hardhat-truffle5";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 require("hardhat-log-remover");
-require("hardhat-log-remover");
 require("hardhat-contract-sizer");
 
 dotenv.config();

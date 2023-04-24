@@ -966,6 +966,8 @@ describe("Factory", function () {
     const nftMint = Archetype.attach(newCollectionAddressMint);
 
     await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 0, 5000);
+    // here
+
     await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
