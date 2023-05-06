@@ -123,6 +123,18 @@ contract Archetype is
     mintTo(auth, quantity, msg.sender, tokenId, affiliate, signature);
   }
 
+  function mintTokens(
+    Auth[] calldata auth,
+    uint256[] calldata quantity,
+    uint256[] calldata tokenId,
+    address affiliate,
+    bytes calldata signature
+  ) external payable {
+    for (uint256 i = 0; i < auth.length; i++) {
+      mintTo(auth[i], quantity[i], msg.sender, tokenId[i], affiliate, signature);
+    }
+  }
+
   // batch mint only supported on non random and non booster lists
   function batchMintTo(
     Auth calldata auth,
