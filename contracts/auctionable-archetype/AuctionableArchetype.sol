@@ -22,13 +22,15 @@ import "../ERC721A__OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
+import "../../lib/ArchetypeAuction/contracts/IExternallyMintable.sol";
 
 contract AuctionableArchetype is
   ERC721A__Initializable,
   ERC721AUpgradeable,
   OperatorFilterer,
   ERC721A__OwnableUpgradeable,
-  ERC2981Upgradeable
+  ERC2981Upgradeable,
+  IExternallyMintable
 {
   //
   // VARIABLES
@@ -68,7 +70,7 @@ contract AuctionableArchetype is
   //
   // PUBLIC
   //
-  function mint() external payable onlyAuctionHouse returns (uint256) {
+  function mint() external override onlyAuctionHouse returns (uint256) {
     if (options.mintLocked) revert MintEnded();
     _mint(msg.sender, 1);
     return _totalMinted();
@@ -169,13 +171,17 @@ contract AuctionableArchetype is
 
     options.ownerAltPayoutLocked = true;
   }
-
-  function setAuctionHouse(address auctionHouse) external onlyOwner {
+    
+  function setMinter(address minter) external override onlyOwner {
     if (options.auctionHouseLocked) {
       revert LockedForever();
     }
 
-    config.auctionHouse = auctionHouse;
+    config.auctionHouse = minter;
+  }
+
+  function isMinter(address minter) external view override returns (bool) {
+    return minter == config.auctionHouse;
   }
 
   /// @notice the password is "forever"
