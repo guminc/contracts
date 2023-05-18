@@ -33,10 +33,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20Upgradeable__factory>;
     getContractFactory(
-      name: "ERC721Upgradeable",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC721Upgradeable__factory>;
-    getContractFactory(
       name: "IERC721MetadataUpgradeable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC721MetadataUpgradeable__factory>;
@@ -77,6 +73,30 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20__factory>;
     getContractFactory(
+      name: "ERC721",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC721__factory>;
+    getContractFactory(
+      name: "IERC721Metadata",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC721Metadata__factory>;
+    getContractFactory(
+      name: "IERC721",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC721__factory>;
+    getContractFactory(
+      name: "IERC721Receiver",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC721Receiver__factory>;
+    getContractFactory(
+      name: "ERC165",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC165__factory>;
+    getContractFactory(
+      name: "IERC165",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC165__factory>;
+    getContractFactory(
       name: "Archetype",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Archetype__factory>;
@@ -88,6 +108,42 @@ declare module "hardhat/types/runtime" {
       name: "ArchetypeLogic",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ArchetypeLogic__factory>;
+    getContractFactory(
+      name: "AuctionableArchetype",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.AuctionableArchetype__factory>;
+    getContractFactory(
+      name: "RewardedAuction",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.RewardedAuction__factory>;
+    getContractFactory(
+      name: "IAuctionedNFT",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IAuctionedNFT__factory>;
+    getContractFactory(
+      name: "ScatterAuction",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ScatterAuction__factory>;
+    getContractFactory(
+      name: "AuctionableArchetype",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.AuctionableArchetype__factory>;
+    getContractFactory(
+      name: "AuctionRewardToken",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.AuctionRewardToken__factory>;
+    getContractFactory(
+      name: "IRewardToken",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IRewardToken__factory>;
+    getContractFactory(
+      name: "MinimalAuctionableNFT",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.MinimalAuctionableNFT__factory>;
+    getContractFactory(
+      name: "WeightedRewardedAuction",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.WeightedRewardedAuction__factory>;
     getContractFactory(
       name: "ContextUpgradeable",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -157,9 +213,21 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC721AUpgradeable__factory>;
     getContractFactory(
+      name: "ECDSA",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ECDSA__factory>;
+    getContractFactory(
       name: "LibString",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.LibString__factory>;
+    getContractFactory(
+      name: "SafeCastLib",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.SafeCastLib__factory>;
+    getContractFactory(
+      name: "SafeTransferLib",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.SafeTransferLib__factory>;
 
     getContractAt(
       name: "OwnableUpgradeable",
@@ -186,11 +254,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC20Upgradeable>;
-    getContractAt(
-      name: "ERC721Upgradeable",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ERC721Upgradeable>;
     getContractAt(
       name: "IERC721MetadataUpgradeable",
       address: string,
@@ -242,6 +305,36 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IERC20>;
     getContractAt(
+      name: "ERC721",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC721>;
+    getContractAt(
+      name: "IERC721Metadata",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC721Metadata>;
+    getContractAt(
+      name: "IERC721",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC721>;
+    getContractAt(
+      name: "IERC721Receiver",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC721Receiver>;
+    getContractAt(
+      name: "ERC165",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC165>;
+    getContractAt(
+      name: "IERC165",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC165>;
+    getContractAt(
       name: "Archetype",
       address: string,
       signer?: ethers.Signer
@@ -256,6 +349,51 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ArchetypeLogic>;
+    getContractAt(
+      name: "AuctionableArchetype",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.AuctionableArchetype>;
+    getContractAt(
+      name: "RewardedAuction",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.RewardedAuction>;
+    getContractAt(
+      name: "IAuctionedNFT",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IAuctionedNFT>;
+    getContractAt(
+      name: "ScatterAuction",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ScatterAuction>;
+    getContractAt(
+      name: "AuctionableArchetype",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.AuctionableArchetype>;
+    getContractAt(
+      name: "AuctionRewardToken",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.AuctionRewardToken>;
+    getContractAt(
+      name: "IRewardToken",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IRewardToken>;
+    getContractAt(
+      name: "MinimalAuctionableNFT",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.MinimalAuctionableNFT>;
+    getContractAt(
+      name: "WeightedRewardedAuction",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.WeightedRewardedAuction>;
     getContractAt(
       name: "ContextUpgradeable",
       address: string,
@@ -342,10 +480,25 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IERC721AUpgradeable>;
     getContractAt(
+      name: "ECDSA",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ECDSA>;
+    getContractAt(
       name: "LibString",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.LibString>;
+    getContractAt(
+      name: "SafeCastLib",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.SafeCastLib>;
+    getContractAt(
+      name: "SafeTransferLib",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.SafeTransferLib>;
 
     // default types
     getContractFactory(

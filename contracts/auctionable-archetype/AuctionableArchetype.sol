@@ -18,7 +18,7 @@ pragma solidity ^0.8.4;
 import "./AuctionableArchetypeState.sol";
 import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
 import "erc721a-upgradeable/contracts/ERC721A__Initializable.sol";
-import "../../ERC721A__OwnableUpgradeable.sol";
+import "../ERC721A__OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
@@ -36,13 +36,13 @@ contract AuctionableArchetype is
   Config public config;
   Options public options;
 
-	string public provenance;
-	uint256 public nextTokenId;
+  string public provenance;
+  uint256 public nextTokenId;
 
   //
   // METHODS
   //
-	// TODO check initialize
+  // TODO check initialize
   function initialize(
     string memory name,
     string memory symbol,
@@ -53,7 +53,7 @@ contract AuctionableArchetype is
     // check max bps not reached and min platform fee.
     if (config_.platformFee > MAXBPS || config_.platformFee < 500) {
       revert InvalidConfig();
-		}
+    }
 
     config = config_;
     __Ownable_init();
@@ -68,37 +68,37 @@ contract AuctionableArchetype is
   //
   // PUBLIC
   //
-	function mint() external payable onlyAuctionHouse returns (uint256) {
-		if (options.mintLocked) revert MintEnded();
-		_mint(msg.sender, 1);
-		return _totalMinted();
-	}
+  function mint() external payable onlyAuctionHouse returns (uint256) {
+    if (options.mintLocked) revert MintEnded();
+    _mint(msg.sender, 1);
+    return _totalMinted();
+  }
 
   function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
     if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
     return
-      bytes(config.baseUri).length != 0
-        ? string(abi.encodePacked(config.baseUri, LibString.toString(tokenId)))
-        : "";
+    bytes(config.baseUri).length != 0
+      ? string(abi.encodePacked(config.baseUri, LibString.toString(tokenId)))
+      : "";
   }
 
-	function withdraw() external {
-		uint256 platformFee = address(this).balance * config.platformFee / 10000;
+  function withdraw() external {
+    uint256 platformFee = address(this).balance * config.platformFee / 10000;
 
-		if (config.superAffiliatePayout != address(0)) {
-			payable(PLATFORM).transfer(platformFee / 2);
-			payable(config.superAffiliatePayout).transfer(platformFee / 2);
-		} else {
-			payable(PLATFORM).transfer(platformFee);
-		}
+    if (config.superAffiliatePayout != address(0)) {
+      payable(PLATFORM).transfer(platformFee / 2);
+      payable(config.superAffiliatePayout).transfer(platformFee / 2);
+    } else {
+      payable(PLATFORM).transfer(platformFee);
+    }
 
     if (config.ownerAltPayout != address(0)) {
-			payable(config.ownerAltPayout).transfer(address(this).balance);
-		} else {
-			payable(owner()).transfer(address(this).balance);
-		}
-	}
+      payable(config.ownerAltPayout).transfer(address(this).balance);
+    } else {
+      payable(owner()).transfer(address(this).balance);
+    }
+  }
 
   function platform() external pure returns (address) {
     return PLATFORM;
@@ -188,13 +188,13 @@ contract AuctionableArchetype is
   }
 
   /// @notice the password is "forever"
-	function lockMint(string memory password) external onlyOwner {
+  function lockMint(string memory password) external onlyOwner {
     if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
       revert WrongPassword();
     }
 
-		options.mintLocked = true;
-	}
+    options.mintLocked = true;
+  }
 
   //
   // PLATFORM ONLY
@@ -217,12 +217,12 @@ contract AuctionableArchetype is
     _;
   }
 
-	modifier onlyAuctionHouse() {
-		if (msg.sender != config.auctionHouse) {
-			revert NotAuctionHouse();
-		}
-		_;
-	}
+  modifier onlyAuctionHouse() {
+    if (msg.sender != config.auctionHouse) {
+      revert NotAuctionHouse();
+    }
+    _;
+  }
 
   // OPTIONAL ROYALTY ENFORCEMENT WITH OPENSEA
   function enableRoyaltyEnforcement() external onlyOwner {
@@ -301,7 +301,7 @@ contract AuctionableArchetype is
     view
     virtual
     override(ERC721AUpgradeable, ERC2981Upgradeable)
-    returns (bool)
+  returns (bool)
   {
     // Supports the following `interfaceId`s:
     // - IERC165: 0x01ffc9a7
@@ -309,7 +309,7 @@ contract AuctionableArchetype is
     // - IERC721Metadata: 0x5b5e139f
     // - IERC2981: 0x2a55205a
     return
-      ERC721AUpgradeable.supportsInterface(interfaceId) ||
+    ERC721AUpgradeable.supportsInterface(interfaceId) ||
       ERC2981Upgradeable.supportsInterface(interfaceId);
   }
 
@@ -318,5 +318,5 @@ contract AuctionableArchetype is
     _setDefaultRoyalty(receiver, feeNumerator);
   }
 
-	receive() external payable {}
+  receive() external payable {}
 }
