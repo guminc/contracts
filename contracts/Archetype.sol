@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.5.2 - ERC1155
+// Archetype v0.5.3 - ERC1155
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -121,18 +121,6 @@ contract Archetype is
     bytes calldata signature
   ) external payable {
     mintTo(auth, quantity, msg.sender, tokenId, affiliate, signature);
-  }
-
-  function mintTokens(
-    Auth[] calldata auth,
-    uint256[] calldata quantity,
-    uint256[] calldata tokenId,
-    address affiliate,
-    bytes calldata signature
-  ) external payable {
-    for (uint256 i = 0; i < auth.length; i++) {
-      mintTo(auth[i], quantity[i], msg.sender, tokenId[i], affiliate, signature);
-    }
   }
 
   // batch mint only supported on non random and non booster lists
