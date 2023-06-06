@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.5.1
+// Archetype v0.5.3
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -212,9 +212,10 @@ contract Archetype is
     ArchetypeLogic.validateBurnToMint(config, burnConfig, tokenIds, curSupply, _minted);
 
     for (uint256 i = 0; i < tokenIds.length; i++) {
+      address burnAddress = burnConfig.burnAddress != address(0)? burnConfig.burnAddress: address(0x000000000000000000000000000000000000dEaD);
       burnConfig.archetype.transferFrom(
         msg.sender,
-        address(0x000000000000000000000000000000000000dEaD),
+        burnAddress,
         tokenIds[i]
       );
     }
@@ -461,6 +462,7 @@ contract Archetype is
 
   function enableBurnToMint(
     address archetype,
+    address burnAddress,
     bool reversed,
     uint16 ratio,
     uint64 start,
@@ -468,6 +470,7 @@ contract Archetype is
   ) external onlyOwner {
     burnConfig = BurnConfig({
       archetype: IERC721AUpgradeable(archetype),
+      burnAddress: burnAddress,
       enabled: true,
       reversed: reversed,
       ratio: ratio,
@@ -478,10 +481,11 @@ contract Archetype is
 
   function disableBurnToMint() external onlyOwner {
     burnConfig = BurnConfig({
+      archetype: IERC721AUpgradeable(address(0)),
+      burnAddress: address(0),
       enabled: false,
       reversed: false,
       ratio: 0,
-      archetype: IERC721AUpgradeable(address(0)),
       start: 0,
       limit: 0
     });

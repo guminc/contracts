@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ArchetypeLogic v0.5.1
+// ArchetypeLogic v0.5.3
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -116,6 +116,7 @@ struct OwnerBalance {
 
 struct BurnConfig {
   IERC721AUpgradeable archetype;
+  address burnAddress;
   bool enabled;
   bool reversed; // side of the ratio (false=burn {ratio} get 1, true=burn 1 get {ratio})
   uint16 ratio;
