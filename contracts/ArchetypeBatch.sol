@@ -18,22 +18,17 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
-
 contract ArchetypeBatch is Ownable {
 
-    event TransactionExecuted(address indexed target, uint256 value, bytes data, bool success);
-
-    /**
-     * @notice Execute multiple calls in a single transaction
-     * @param targets The addresses of the contracts
-     * @param values The value to send to the contracts
-     * @param datas The data to send to the contracts
-     */
+    // Execute multiple calls in a single transaction
+    // targets: The addresses of the contracts
+    // values: The value to send to the contracts
+    // datas The data to send to the contracts
     function executeBatch(
         address[] calldata targets,
         uint256[] calldata values,
         bytes[] calldata datas
-    ) external {
+    ) external payable {
         require(
             targets.length == values.length && targets.length == datas.length,
             "ArchetypeBatch: The array lengths must be identical"
@@ -46,8 +41,6 @@ contract ArchetypeBatch is Ownable {
                 // Decode the return data as a string and revert with it
                 revert(string(returnData));
             }
-
-            emit TransactionExecuted(targets[i], values[i], datas[i], success);
         }
     }
 

@@ -5,6 +5,7 @@ import {
   Archetype__factory,
   Archetype as IArchetype,
   ArchetypeLogic__factory,
+  ArchetypeBatch__factory,
   Factory__factory,
 } from "../typechain";
 import Invitelist from "../lib/invitelist";
@@ -28,12 +29,16 @@ const CID_ZERO = "bafkreiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 const ZERO = "0x0000000000000000000000000000000000000000";
 const BURN = "0x000000000000000000000000000000000000dEaD";
+const HASHONE = "0x0000000000000000000000000000000000000000000000000000000000000001";
+const HASH256 = "0x00000000000000000000000000000000000000000000000000000000000000ff";
 
 describe("Factory", function () {
   let Archetype: Archetype__factory;
   let archetype: IArchetype;
   let ArchetypeLogic: ArchetypeLogic__factory;
   let archetypeLogic: Contract;
+  let ArchetypeBatch: ArchetypeBatch__factory;
+  let archetypeBatch: Contract;
   let Factory: Factory__factory;
   let factory: Contract;
 
@@ -59,6 +64,9 @@ describe("Factory", function () {
       },
     };
 
+    ArchetypeBatch = await ethers.getContractFactory("ArchetypeBatch");
+    archetypeBatch = await ArchetypeBatch.deploy();
+
     ArchetypeLogic = await ethers.getContractFactory("ArchetypeLogic");
     archetypeLogic = await ArchetypeLogic.deploy();
     Archetype = await ethers.getContractFactory("Archetype", {
@@ -68,15 +76,12 @@ describe("Factory", function () {
     });
 
     archetype = await Archetype.deploy();
-
     await archetype.deployed();
 
     Factory = await ethers.getContractFactory("Factory");
-
     factory = await upgrades.deployProxy(Factory, [archetype.address], {
       initializer: "initialize",
     });
-
     await factory.deployed();
 
     console.log({ factoryAddress: factory.address, archetypeAddress: archetype.address });
@@ -965,7 +970,7 @@ describe("Factory", function () {
     const newCollectionAddressMint = resultMint.events[0].address || "";
     const nftMint = Archetype.attach(newCollectionAddressMint);
 
-    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 0, 5000);
+    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, BURN, false, 2, 0, 5000);
     await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
@@ -1012,7 +1017,7 @@ describe("Factory", function () {
     );
 
     // re-enable with time set in future
-    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 10000000000, 5000);
+    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, BURN, false, 2, 10000000000, 5000);
 
     // burn will fail as burn is time is set in future
     await expect(nftBurn.connect(minter).burnToMint([11, 12])).to.be.revertedWith(
@@ -1020,13 +1025,13 @@ describe("Factory", function () {
     );
 
     // re-enable again with valid config
-    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 0, 5000);
+    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, BURN, false, 2, 0, 5000);
 
     // burn 4 tokens and collect 2 tokens in new collection
     await nftBurn.connect(minter).burnToMint([11, 12]);
 
     // re-enable again with valid reversed config
-    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, true, 4, 0, 5000);
+    await nftBurn.connect(owner).enableBurnToMint(nftMint.address,BURN, true, 4, 0, 5000);
 
     // burn 1 tokens and collect 4 tokens in new collection
     await nftBurn.connect(minter).burnToMint([7]);
@@ -1100,7 +1105,7 @@ describe("Factory", function () {
     const newCollectionAddressMint = resultMint.events[0].address || "";
     const nftMint = Archetype.attach(newCollectionAddressMint);
 
-    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 0, 5000);
+    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, ZERO, false, 2, 0, 5000);
     await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
@@ -1631,9 +1636,6 @@ describe("Factory", function () {
     const minter = accountOne;
     const minter2 = accountTwo;
 
-    const HASHONE = "0x0000000000000000000000000000000000000000000000000000000000000001";
-    const HASH256 = "0x00000000000000000000000000000000000000000000000000000000000000ff";
-
     const newCollectionMint = await factory.createCollection(
       owner.address,
       DEFAULT_NAME,
@@ -1745,6 +1747,90 @@ describe("Factory", function () {
     await expect(await nftMint.balanceOf(minter2.address)).to.be.equal(24);
     await expect(await nftMint.totalSupply()).to.be.equal(36);
   });
+
+  it("test batchTransactions method logic", async function () {
+    const [accountZero, accountOne, accountTwo, accountThree] = await ethers.getSigners();
+  
+    const owner = accountZero;
+    const minter = accountOne;
+    const minter2 = accountTwo;
+    const minter3 = accountThree;
+  
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const nftMint = Archetype.attach(newCollectionAddressMint);
+  
+    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      end: 0,
+      limit: 100,
+      maxSupply: 100,
+      unitSize: 0,
+      tokenAddress: ZERO,
+    });
+
+    await nftMint.connect(owner).setInvite(HASHONE, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("0.1"),
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      end: 0,
+      limit: 100,
+      maxSupply: 100,
+      unitSize: 0,
+      tokenAddress: ZERO,
+    });
+
+    const targets = [nftMint.address, nftMint.address, nftMint.address, nftMint.address, nftMint.address];
+    const values = [0, 0, 0, ethers.utils.parseEther("0.2"), ethers.utils.parseEther("0.3")];
+    const datas = [
+      nftMint.interface.encodeFunctionData("mint", [{ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x"]),
+      nftMint.interface.encodeFunctionData("mintTo", [{ key: ethers.constants.HashZero, proof: [] }, 2, minter.address, ZERO, "0x"]),
+      nftMint.interface.encodeFunctionData("mintTo", [{ key: ethers.constants.HashZero, proof: [] }, 5, minter2.address, ZERO, "0x"]),
+      nftMint.interface.encodeFunctionData("mintTo", [{ key: HASHONE, proof: [] }, 2, minter.address, ZERO, "0x"]),
+      nftMint.interface.encodeFunctionData("mintTo", [{ key: HASHONE, proof: [] }, 3, minter2.address, ZERO, "0x"]),
+    ];
+  
+    // Execute batch transactions
+    await archetypeBatch.connect(minter).executeBatch(targets, values, datas, {
+      value: ethers.utils.parseEther("0.6"),
+    });
+  
+    const balanceOfContract = await nftMint.balanceOf(archetypeBatch.address);
+    const balanceOfMinter = await nftMint.balanceOf(minter.address);
+    const balanceOfMinter2 = await nftMint.balanceOf(minter2.address);
+    const totalSupply = await nftMint.totalSupply();
+  
+    expect(balanceOfContract).to.be.equal(1);
+    expect(balanceOfMinter).to.be.equal(4);
+    expect(balanceOfMinter2).to.be.equal(8);
+    expect(totalSupply).to.be.equal(13);
+
+    // mint will make token owner msg.sender, which in this case is the ArchetypeBatch contract
+    // Use rescueErc721 method to save token
+    const asset = nftMint.address
+    const ids = [1];
+    const recipient = minter3.address
+    await archetypeBatch.connect(owner).rescueERC721(asset, ids, recipient);
+
+    const balanceOfMinter3 = await nftMint.balanceOf(minter3.address);
+    expect(balanceOfMinter3).to.be.equal(1);
+
+    // batchTransaction tx sent 0.1 extra eth
+    // Use rescueETH method to save eth
+    const recipient_ = minter2.address;
+    let ethbalance = await ethers.provider.getBalance(minter2.address);
+    await archetypeBatch.connect(owner).rescueETH(recipient_);
+    let diff = (await ethers.provider.getBalance(minter2.address)).toBigInt() - ethbalance.toBigInt();
+
+    expect(Number(diff)).to.be.equal(Number(ethers.utils.parseEther("0.1")));
+  });
+  
 });
 
 // todo: add test to ensure affiliate signer can't be zero address
