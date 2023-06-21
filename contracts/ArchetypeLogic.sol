@@ -144,19 +144,11 @@ library ArchetypeLogic {
   ) public view returns (uint256) {
     uint256 price = invite.price;
     if (invite.interval != 0) {
-      uint256 diff = (((block.timestamp - invite.start) / invite.interval) * invite.delta);
+      uint256 diff = ((block.timestamp - invite.start) / invite.interval) * invite.delta;
       if (price > invite.reservePrice) {
-        if (diff > price - invite.reservePrice) {
-          price = invite.reservePrice;
-        } else {
-          price = price - diff;
-        }
+        price = diff > price - invite.reservePrice ? invite.reservePrice : price - diff;
       } else if (price < invite.reservePrice) {
-        if (diff > invite.reservePrice - price) {
-          price = invite.reservePrice;
-        } else {
-          price = price + diff;
-        }
+        price = diff > invite.reservePrice - price ? invite.reservePrice : price + diff;
       }
     }
 
@@ -166,9 +158,14 @@ library ArchetypeLogic {
       cost = cost - ((cost * discounts.affiliateDiscount) / 10000);
     }
 
-    for (uint256 i = 0; i < discounts.mintTiers.length; i++) {
-      if (numTokens >= discounts.mintTiers[i].numMints) {
-        return cost = cost - ((cost * discounts.mintTiers[i].mintDiscount) / 10000);
+    uint256 numMints = discounts.mintTiers.length;
+    for (uint256 i; i < numMints; ) {
+      uint256 tierNumMints = discounts.mintTiers[i].numMints;
+      if (numTokens >= tierNumMints) {
+        return cost - ((cost * discounts.mintTiers[i].mintDiscount) / 10000);
+      }
+      unchecked {
+        ++i;
       }
     }
     return cost;
@@ -274,9 +271,12 @@ library ArchetypeLogic {
     }
 
     // check if msg.sender owns tokens and has correct approvals
-    for (uint256 i = 0; i < tokenIds.length; i++) {
+    for (uint256 i = 0; i < tokenIds.length; ) {
       if (burnConfig.archetype.ownerOf(tokenIds[i]) != msg.sender) {
         revert NotTokenOwner();
+      }
+      unchecked {
+        ++i;
       }
     }
 
@@ -359,7 +359,7 @@ library ArchetypeLogic {
     address owner,
     address[] calldata tokens
   ) public {
-    for (uint256 i = 0; i < tokens.length; i++) {
+    for (uint256 i = 0; i < tokens.length; ) {
       address tokenAddress = tokens[i];
       uint128 wad = 0;
 
@@ -402,6 +402,9 @@ library ArchetypeLogic {
         }
       }
       emit Withdrawal(msg.sender, tokenAddress, wad);
+      unchecked {
+        ++i;
+      }
     }
   }
 
