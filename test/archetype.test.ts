@@ -235,7 +235,7 @@ describe("Factory", function () {
 
     const nft = Archetype.attach(newCollectionAddress);
 
-    await expect(nft.lockURI("forever")).to.be.revertedWith("Ownable: caller is not the owner");
+    await expect(nft.lockURI("forever")).to.be.revertedWith("NotOwner");
   });
 
   it("should mint if public sale is set", async function () {
