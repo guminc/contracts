@@ -1846,16 +1846,6 @@ describe("Factory", function () {
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
     const nftMint = Archetype.attach(newCollectionAddressMint);
-  
-    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
-      price: 0,
-      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-      end: 0,
-      limit: 100,
-      maxSupply: 100,
-      unitSize: 0,
-      tokenAddress: ZERO,
-    });
 
     const addresses = [minter.address];
     const invitelist = new Invitelist(addresses);
