@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ArchetypeLogic v0.5.2 - ERC1155
+// ArchetypeLogic v0.6.0 - ERC1155
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -38,6 +38,7 @@ error MaxBatchSizeExceeded();
 error BurnToMintDisabled();
 error NotTokenOwner();
 error NotPlatform();
+error NotOwner();
 error NotApprovedToTransfer();
 error InvalidAmountOfTokens();
 error WrongPassword();
@@ -127,6 +128,7 @@ struct ValidationArgs {
 
 address constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
 // address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
+address constant BATCH = 0x5FbDB2315678afecb367f032d93F642f64180aa3; // TEST
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 
 library ArchetypeLogic {
@@ -186,9 +188,10 @@ library ArchetypeLogic {
     bytes calldata signature,
     ValidationArgs memory args
   ) public view {
+    address msgSender = _msgSender();
     if (args.affiliate != address(0)) {
       if (
-        args.affiliate == PLATFORM || args.affiliate == args.owner || args.affiliate == msg.sender
+        args.affiliate == PLATFORM || args.affiliate == args.owner || args.affiliate == msgSender
       ) {
         revert InvalidReferral();
       }
@@ -199,7 +202,7 @@ library ArchetypeLogic {
       revert MintingPaused();
     }
 
-    if (!verify(auth, i.tokenAddress, msg.sender)) {
+    if (!verify(auth, i.tokenAddress, msgSender)) {
       revert WalletUnauthorizedToMint();
     }
 
@@ -216,19 +219,21 @@ library ArchetypeLogic {
       totalQuantity += args.quantities[j];
     }
 
-    uint256 totalAfterMint;
-    if (i.limit < i.maxSupply) {
-      totalAfterMint = minted[msg.sender][auth.key] + totalQuantity;
+    {
+      uint256 totalAfterMint;
+      if (i.limit < i.maxSupply) {
+        totalAfterMint = minted[msgSender][auth.key] + totalQuantity;
 
-      if (totalAfterMint > i.limit) {
-        revert NumberOfMintsExceeded();
+        if (totalAfterMint > i.limit) {
+          revert NumberOfMintsExceeded();
+        }
       }
-    }
 
-    if (i.maxSupply < 2**32 - 1) {
-      totalAfterMint = listSupply[auth.key] + totalQuantity;
-      if (totalAfterMint > i.maxSupply) {
-        revert ListMaxSupplyExceeded();
+      if (i.maxSupply < 2**32 - 1) {
+        totalAfterMint = listSupply[auth.key] + totalQuantity;
+        if (totalAfterMint > i.maxSupply) {
+          revert ListMaxSupplyExceeded();
+        }
       }
     }
 
@@ -267,11 +272,11 @@ library ArchetypeLogic {
 
     if (i.tokenAddress != address(0)) {
       IERC20Upgradeable erc20Token = IERC20Upgradeable(i.tokenAddress);
-      if (erc20Token.allowance(msg.sender, address(this)) < cost) {
+      if (erc20Token.allowance(msgSender, address(this)) < cost) {
         revert NotApprovedToTransfer();
       }
 
-      if (erc20Token.balanceOf(msg.sender) < cost) {
+      if (erc20Token.balanceOf(msgSender) < cost) {
         revert Erc20BalanceTooLow();
       }
 
@@ -326,7 +331,7 @@ library ArchetypeLogic {
 
     if (tokenAddress != address(0)) {
       IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
-      erc20Token.transferFrom(msg.sender, address(this), value);
+      erc20Token.transferFrom(_msgSender(), address(this), value);
     }
   }
 
@@ -337,13 +342,14 @@ library ArchetypeLogic {
     address owner,
     address[] calldata tokens
   ) public {
+    address msgSender = _msgSender();
     for (uint256 i = 0; i < tokens.length; i++) {
       address tokenAddress = tokens[i];
       uint128 wad = 0;
 
-      if (msg.sender == owner || msg.sender == config.ownerAltPayout || msg.sender == PLATFORM) {
+      if (msgSender == owner || msgSender == config.ownerAltPayout || msgSender == PLATFORM) {
         OwnerBalance storage balance = _ownerBalance[tokenAddress];
-        if (msg.sender == owner || msg.sender == config.ownerAltPayout) {
+        if (msgSender == owner || msgSender == config.ownerAltPayout) {
           wad = balance.owner;
           balance.owner = 0;
         } else {
@@ -351,8 +357,8 @@ library ArchetypeLogic {
           balance.platform = 0;
         }
       } else {
-        wad = _affiliateBalance[msg.sender][tokenAddress];
-        _affiliateBalance[msg.sender][tokenAddress] = 0;
+        wad = _affiliateBalance[msgSender][tokenAddress];
+        _affiliateBalance[msgSender][tokenAddress] = 0;
       }
 
       if (wad == 0) {
@@ -362,10 +368,10 @@ library ArchetypeLogic {
       if (tokenAddress == address(0)) {
         bool success = false;
         // send to ownerAltPayout if set and owner is withdrawing
-        if (msg.sender == owner && config.ownerAltPayout != address(0)) {
+        if (msgSender == owner && config.ownerAltPayout != address(0)) {
           (success, ) = payable(config.ownerAltPayout).call{ value: wad }("");
         } else {
-          (success, ) = msg.sender.call{ value: wad }("");
+          (success, ) = msgSender.call{ value: wad }("");
         }
         if (!success) {
           revert TransferFailed();
@@ -373,13 +379,13 @@ library ArchetypeLogic {
       } else {
         IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
 
-        if (msg.sender == owner && config.ownerAltPayout != address(0)) {
+        if (msgSender == owner && config.ownerAltPayout != address(0)) {
           erc20Token.transfer(config.ownerAltPayout, wad);
         } else {
-          erc20Token.transfer(msg.sender, wad);
+          erc20Token.transfer(msgSender, wad);
         }
       }
-      emit Withdrawal(msg.sender, tokenAddress, wad);
+      emit Withdrawal(msgSender, tokenAddress, wad);
     }
   }
 
@@ -466,5 +472,9 @@ library ArchetypeLogic {
   function random() public view returns (uint256) {
     uint256 randomHash = uint256(keccak256(abi.encodePacked(block.difficulty, block.timestamp)));
     return randomHash;
+  }
+
+  function _msgSender() internal view returns (address) {
+    return msg.sender == BATCH? tx.origin: msg.sender;
   }
 }
