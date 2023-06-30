@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ArchetypeLogic v0.5.3
+// ArchetypeLogic v0.6.0
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -127,7 +127,7 @@ struct BurnConfig {
 
 address constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
 // address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
-address constant BATCH = 0x86B82972282Dd22348374bC63fd21620F7ED847B; // Change to actual ArchetypeBatch contract
+address constant BATCH = 0x5FbDB2315678afecb367f032d93F642f64180aa3; // TEST
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 
 library ArchetypeLogic {
