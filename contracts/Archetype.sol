@@ -471,7 +471,7 @@ contract Archetype is
     bytes32 _key,
     bytes32 _cid,
     Invite calldata _invite
-  ) external onlyOwner {
+  ) external _onlyOwner {
     invites[_key] = DutchInvite({
       price: _invite.price,
       reservePrice: _invite.price,
@@ -523,6 +523,12 @@ contract Archetype is
     return msg.sender == BATCH? tx.origin: msg.sender;
   }
 
+  function _isOwner() internal view {
+    if (_msgSender() != owner()) {
+      revert NotOwner();
+    }  
+  }
+
   modifier _onlyPlatform() {
     if (_msgSender() != PLATFORM) {
       revert NotPlatform();
@@ -531,9 +537,7 @@ contract Archetype is
   }
 
   modifier _onlyOwner() {
-    if (_msgSender() != owner()) {
-      revert NotOwner();
-    }
+    _isOwner();
     _;
   }
 
@@ -555,7 +559,7 @@ contract Archetype is
       ERC2981Upgradeable.supportsInterface(interfaceId);
   }
 
-  function setDefaultRoyalty(address receiver, uint16 feeNumerator) public onlyOwner {
+  function setDefaultRoyalty(address receiver, uint16 feeNumerator) public _onlyOwner {
     config.defaultRoyalty = feeNumerator;
     _setDefaultRoyalty(receiver, feeNumerator);
   }
