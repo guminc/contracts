@@ -2218,6 +2218,50 @@ describe("Factory", function () {
     expect(balanceOfMinter).to.be.equal(10);
     expect(totalSupply).to.be.equal(10);
   });
+
+  it("test batching owner method", async function () {
+    const [accountZero, accountOne, accountTwo, accountThree] = await ethers.getSigners();
+  
+    const owner = accountZero;
+    const minter = accountOne;
+  
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const nftMint = Archetype.attach(newCollectionAddressMint);
+
+    const targets = [nftMint.address, nftMint.address, nftMint.address];
+    const values = [0, 0, 0];
+    const datas = [
+      nftMint.interface.encodeFunctionData("setInvite", [ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+        price: ethers.utils.parseEther("0.0"),
+        start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+        end: 0,
+        limit: 100,
+        maxSupply: 100,
+        unitSize: 0,
+        tokenAddress: ZERO,
+        randomize: false,
+        tokenIds: []
+      }]),
+      nftMint.interface.encodeFunctionData("setMaxSupply", [[1000], "forever"]),
+      nftMint.interface.encodeFunctionData("setBaseURI", ["test"]),
+    ];
+
+    // Execute batch transactions
+    await archetypeBatch.connect(owner).executeBatch(targets, values, datas, {
+      value: ethers.utils.parseEther("0.0"),
+    });
+
+    await expect(await nftMint.connect(owner).maxSupply()).to.deep.equal([1000]);
+    await expect((await nftMint.connect(owner).config()).baseUri).to.be.equal("test");
+
+  });
 });
 
 // todo: add test to ensure affiliate signer can't be zero address
