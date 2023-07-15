@@ -291,6 +291,15 @@ contract Archetype is
     return PLATFORM;
   }
 
+  function computePrice(
+    bytes32 key,
+    uint256 quantity,
+    bool affiliateUsed
+  ) external view returns (uint256) {
+    DutchInvite storage i = invites[key];
+    return ArchetypeLogic.computePrice(i, config.discounts, quantity, affiliateUsed);
+  }
+
   //
   // OWNER ONLY
   //
