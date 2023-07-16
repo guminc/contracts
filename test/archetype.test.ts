@@ -1826,11 +1826,11 @@ describe("Factory", function () {
     await expect(await nftMint.balanceOf(minter2.address, 20)).to.be.equal(4);
   });
 
-  it("test erc1155 large max supply of 200 tokens", async function () {
+  it("test erc1155 large token pool of 10000 tokens", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();
     const default_config = {
       ...DEFAULT_CONFIG,
-      maxSupply: new Array(500).fill(10),
+      tokenPool: generateTokenPool(5000),
       maxBatchSize: 1000,
     };
 
@@ -1847,23 +1847,13 @@ describe("Factory", function () {
     const newCollectionAddressMint = resultMint.events[0].address || "";
     const nftMint = Archetype.attach(newCollectionAddressMint);
 
-    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
-      price: 0,
-      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-      end: 0,
-      limit: 2 ** 32 - 1,
-      maxSupply: 2 ** 32 - 1,
-      unitSize: 0,
-      randomize: false,
-      tokenIds: [],
-      tokenAddress: ZERO,
-    });
+    // Due to gas limit of 30 million in tx, need to split in two txs
+    await nftMint.connect(owner).setTokenPool(generateTokenPool(5000), "forever");
+
+    const tokenPool = await nftMint.connect(owner).tokenPool();
+    await expect(tokenPool.length).to.be.equal(10000);
 
     // mint 1
-    await nftMint
-      .connect(minter)
-      .mintToken({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", { value: 0 });
-
     await nftMint.connect(owner).setInvite(HASHONE, ipfsh.ctod(CID_ZERO), {
       price: 0,
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
@@ -1877,7 +1867,7 @@ describe("Factory", function () {
     // mint 1 random
     await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: 0 });
 
-    await expect(await nftMint.totalSupply()).to.be.equal(2);
+    await expect(await nftMint.totalSupply()).to.be.equal(1);
   });
 
   // it("test erc1155 test batch mint verification", async function () {
