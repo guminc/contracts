@@ -70,17 +70,17 @@ struct Config {
   address affiliateSigner;
   address ownerAltPayout; // optional alternative address for owner withdrawals.
   address superAffiliatePayout; // optional super affiliate address, will receive half of platform fee if set.
-  uint32[] maxSupply; // max supply for each mintable tokenId
-  uint32 maxBatchSize;
+  Discount discounts;
+  uint16[] tokenPool; // flattened address of all mintable tokens
+  uint16 maxBatchSize;
   uint16 affiliateFee; //BPS
   uint16 platformFee; //BPS
   uint16 defaultRoyalty; //BPS
-  Discount discounts;
 }
 
 struct Options {
   bool uriLocked;
-  bool maxSupplyLocked;
+  bool tokenPoolLocked;
   bool affiliateFeeLocked;
   bool discountsLocked;
   bool ownerAltPayoutLocked;
@@ -97,8 +97,7 @@ struct DutchInvite {
   uint32 maxSupply;
   uint32 interval;
   uint32 unitSize; // mint 1 get x
-  bool randomize; // true for random tokenId, false for user selected
-  uint32[] tokenIds; // token id mintable from this list
+  uint16[] tokenIds; // token id mintable from this list, TODO: implement/remove
   address tokenAddress;
 }
 
@@ -109,8 +108,7 @@ struct Invite {
   uint32 limit;
   uint32 maxSupply;
   uint32 unitSize; // mint 1 get x
-  bool randomize; // true for random tokenId, false for user selected
-  uint32[] tokenIds; // token ids mintable from this list
+  uint16[] tokenIds; // token ids mintable from this list, TODO: implement/remove
   address tokenAddress;
 }
 
@@ -122,8 +120,7 @@ struct OwnerBalance {
 struct ValidationArgs {
   address owner;
   address affiliate;
-  uint256[] quantities;
-  uint256[] tokenIds;
+  uint256 quantity;
 }
 
 address constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
@@ -184,7 +181,6 @@ library ArchetypeLogic {
     Auth calldata auth,
     mapping(address => mapping(bytes32 => uint256)) storage minted,
     mapping(bytes32 => uint256) storage listSupply,
-    uint256[] storage tokenSupply,
     bytes calldata signature,
     ValidationArgs memory args
   ) public view {
@@ -214,15 +210,10 @@ library ArchetypeLogic {
       revert MintEnded();
     }
 
-    uint256 totalQuantity = 0;
-    for (uint256 j = 0; j < args.quantities.length; j++) {
-      totalQuantity += args.quantities[j];
-    }
-
     {
       uint256 totalAfterMint;
       if (i.limit < i.maxSupply) {
-        totalAfterMint = minted[msgSender][auth.key] + totalQuantity;
+        totalAfterMint = minted[msgSender][auth.key] + args.quantity;
 
         if (totalAfterMint > i.limit) {
           revert NumberOfMintsExceeded();
@@ -230,45 +221,18 @@ library ArchetypeLogic {
       }
 
       if (i.maxSupply < 2**32 - 1) {
-        totalAfterMint = listSupply[auth.key] + totalQuantity;
+        totalAfterMint = listSupply[auth.key] + args.quantity;
         if (totalAfterMint > i.maxSupply) {
           revert ListMaxSupplyExceeded();
         }
       }
     }
 
-    uint256[] memory checked = new uint256[](tokenSupply.length);
-    for (uint256 j = 0; j < args.tokenIds.length; j++) {
-      uint256 tokenId = args.tokenIds[j];
-      if (!i.randomize) {
-        if (i.tokenIds.length != 0) {
-          bool isValid = false;
-          for (uint256 k = 0; k < i.tokenIds.length; k++) {
-            if (tokenId == i.tokenIds[k]) {
-              isValid = true;
-              break;
-            }
-          }
-          if (!isValid) {
-            revert InvalidTokenId();
-          }
-        }
-      }
-
-      if (
-        (tokenSupply[tokenId - 1] + checked[tokenId - 1] + args.quantities[j]) >
-        config.maxSupply[tokenId - 1]
-      ) {
-        revert MaxSupplyExceeded();
-      }
-      checked[tokenId - 1] += args.quantities[j];
-    }
-
-    if (totalQuantity > config.maxBatchSize) {
+    if (args.quantity > config.maxBatchSize) {
       revert MaxBatchSizeExceeded();
     }
 
-    uint256 cost = computePrice(i, config.discounts, totalQuantity, args.affiliate != address(0));
+    uint256 cost = computePrice(i, config.discounts, args.quantity, args.affiliate != address(0));
 
     if (i.tokenAddress != address(0)) {
       IERC20Upgradeable erc20Token = IERC20Upgradeable(i.tokenAddress);
@@ -418,53 +382,23 @@ library ArchetypeLogic {
   }
 
   function getRandomTokenIds(
-    uint256[] memory tokenSupply,
-    uint32[] memory maxSupply,
-    uint32[] memory validIds,
+    uint16[] storage tokenPool,
     uint256 quantity,
     uint256 seed
-  ) public pure returns (uint256[] memory) {
-    uint256 tokenIdsAvailable = 0;
-    if (validIds.length > 0) {
-      for (uint256 i = 0; i < validIds.length; i++) {
-        tokenIdsAvailable += maxSupply[validIds[i] - 1] - tokenSupply[validIds[i] - 1];
-      }
-    } else {
-      for (uint256 i = 0; i < maxSupply.length; i++) {
-        tokenIdsAvailable += maxSupply[i] - tokenSupply[i];
-      }
-    }
+  ) public returns (uint16[] memory) {
+    uint16[] memory tokenIds = new uint16[](quantity);
 
-    uint256[] memory tokenIds = new uint256[](quantity);
     for (uint256 i = 0; i < quantity; i++) {
-      if (tokenIdsAvailable == 0) {
+      if (tokenPool.length == 0) {
         revert MaxSupplyExceeded();
       }
       uint256 rand = uint256(keccak256(abi.encode(seed, i)));
-      uint256 num = (rand % tokenIdsAvailable) + 1;
-      if (validIds.length > 0) {
-        for (uint256 j = 0; j < validIds.length; j++) {
-          uint256 available = maxSupply[validIds[j] - 1] - tokenSupply[validIds[j] - 1];
-          if (num <= available) {
-            tokenIds[i] = validIds[j];
-            tokenSupply[validIds[j] - 1] += 1;
-            tokenIdsAvailable -= 1;
-            break;
-          }
-          num -= available;
-        }
-      } else {
-        for (uint256 j = 0; j < maxSupply.length; j++) {
-          uint256 available = maxSupply[j] - tokenSupply[j];
-          if (num <= available) {
-            tokenIds[i] = j + 1;
-            tokenSupply[j] += 1;
-            tokenIdsAvailable -= 1;
-            break;
-          }
-          num -= available;
-        }
-      }
+      uint256 randIdx = rand % tokenPool.length;
+      tokenIds[i] = tokenPool[randIdx];
+
+      // remove token from pool
+      tokenPool[randIdx] = tokenPool[tokenPool.length - 1];
+      tokenPool.pop();
     }
     return tokenIds;
   }

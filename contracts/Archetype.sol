@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.6.0 - ERC1155
+// Archetype v0.6.0 - ERC1155-Random
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -87,8 +87,9 @@ contract Archetype is
         revert InvalidConfig();
       }
     }
+    uint16 maxToken = _findMax(config_.tokenPool);
+    _tokenSupply = new uint256[](maxToken + 1);
     config = config_;
-    _tokenSupply = new uint256[](config_.maxSupply.length);
     __Ownable_init();
 
     if (config.ownerAltPayout != address(0)) {
@@ -102,98 +103,19 @@ contract Archetype is
   // PUBLIC
   //
 
-  // use mintToken for non-random lists
   function mint(
     Auth calldata auth,
     uint256 quantity,
     address affiliate,
     bytes calldata signature
   ) external payable {
-    mintTo(auth, quantity, _msgSender(), 0, affiliate, signature);
-  }
-
-  // tokenId is ignored in case of random list
-  function mintToken(
-    Auth calldata auth,
-    uint256 quantity,
-    uint256 tokenId,
-    address affiliate,
-    bytes calldata signature
-  ) external payable {
-    mintTo(auth, quantity, _msgSender(), tokenId, affiliate, signature);
-  }
-
-  // batch mint only supported on non random and non booster lists
-  function batchMintTo(
-    Auth calldata auth,
-    address[] calldata toList,
-    uint256[] calldata quantityList,
-    uint256[] calldata tokenIdList,
-    address affiliate,
-    bytes calldata signature
-  ) external payable {
-    if (quantityList.length != toList.length || quantityList.length != tokenIdList.length) {
-      revert InvalidConfig();
-    }
-
-    DutchInvite storage invite = invites[auth.key];
-    if (invite.randomize || invite.unitSize > 1) {
-      revert NotSupported();
-    }
-
-    ValidationArgs memory args;
-    {
-      args = ValidationArgs({
-        owner: owner(),
-        affiliate: affiliate,
-        quantities: quantityList,
-        tokenIds: tokenIdList
-      });
-    }
-    ArchetypeLogic.validateMint(
-      invite,
-      config,
-      auth,
-      _minted,
-      _listSupply,
-      _tokenSupply,
-      signature,
-      args
-    );
-
-    for (uint256 i = 0; i < toList.length; i++) {
-      bytes memory _data;
-      _mint(toList[i], tokenIdList[i], quantityList[i], _data);
-      _tokenSupply[tokenIdList[i] - 1] += quantityList[i];
-    }
-
-    uint256 quantity = 0;
-    for (uint256 i = 0; i < quantityList.length; i++) {
-      quantity += quantityList[i];
-    }
-
-    if (invite.limit < invite.maxSupply) {
-      _minted[_msgSender()][auth.key] += quantity;
-    }
-    if (invite.maxSupply < 2**32 - 1) {
-      _listSupply[auth.key] += quantity;
-    }
-
-    ArchetypeLogic.updateBalances(
-      invite,
-      config,
-      _ownerBalance,
-      _affiliateBalance,
-      affiliate,
-      quantity
-    );
+    mintTo(auth, quantity, _msgSender(), affiliate, signature);
   }
 
   function mintTo(
     Auth calldata auth,
     uint256 quantity,
     address to,
-    uint256 tokenId, // only used if randomizer=false
     address affiliate,
     bytes calldata signature
   ) public payable {
@@ -203,52 +125,36 @@ contract Archetype is
       quantity = quantity * i.unitSize;
     }
 
-    ValidationArgs memory args;
-    {
-      uint256[] memory tokenIds;
-      uint256[] memory quantities;
-      if (i.randomize) {
-        // to avoid stack too deep errors
-        uint256 seed = ArchetypeLogic.random();
-        tokenIds = ArchetypeLogic.getRandomTokenIds(
-          _tokenSupply,
-          config.maxSupply,
-          i.tokenIds,
-          quantity,
-          seed
-        );
-        quantities = new uint256[](tokenIds.length);
-        for (uint256 j = 0; j < tokenIds.length; j++) {
-          quantities[j] = 1;
-        }
-      } else {
-        tokenIds = new uint256[](1);
-        tokenIds[0] = tokenId;
-        quantities = new uint256[](1);
-        quantities[0] = quantity;
-      }
-      args = ValidationArgs({
+    ValidationArgs memory args = ValidationArgs({
         owner: owner(),
         affiliate: affiliate,
-        quantities: quantities,
-        tokenIds: tokenIds
-      });
-    }
+        quantity: quantity
+    });
+
     ArchetypeLogic.validateMint(
       i,
       config,
       auth,
       _minted,
       _listSupply,
-      _tokenSupply,
       signature,
       args
     );
 
-    for (uint256 j = 0; j < args.tokenIds.length; j++) {
+    uint16[] memory tokenIds;
+    uint256 seed = ArchetypeLogic.random();
+    tokenIds = ArchetypeLogic.getRandomTokenIds(
+      config.tokenPool,
+      quantity,
+      seed
+    );
+
+    for (uint256 j = 0; j < tokenIds.length; j++) {
       bytes memory _data;
-      _mint(to, args.tokenIds[j], args.quantities[j], _data);
-      _tokenSupply[args.tokenIds[j] - 1] += args.quantities[j];
+      _mint(to, tokenIds[j], 1, _data);
+      _tokenSupply[tokenIds[j]] += 1;
+      // TODO: Analyze tradeoff of keeping this tokenSupply, we do not need it for validation
+      // Pros: on chain supply tracking, Cons: Extra storage write every mint
     }
 
     if (i.limit < i.maxSupply) {
@@ -320,8 +226,8 @@ contract Archetype is
     return supply;
   }
 
-  function maxSupply() external view returns (uint32[] memory) {
-    return config.maxSupply;
+  function tokenPool() external view returns (uint16[] memory) {
+    return config.tokenPool;
   }
 
   function computePrice(
@@ -355,36 +261,35 @@ contract Archetype is
   }
 
   /// @notice the password is "forever"
-  // max supply cannot subceed total supply. Be careful changing.
-  function setMaxSupply(uint32[] memory newMaxSupply, string memory password) external _onlyOwner {
+  // token supply cannot be decreased once added. Be careful changing.
+  function setTokenPool(uint16[] memory newTokens, string memory password) external _onlyOwner {
     if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
       revert WrongPassword();
     }
 
-    if (options.maxSupplyLocked) {
+    if (options.tokenPoolLocked) {
       revert LockedForever();
     }
 
-    for (uint256 i = 0; i < _tokenSupply.length; i++) {
-      if (newMaxSupply[i] < _tokenSupply[i]) {
-        revert MaxSupplyExceeded();
-      }
+    uint16 maxToken = _findMax(newTokens);
+
+    for (uint256 i = 0; i < newTokens.length; i++) {
+      config.tokenPool.push(newTokens[i]);
     }
 
-    // increase size of token supply array to match new max supply
-    for (uint256 i = _tokenSupply.length; i < newMaxSupply.length; i++) {
+    // increase size of token supply array to match new max token
+    for (uint256 i = _tokenSupply.length; i <= maxToken; i++) {
       _tokenSupply.push(0);
     }
-    config.maxSupply = newMaxSupply;
   }
 
   /// @notice the password is "forever"
-  function lockMaxSupply(string memory password) external _onlyOwner {
+  function lockTokenPool(string memory password) external _onlyOwner {
     if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
       revert WrongPassword();
     }
 
-    options.maxSupplyLocked = true;
+    options.tokenPoolLocked = true;
   }
 
   function setAffiliateFee(uint16 affiliateFee) external _onlyOwner {
@@ -472,7 +377,7 @@ contract Archetype is
     options.ownerAltPayoutLocked = true;
   }
 
-  function setMaxBatchSize(uint32 maxBatchSize) external _onlyOwner {
+  function setMaxBatchSize(uint16 maxBatchSize) external _onlyOwner {
     config.maxBatchSize = maxBatchSize;
   }
 
@@ -491,7 +396,6 @@ contract Archetype is
       maxSupply: _invite.maxSupply,
       interval: 0,
       unitSize: _invite.unitSize,
-      randomize: _invite.randomize,
       tokenIds: _invite.tokenIds,
       tokenAddress: _invite.tokenAddress
     });
@@ -526,6 +430,16 @@ contract Archetype is
 
   function _exists(uint256 tokenId) internal view returns (bool) {
     return tokenId > 0 && tokenId <= _tokenSupply.length;
+  }
+
+  function _findMax(uint16[] memory _tokenPool) internal pure returns (uint16) {
+    uint16 maxToken;
+    for (uint256 i = 0; i < _tokenPool.length; i++) {
+      if (_tokenPool[i] > maxToken) {
+          maxToken = _tokenPool[i];
+      }
+    }
+    return maxToken;
   }
 
   function _msgSender() internal view override returns (address) {
