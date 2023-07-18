@@ -362,6 +362,7 @@ describe("Factory", function () {
     });
 
     expect(await nft.balanceOf(accountZero.address)).to.equal(6);
+    expect((await nft.tokensOfOwner(accountZero.address)).map(bn => bn.toNumber())).to.deep.equal([1,2,3,4,5,6]);
 
     const proofTwo = invitelist.proof(accountTwo.address);
 
@@ -830,54 +831,54 @@ describe("Factory", function () {
     expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.095")));
   });
 
-  it("allow token owner to store msg", async function () {
-    const [accountZero, accountOne] = await ethers.getSigners();
+  // it("allow token owner to store msg", async function () {
+  //   const [accountZero, accountOne] = await ethers.getSigners();
 
-    const owner = accountOne;
-    const holder = accountZero;
+  //   const owner = accountOne;
+  //   const holder = accountZero;
 
-    const newCollection = await factory.createCollection(
-      owner.address,
-      DEFAULT_NAME,
-      DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
-    );
+  //   const newCollection = await factory.createCollection(
+  //     owner.address,
+  //     DEFAULT_NAME,
+  //     DEFAULT_SYMBOL,
+  //     DEFAULT_CONFIG
+  //   );
 
-    const result = await newCollection.wait();
+  //   const result = await newCollection.wait();
 
-    const newCollectionAddress = result.events[0].address || "";
+  //   const newCollectionAddress = result.events[0].address || "";
 
-    const nft = Archetype.attach(newCollectionAddress);
+  //   const nft = Archetype.attach(newCollectionAddress);
 
-    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
-      price: ethers.utils.parseEther("0.02"),
-      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-      end: 0,
-      limit: 300,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
-      unitSize: 0,
-      tokenAddress: ZERO,
-    });
+  //   await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+  //     price: ethers.utils.parseEther("0.02"),
+  //     start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+  //     end: 0,
+  //     limit: 300,
+  //     maxSupply: DEFAULT_CONFIG.maxSupply,
+  //     unitSize: 0,
+  //     tokenAddress: ZERO,
+  //   });
 
-    // mint tokens 1, 2, 3
-    await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x", {
-      value: ethers.utils.parseEther("0.06"),
-    });
+  //   // mint tokens 1, 2, 3
+  //   await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x", {
+  //     value: ethers.utils.parseEther("0.06"),
+  //   });
 
-    const msg = "Hi this is a test, I own this";
+  //   const msg = "Hi this is a test, I own this";
 
-    // try to set as non token owner - will fail
-    await expect(nft.connect(owner).setTokenMsg(3, msg)).to.be.revertedWith("NotTokenOwner");
+  //   // try to set as non token owner - will fail
+  //   await expect(nft.connect(owner).setTokenMsg(3, msg)).to.be.revertedWith("NotTokenOwner");
 
-    // try to set as token owner - will succeed
-    await nft.connect(holder).setTokenMsg(3, msg + msg + msg + msg + msg);
+  //   // try to set as token owner - will succeed
+  //   await nft.connect(holder).setTokenMsg(3, msg + msg + msg + msg + msg);
 
-    // try to set as token owner - will succeed
-    await nft.connect(holder).setTokenMsg(3, msg);
+  //   // try to set as token owner - will succeed
+  //   await nft.connect(holder).setTokenMsg(3, msg);
 
-    // check that msgs match
-    await expect(await nft.getTokenMsg(3)).to.be.equal(msg);
-  });
+  //   // check that msgs match
+  //   await expect(await nft.getTokenMsg(3)).to.be.equal(msg);
+  // });
 
   it("test config changes and locking", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();

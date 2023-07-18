@@ -18,6 +18,7 @@ pragma solidity ^0.8.4;
 import "./ArchetypeLogic.sol";
 import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
 import "erc721a-upgradeable/contracts/ERC721A__Initializable.sol";
+import "erc721a-upgradeable/contracts/extensions/ERC721AQueryableUpgradeable.sol";
 import "./ERC721A__OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
@@ -28,7 +29,8 @@ contract Archetype is
   ERC721AUpgradeable,
   OperatorFilterer,
   ERC721A__OwnableUpgradeable,
-  ERC2981Upgradeable
+  ERC2981Upgradeable,
+  ERC721AQueryableUpgradeable
 {
   //
   // EVENTS
@@ -45,7 +47,6 @@ contract Archetype is
   mapping(bytes32 => uint256) private _listSupply;
   mapping(address => OwnerBalance) private _ownerBalance;
   mapping(address => mapping(address => uint128)) private _affiliateBalance;
-  mapping(uint256 => bytes) private _tokenMsg;
 
   Config public config;
   BurnConfig public burnConfig;
@@ -248,19 +249,6 @@ contract Archetype is
 
   function withdrawTokens(address[] memory tokens) public {
     ArchetypeLogic.withdrawTokens(config, _ownerBalance, _affiliateBalance, owner(), tokens);
-  }
-
-  function setTokenMsg(uint256 tokenId, string calldata message) external {
-    if (_msgSender() != ownerOf(tokenId)) {
-      revert NotTokenOwner();
-    }
-
-    _tokenMsg[tokenId] = bytes(message);
-  }
-
-  function getTokenMsg(uint256 tokenId) external view returns (string memory) {
-    if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
-    return string(_tokenMsg[tokenId]);
   }
 
   function ownerBalance() external view returns (OwnerBalance memory) {
