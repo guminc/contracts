@@ -84,7 +84,6 @@ struct Options {
   bool ownerAltPayoutLocked;
   bool royaltyEnforcementEnabled;
   bool royaltyEnforcementLocked;
-  bool provenanceHashLocked;
 }
 
 struct DutchInvite {

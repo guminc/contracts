@@ -52,8 +52,6 @@ contract Archetype is
   BurnConfig public burnConfig;
   Options public options;
 
-  string public provenance;
-
   //
   // METHODS
   //
@@ -385,24 +383,6 @@ contract Archetype is
     }
 
     options.discountsLocked = true;
-  }
-
-  /// @notice Set BAYC-style provenance once it's calculated
-  function setProvenanceHash(string memory provenanceHash) external _onlyOwner {
-    if (options.provenanceHashLocked) {
-      revert LockedForever();
-    }
-
-    provenance = provenanceHash;
-  }
-
-  /// @notice the password is "forever"
-  function lockProvenanceHash(string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
-    options.provenanceHashLocked = true;
   }
 
   function setOwnerAltPayout(address ownerAltPayout) external _onlyOwner {
