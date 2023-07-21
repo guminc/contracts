@@ -74,12 +74,15 @@ contract Archetype is
       revert InvalidConfig();
     }
     // ensure mint tiers are correctly ordered from highest to lowest.
-    for (uint256 i = 1; i < config_.discounts.mintTiers.length; i++) {
+    for (uint256 i = 1; i < config_.discounts.mintTiers.length;) {
       if (
         config_.discounts.mintTiers[i].mintDiscount > MAXBPS ||
         config_.discounts.mintTiers[i].numMints > config_.discounts.mintTiers[i - 1].numMints
       ) {
         revert InvalidConfig();
+      }
+      unchecked {
+        ++i;
       }
     }
     config = config_;
@@ -116,19 +119,25 @@ contract Archetype is
     }
 
     DutchInvite storage invite = invites[auth.key];
-    uint256 quantity = 0;
-    {
-      uint32 unitSize = invite.unitSize;
-      for (uint256 i = 0; i < quantityList.length; i++) {
-        if (unitSize > 1) {
-          quantity += quantityList[i] * unitSize;
-        } else {
-          quantity += quantityList[i];
-        }
+    uint256 curSupply = _totalMinted();
+    uint256 quantity;
+
+    for (uint256 i; i < toList.length;) {
+      uint256 quantityToAdd;
+      if (invite.unitSize > 1) {
+        quantityToAdd = quantityList[i] * invite.unitSize;
+      } else {
+        quantityToAdd = quantityList[i];
+      }
+      quantity += quantityToAdd;
+
+      _mint(toList[i], quantityToAdd);
+
+      unchecked {
+        ++i;
       }
     }
 
-    uint256 curSupply = _totalMinted();
     ArchetypeLogic.validateMint(
       invite,
       config,
@@ -141,17 +150,6 @@ contract Archetype is
       _listSupply,
       signature
     );
-
-    {
-      uint32 unitSize = invite.unitSize;
-      for (uint256 i = 0; i < toList.length; i++) {
-        if (unitSize > 1) {
-          _mint(toList[i], quantityList[i] * unitSize);
-        } else {
-          _mint(toList[i], quantityList[i]);
-        }
-      }
-    }
 
     if (invite.limit < invite.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
@@ -211,13 +209,16 @@ contract Archetype is
     ArchetypeLogic.validateBurnToMint(config, burnConfig, tokenIds, curSupply, _minted);
 
     address msgSender = _msgSender();
-    for (uint256 i = 0; i < tokenIds.length; i++) {
+    for (uint256 i; i < tokenIds.length;) {
       address burnAddress = burnConfig.burnAddress != address(0)? burnConfig.burnAddress: address(0x000000000000000000000000000000000000dEaD);
       burnConfig.archetype.transferFrom(
         msgSender,
         burnAddress,
         tokenIds[i]
       );
+      unchecked {
+        ++i;
+      }
     }
 
     uint256 quantity = burnConfig.reversed
@@ -364,12 +365,15 @@ contract Archetype is
     }
 
     // ensure mint tiers are correctly ordered from highest to lowest.
-    for (uint256 i = 1; i < discounts.mintTiers.length; i++) {
+    for (uint256 i = 1; i < discounts.mintTiers.length;) {
       if (
         discounts.mintTiers[i].mintDiscount > MAXBPS ||
         discounts.mintTiers[i].numMints > discounts.mintTiers[i - 1].numMints
       ) {
         revert InvalidConfig();
+      }
+      unchecked {
+        ++i;
       }
     }
 

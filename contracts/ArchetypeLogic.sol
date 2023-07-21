@@ -168,9 +168,14 @@ library ArchetypeLogic {
       cost = cost - ((cost * discounts.affiliateDiscount) / 10000);
     }
 
-    for (uint256 i = 0; i < discounts.mintTiers.length; i++) {
-      if (numTokens >= discounts.mintTiers[i].numMints) {
-        return cost = cost - ((cost * discounts.mintTiers[i].mintDiscount) / 10000);
+    uint256 numMints = discounts.mintTiers.length;
+    for (uint256 i; i < numMints; ) {
+      uint256 tierNumMints = discounts.mintTiers[i].numMints;
+      if (numTokens >= tierNumMints) {
+        return cost - ((cost * discounts.mintTiers[i].mintDiscount) / 10000);
+      }
+      unchecked {
+        ++i;
       }
     }
     return cost;
@@ -278,9 +283,12 @@ library ArchetypeLogic {
 
     // check if msgSender owns tokens and has correct approvals
     address msgSender = _msgSender();
-    for (uint256 i = 0; i < tokenIds.length; i++) {
+    for (uint256 i; i < tokenIds.length;) {
       if (burnConfig.archetype.ownerOf(tokenIds[i]) != msgSender) {
         revert NotTokenOwner();
+      }
+      unchecked {
+        ++i;
       }
     }
 
@@ -329,14 +337,14 @@ library ArchetypeLogic {
       value = uint128(computePrice(i, config.discounts, quantity, affiliate != address(0)));
     }
 
-    uint128 affiliateWad = 0;
+    uint128 affiliateWad;
     if (affiliate != address(0)) {
       affiliateWad = (value * config.affiliateFee) / 10000;
       _affiliateBalance[affiliate][tokenAddress] += affiliateWad;
       emit Referral(affiliate, tokenAddress, affiliateWad, quantity);
     }
 
-    uint128 superAffiliateWad = 0;
+    uint128 superAffiliateWad;
     if (config.superAffiliatePayout != address(0)) {
       superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
       _affiliateBalance[config.superAffiliatePayout][tokenAddress] += superAffiliateWad;
@@ -364,9 +372,9 @@ library ArchetypeLogic {
     address[] calldata tokens
   ) public {
     address msgSender = _msgSender();
-    for (uint256 i = 0; i < tokens.length; i++) {
+    for (uint256 i; i < tokens.length;) {
       address tokenAddress = tokens[i];
-      uint128 wad = 0;
+      uint128 wad;
 
       if (msgSender == owner || msgSender == config.ownerAltPayout || msgSender == PLATFORM) {
         OwnerBalance storage balance = _ownerBalance[tokenAddress];
@@ -407,6 +415,9 @@ library ArchetypeLogic {
         }
       }
       emit Withdrawal(msgSender, tokenAddress, wad);
+      unchecked {
+        ++i;
+      }
     }
   }
 
