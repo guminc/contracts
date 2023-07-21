@@ -126,9 +126,9 @@ struct ValidationArgs {
   uint256[] tokenIds;
 }
 
-address constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
-// address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
-address constant BATCH = 0x5FbDB2315678afecb367f032d93F642f64180aa3; // TEST
+address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
+// TODO: set batch to mainnet address and update preTest script
+address constant BATCH = 0x5FbDB2315678afecb367f032d93F642f64180aa3;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 
 library ArchetypeLogic {
