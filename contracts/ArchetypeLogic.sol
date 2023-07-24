@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ArchetypeLogic v0.6.0 - ERC1155
+// ArchetypeLogic v0.6.1 - ERC1155
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -126,9 +126,8 @@ struct ValidationArgs {
   uint256[] tokenIds;
 }
 
-address constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // TEST (account[2])
-// address private constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
-address constant BATCH = 0x5FbDB2315678afecb367f032d93F642f64180aa3; // TEST
+address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
+address constant BATCH = 0x6Bc558A6DC48dEfa0e7022713c23D65Ab26e4Fa7;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 
 library ArchetypeLogic {
@@ -475,6 +474,6 @@ library ArchetypeLogic {
   }
 
   function _msgSender() internal view returns (address) {
-    return msg.sender == BATCH? tx.origin: msg.sender;
+    return msg.sender == BATCH ? tx.origin : msg.sender;
   }
 }

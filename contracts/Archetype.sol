@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.6.0 - ERC1155
+// Archetype v0.6.1 - ERC1155
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -324,6 +324,15 @@ contract Archetype is
     return config.maxSupply;
   }
 
+  function computePrice(
+    bytes32 key,
+    uint256 quantity,
+    bool affiliateUsed
+  ) external view returns (uint256) {
+    DutchInvite storage i = invites[key];
+    return ArchetypeLogic.computePrice(i, config.discounts, quantity, affiliateUsed);
+  }
+
   //
   // OWNER ONLY
   //
@@ -520,13 +529,13 @@ contract Archetype is
   }
 
   function _msgSender() internal view override returns (address) {
-    return msg.sender == BATCH? tx.origin: msg.sender;
+    return msg.sender == BATCH ? tx.origin : msg.sender;
   }
 
   function _isOwner() internal view {
     if (_msgSender() != owner()) {
       revert NotOwner();
-    }  
+    }
   }
 
   modifier _onlyPlatform() {
