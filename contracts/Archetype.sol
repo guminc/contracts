@@ -529,13 +529,13 @@ contract Archetype is
   }
 
   function _msgSender() internal view override returns (address) {
-    return msg.sender == BATCH? tx.origin: msg.sender;
+    return msg.sender == BATCH ? tx.origin : msg.sender;
   }
 
   function _isOwner() internal view {
     if (_msgSender() != owner()) {
       revert NotOwner();
-    }  
+    }
   }
 
   modifier _onlyPlatform() {

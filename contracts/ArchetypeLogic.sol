@@ -475,6 +475,6 @@ library ArchetypeLogic {
   }
 
   function _msgSender() internal view returns (address) {
-    return msg.sender == BATCH? tx.origin: msg.sender;
+    return msg.sender == BATCH ? tx.origin : msg.sender;
   }
 }
