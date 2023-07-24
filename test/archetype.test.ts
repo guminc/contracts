@@ -665,6 +665,8 @@ describe("Factory", function () {
         value: ethers.utils.parseEther((0.081 * 20).toString()), // 10 % discount from using an affiliate, additional 10% for minting 20 = 0.081 per
       });
 
+    await expect((await nft.computePrice(ethers.constants.HashZero, 20, true))).to.equal(ethers.utils.parseEther((0.081 * 20).toString()));
+
     await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("1.296")); // 80%
     await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.081")); // 5%
     await expect(await nft.affiliateBalance(affiliate.address)).to.equal(
