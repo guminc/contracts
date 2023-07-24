@@ -125,8 +125,7 @@ struct BurnConfig {
 }
 
 address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
-// TODO: set batch to mainnet address and update preTest script
-address constant BATCH = 0x5FbDB2315678afecb367f032d93F642f64180aa3;
+address constant BATCH = 0x6Bc558A6DC48dEfa0e7022713c23D65Ab26e4Fa7;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 
 library ArchetypeLogic {
@@ -283,7 +282,7 @@ library ArchetypeLogic {
 
     // check if msgSender owns tokens and has correct approvals
     address msgSender = _msgSender();
-    for (uint256 i; i < tokenIds.length;) {
+    for (uint256 i; i < tokenIds.length; ) {
       if (burnConfig.archetype.ownerOf(tokenIds[i]) != msgSender) {
         revert NotTokenOwner();
       }
@@ -372,7 +371,7 @@ library ArchetypeLogic {
     address[] calldata tokens
   ) public {
     address msgSender = _msgSender();
-    for (uint256 i; i < tokens.length;) {
+    for (uint256 i; i < tokens.length; ) {
       address tokenAddress = tokens[i];
       uint128 wad;
 
@@ -450,6 +449,6 @@ library ArchetypeLogic {
   }
 
   function _msgSender() internal view returns (address) {
-    return msg.sender == BATCH? tx.origin: msg.sender;
+    return msg.sender == BATCH ? tx.origin : msg.sender;
   }
 }

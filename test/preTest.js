@@ -10,7 +10,7 @@ async function replaceConstants(filePath) {
     "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
   );
   data = data.replace(
-    "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "0x6Bc558A6DC48dEfa0e7022713c23D65Ab26e4Fa7",
     "0x5FbDB2315678afecb367f032d93F642f64180aa3"
   );
 

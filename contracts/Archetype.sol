@@ -74,7 +74,7 @@ contract Archetype is
       revert InvalidConfig();
     }
     // ensure mint tiers are correctly ordered from highest to lowest.
-    for (uint256 i = 1; i < config_.discounts.mintTiers.length;) {
+    for (uint256 i = 1; i < config_.discounts.mintTiers.length; ) {
       if (
         config_.discounts.mintTiers[i].mintDiscount > MAXBPS ||
         config_.discounts.mintTiers[i].numMints > config_.discounts.mintTiers[i - 1].numMints
@@ -122,7 +122,7 @@ contract Archetype is
     uint256 curSupply = _totalMinted();
     uint256 quantity;
 
-    for (uint256 i; i < toList.length;) {
+    for (uint256 i; i < toList.length; ) {
       uint256 quantityToAdd;
       if (invite.unitSize > 1) {
         quantityToAdd = quantityList[i] * invite.unitSize;
@@ -209,13 +209,11 @@ contract Archetype is
     ArchetypeLogic.validateBurnToMint(config, burnConfig, tokenIds, curSupply, _minted);
 
     address msgSender = _msgSender();
-    for (uint256 i; i < tokenIds.length;) {
-      address burnAddress = burnConfig.burnAddress != address(0)? burnConfig.burnAddress: address(0x000000000000000000000000000000000000dEaD);
-      burnConfig.archetype.transferFrom(
-        msgSender,
-        burnAddress,
-        tokenIds[i]
-      );
+    for (uint256 i; i < tokenIds.length; ) {
+      address burnAddress = burnConfig.burnAddress != address(0)
+        ? burnConfig.burnAddress
+        : address(0x000000000000000000000000000000000000dEaD);
+      burnConfig.archetype.transferFrom(msgSender, burnAddress, tokenIds[i]);
       unchecked {
         ++i;
       }
@@ -365,7 +363,7 @@ contract Archetype is
     }
 
     // ensure mint tiers are correctly ordered from highest to lowest.
-    for (uint256 i = 1; i < discounts.mintTiers.length;) {
+    for (uint256 i = 1; i < discounts.mintTiers.length; ) {
       if (
         discounts.mintTiers[i].mintDiscount > MAXBPS ||
         discounts.mintTiers[i].numMints > discounts.mintTiers[i - 1].numMints
@@ -488,7 +486,7 @@ contract Archetype is
   }
 
   function _msgSender() internal view returns (address) {
-    return msg.sender == BATCH? tx.origin: msg.sender;
+    return msg.sender == BATCH ? tx.origin : msg.sender;
   }
 
   modifier _onlyPlatform() {
