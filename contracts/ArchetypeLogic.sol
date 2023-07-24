@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ArchetypeLogic v0.6.0 - ERC1155
+// ArchetypeLogic v0.6.0 - ERC1155-random
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -124,8 +124,7 @@ struct ValidationArgs {
 }
 
 address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
-// TODO: set batch to mainnet address and update preTest script
-address constant BATCH = 0x5FbDB2315678afecb367f032d93F642f64180aa3;
+address constant BATCH = 0x6Bc558A6DC48dEfa0e7022713c23D65Ab26e4Fa7;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 
 library ArchetypeLogic {
