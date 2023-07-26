@@ -261,8 +261,8 @@ contract Archetype is
   }
 
   /// @notice the password is "forever"
-  // token supply cannot be decreased once added. Be careful changing.
-  function setTokenPool(uint16[] memory newTokens, string memory password) external _onlyOwner {
+  // token supply cannot be decreased once minted. Be careful changing.
+  function updateTokenPool(uint16[] memory newTokens, string memory password) public _onlyOwner {
     if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
       revert WrongPassword();
     }
@@ -281,6 +281,13 @@ contract Archetype is
     for (uint256 i = _tokenSupply.length; i <= maxToken; i++) {
       _tokenSupply.push(0);
     }
+  }
+
+  /// @notice the password is "forever"
+  // token supply will be reset and contents will be lost forever. Be careful changing.
+  function resetTokenPool(uint16[] memory newTokens, string memory password) external _onlyOwner {
+    delete config.tokenPool;
+    updateTokenPool(newTokens, password);
   }
 
   /// @notice the password is "forever"
