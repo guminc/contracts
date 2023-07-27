@@ -75,7 +75,6 @@ struct Config {
   uint16 platformFee; //BPS
   uint16 defaultRoyalty; //BPS
   Discount discounts;
-  bytes32 blacklisted;
 }
 
 struct Options {
@@ -99,6 +98,7 @@ struct DutchInvite {
   uint32 interval;
   uint32 unitSize; // mint 1 get x
   address tokenAddress;
+  bool isBlacklist;
 }
 
 struct Invite {
@@ -109,6 +109,7 @@ struct Invite {
   uint32 maxSupply;
   uint32 unitSize; // mint 1 get x
   address tokenAddress;
+  bool isBlacklist;
 }
 
 struct OwnerBalance {
@@ -206,12 +207,12 @@ library ArchetypeLogic {
       revert MintingPaused();
     }
 
-    if (!verify(auth, i.tokenAddress, msgSender)) {
-      revert WalletUnauthorizedToMint();
-    }
-
-    if (config.blacklisted != bytes32(0)) {
-      if (isBlacklisted(auth.proof, config.blacklisted, msgSender)) {
+    if (!i.isBlacklist) {
+      if (!verify(auth, i.tokenAddress, msgSender)) {
+        revert WalletUnauthorizedToMint();
+      }
+    } else {
+      if (verify(auth, i.tokenAddress, msgSender)) {
         revert Blacklisted();
       }
     }
@@ -454,14 +455,6 @@ library ArchetypeLogic {
     }
 
     return MerkleProofLib.verify(auth.proof, auth.key, keccak256(abi.encodePacked(account)));
-  }
-
-  function isBlacklisted(
-    bytes32[] calldata proof, 
-    bytes32 root, 
-    address acount
-  ) public view returns (bool) {
-    return MerkleProofLib.verify(proof, root, keccak256(abi.encodePacked(acount)));
   }
 
   function _msgSender() internal view returns (address) {
