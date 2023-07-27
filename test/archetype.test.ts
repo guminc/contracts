@@ -9,7 +9,6 @@ import {
   Factory__factory,
 } from "../typechain";
 import Invitelist from "../lib/invitelist";
-import Blacklist from "../lib/blacklist";
 import { IArchetypeConfig } from "../lib/types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import ipfsh from "ipfsh";
@@ -2053,7 +2052,7 @@ describe("Factory", function () {
 
     await sleep(1000);
 
-    const blacklist = new Blacklist([accountZero.address]);
+    const blacklist = new Invitelist([accountZero.address]);
     const root = blacklist.root();
 
     await nft2.connect(owner).setBlacklisted(root);
