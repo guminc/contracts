@@ -2058,11 +2058,19 @@ describe("Factory", function () {
 
     await nft2.connect(owner).setBlacklisted(root);
 
+    // account zero is blacklisted
     expect(
       nft2.connect(accountZero).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
         value: ethers.utils.parseEther("0.08"),
       })
     ).to.be.revertedWith("Blacklisted");
+    
+    // account one is not blacklisted
+    await nft2.connect(accountOne).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+      value: ethers.utils.parseEther("0.08"),
+    });
+
+    expect(await nft2.balanceOf(accountOne.address)).to.equal(1);
   });
 });
 
