@@ -9,6 +9,7 @@ import {
   Factory__factory,
 } from "../typechain";
 import Invitelist from "../lib/invitelist";
+import Blacklist from "../lib/blacklist";
 import { IArchetypeConfig } from "../lib/types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import ipfsh from "ipfsh";
@@ -62,6 +63,7 @@ describe("Factory", function () {
         //   mintDiscount: number;
         // }];
       },
+      blacklisted: ethers.constants.HashZero,
     };
 
     ArchetypeBatch = await ethers.getContractFactory("ArchetypeBatch");
@@ -600,6 +602,7 @@ describe("Factory", function () {
             },
           ],
         },
+        blacklisted: ethers.constants.HashZero,
       }
     );
 
@@ -686,6 +689,7 @@ describe("Factory", function () {
           affiliateDiscount: 0, // 10%
           mintTiers: [],
         },
+        blacklisted: ethers.constants.HashZero,
       }
     );
 
@@ -780,6 +784,7 @@ describe("Factory", function () {
           affiliateDiscount: 0, // 10%
           mintTiers: [],
         },
+        blacklisted: ethers.constants.HashZero,
       }
     );
 
@@ -1985,6 +1990,79 @@ describe("Factory", function () {
 
     await expect((await nftMint.connect(owner).config()).maxSupply).to.be.equal(1000);
     await expect((await nftMint.connect(owner).config()).baseUri).to.be.equal("test");
+  });
+
+  it("test blacklist checks", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    const owner = accountOne;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+
+    const newCollectionAddress = result.events[0].address || "";
+
+    const nft = Archetype.attach(newCollectionAddress);
+
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("0.08"),
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      end: 0,
+      limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
+      unitSize: 0,
+      tokenAddress: ZERO,
+    });
+
+    await sleep(1000);
+
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+      value: ethers.utils.parseEther("0.08"),
+    });
+
+    expect(await nft.balanceOf(accountZero.address)).to.equal(1);
+
+    const newCollection2 = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result2 = await newCollection2.wait();
+
+    const newCollectionAddress2 = result2.events[0].address || "";
+
+    const nft2 = Archetype.attach(newCollectionAddress2);
+
+    await nft2.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("0.08"),
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      end: 0,
+      limit: 300,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
+      unitSize: 0,
+      tokenAddress: ZERO,
+    });
+
+    await sleep(1000);
+
+    const blacklist = new Blacklist([accountZero.address]);
+    const root = blacklist.root();
+
+    await nft2.connect(owner).setBlacklisted(root);
+
+    expect(
+      nft2.connect(accountZero).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: ethers.utils.parseEther("0.08"),
+      })
+    ).to.be.revertedWith("Blacklisted");
   });
 });
 

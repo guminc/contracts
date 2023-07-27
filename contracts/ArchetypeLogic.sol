@@ -44,6 +44,7 @@ error NotApprovedToTransfer();
 error InvalidAmountOfTokens();
 error WrongPassword();
 error LockedForever();
+error Blacklisted();
 
 //
 // STRUCTS
@@ -74,6 +75,7 @@ struct Config {
   uint16 platformFee; //BPS
   uint16 defaultRoyalty; //BPS
   Discount discounts;
+  bytes32 blacklisted;
 }
 
 struct Options {
@@ -124,8 +126,8 @@ struct BurnConfig {
   uint64 limit;
 }
 
-address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
-address constant BATCH = 0x6Bc558A6DC48dEfa0e7022713c23D65Ab26e4Fa7;
+address constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
+address constant BATCH = 0x5FbDB2315678afecb367f032d93F642f64180aa3;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 
 library ArchetypeLogic {
@@ -206,6 +208,12 @@ library ArchetypeLogic {
 
     if (!verify(auth, i.tokenAddress, msgSender)) {
       revert WalletUnauthorizedToMint();
+    }
+
+    if (config.blacklisted != bytes32(0)) {
+      if (isBlacklisted(auth.proof, config.blacklisted, msgSender)) {
+        revert Blacklisted();
+      }
     }
 
     if (block.timestamp < i.start) {
@@ -446,6 +454,14 @@ library ArchetypeLogic {
     }
 
     return MerkleProofLib.verify(auth.proof, auth.key, keccak256(abi.encodePacked(account)));
+  }
+
+  function isBlacklisted(
+    bytes32[] calldata proof, 
+    bytes32 root, 
+    address acount
+  ) public view returns (bool) {
+    return MerkleProofLib.verify(proof, root, keccak256(abi.encodePacked(acount)));
   }
 
   function _msgSender() internal view returns (address) {

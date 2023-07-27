@@ -404,6 +404,10 @@ contract Archetype is
     options.ownerAltPayoutLocked = true;
   }
 
+  function setBlacklisted(bytes32 _root) external _onlyOwner {
+    config.blacklisted = _root;
+  }
+
   function setMaxBatchSize(uint32 maxBatchSize) external _onlyOwner {
     config.maxBatchSize = maxBatchSize;
   }
