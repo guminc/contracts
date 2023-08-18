@@ -141,6 +141,7 @@ library ArchetypeLogic {
     DutchInvite storage invite,
     Discount storage discounts,
     uint256 numTokens,
+    uint256 curSupply,
     bool affiliateUsed
   ) public view returns (uint256) {
     uint256 price = invite.price;
@@ -162,6 +163,11 @@ library ArchetypeLogic {
     }
 
     uint256 cost = price * numTokens;
+    
+    if(curSupply >= 10000 && invite.interval == 0){ //Apply the linear curve after minted 10000 nfts
+      uint256 lastPrice =  price + invite.delta * (curSupply - 10000);
+      cost = lastPrice * numTokens + invite.delta * numTokens * (numTokens - 1) / 2;
+    }
 
     if (affiliateUsed) {
       cost = cost - ((cost * discounts.affiliateDiscount) / 10000);
@@ -239,7 +245,7 @@ library ArchetypeLogic {
       revert MaxSupplyExceeded();
     }
 
-    uint256 cost = computePrice(i, config.discounts, quantity, affiliate != address(0));
+    uint256 cost = computePrice(i, config.discounts, quantity, curSupply, affiliate != address(0));
 
     if (i.tokenAddress != address(0)) {
       IERC20Upgradeable erc20Token = IERC20Upgradeable(i.tokenAddress);
@@ -328,12 +334,13 @@ library ArchetypeLogic {
     mapping(address => OwnerBalance) storage _ownerBalance,
     mapping(address => mapping(address => uint128)) storage _affiliateBalance,
     address affiliate,
-    uint256 quantity
+    uint256 quantity,
+    uint256 curSupply
   ) public {
     address tokenAddress = i.tokenAddress;
     uint128 value = uint128(msg.value);
     if (tokenAddress != address(0)) {
-      value = uint128(computePrice(i, config.discounts, quantity, affiliate != address(0)));
+      value = uint128(computePrice(i, config.discounts, quantity, curSupply, affiliate != address(0)));
     }
 
     uint128 affiliateWad;
