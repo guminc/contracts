@@ -163,7 +163,8 @@ contract Archetype is
       _ownerBalance,
       _affiliateBalance,
       affiliate,
-      quantity
+      quantity,
+      curSupply
     );
   }
 
@@ -201,7 +202,7 @@ contract Archetype is
     if (i.maxSupply < config.maxSupply) {
       _listSupply[auth.key] += quantity;
     }
-    ArchetypeLogic.updateBalances(i, config, _ownerBalance, _affiliateBalance, affiliate, quantity);
+    ArchetypeLogic.updateBalances(i, config, _ownerBalance, _affiliateBalance, affiliate, quantity, curSupply);
   }
 
   function burnToMint(uint256[] calldata tokenIds) external {
@@ -229,7 +230,7 @@ contract Archetype is
     }
   }
 
-  function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+  function tokenURI(uint256 tokenId) public view virtual override(ERC721AUpgradeable, IERC721AUpgradeable) returns (string memory) {
     if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
     return
@@ -282,7 +283,8 @@ contract Archetype is
     bool affiliateUsed
   ) external view returns (uint256) {
     DutchInvite storage i = invites[key];
-    return ArchetypeLogic.computePrice(i, config.discounts, quantity, affiliateUsed);
+    uint256 curSupply = _totalMinted();
+    return ArchetypeLogic.computePrice(i, config.discounts, quantity, curSupply, affiliateUsed);
   }
 
   //
@@ -530,7 +532,7 @@ contract Archetype is
 
   function setApprovalForAll(address operator, bool approved)
     public
-    override
+    override(ERC721AUpgradeable, IERC721AUpgradeable)
     onlyAllowedOperatorApproval(operator)
   {
     super.setApprovalForAll(operator, approved);
@@ -539,7 +541,7 @@ contract Archetype is
   function approve(address operator, uint256 tokenId)
     public
     payable
-    override
+    override(ERC721AUpgradeable, IERC721AUpgradeable)
     onlyAllowedOperatorApproval(operator)
   {
     super.approve(operator, tokenId);
@@ -549,7 +551,7 @@ contract Archetype is
     address from,
     address to,
     uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
+  ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
     super.transferFrom(from, to, tokenId);
   }
 
@@ -557,7 +559,7 @@ contract Archetype is
     address from,
     address to,
     uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
+  ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
     super.safeTransferFrom(from, to, tokenId);
   }
 
@@ -566,7 +568,7 @@ contract Archetype is
     address to,
     uint256 tokenId,
     bytes memory data
-  ) public payable override onlyAllowedOperator(from) {
+  ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
     super.safeTransferFrom(from, to, tokenId, data);
   }
 
@@ -579,7 +581,7 @@ contract Archetype is
     public
     view
     virtual
-    override(ERC721AUpgradeable, ERC2981Upgradeable)
+    override(ERC721AUpgradeable, ERC2981Upgradeable, IERC721AUpgradeable)
     returns (bool)
   {
     // Supports the following `interfaceId`s:
