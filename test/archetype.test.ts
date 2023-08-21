@@ -1589,6 +1589,64 @@ describe("Factory", function () {
 
     await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
   });
+  
+    it("test Linear Curve", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    const owner = accountOne;
+    const holder = accountZero;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+
+    const newCollectionAddress = result.events[0].address || "";
+
+    const nft = Archetype.attach(newCollectionAddress);
+
+    await nft.connect(owner).setDutchInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("1"),
+      reservePrice: ethers.utils.parseEther("0.1"),
+      start: 0,
+      end: 0,
+      limit: 300,
+      interval: 0, // 1000s,
+      delta: ethers.utils.parseEther("0.01"),
+      maxSupply: DEFAULT_CONFIG.maxSupply-1, 
+      unitSize: 0,
+      tokenAddress: ZERO,
+    });
+
+    // mint at full price
+    await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+      value: ethers.utils.parseEther("1"),
+    });
+
+
+    // try to mint at initial price, will revert
+    await expect(
+      nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: ethers.utils.parseEther("1"),
+      })
+    ).to.be.revertedWith("InsufficientEthSent");
+
+    // mint at current price (1.01) in a linear curve 
+    await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+      value: ethers.utils.parseEther("1.01"),
+    });
+    
+    // mint 10 nfts, current price=1.02 and the price of 10 nfts = 1.02*10 + 0.01*10*9/2=10.65
+    await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 10, ZERO, "0x", {
+      value: ethers.utils.parseEther("10.65"),
+    });
+
+    await expect(await nft.balanceOf(holder.address)).to.be.equal(12);
+  });
 
   it("test invite list max supply check", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
