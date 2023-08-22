@@ -164,9 +164,9 @@ library ArchetypeLogic {
 
     uint256 cost = price * numTokens;
 
-    if (curSupply >= 10000 && invite.interval == 0) {
-      //Apply the linear curve after minted 10000 nfts
-      uint256 lastPrice = price + invite.delta * (curSupply - 10000);
+    if (invite.interval == 0) {
+      //Apply the linear curve
+      uint256 lastPrice = price + invite.delta * listSupply;
       cost = lastPrice * numTokens + (invite.delta * numTokens * (numTokens - 1)) / 2;
     }
 
