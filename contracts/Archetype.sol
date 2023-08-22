@@ -24,6 +24,12 @@ import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
 
+import "./caviar/ICaviar.sol";
+import "./caviar/IPair.sol";
+import "./caviar/ReservoirOracle.sol";
+
+import "hardhat/console.sol";
+
 contract Archetype is
   ERC721A__Initializable,
   ERC721AUpgradeable,
@@ -51,6 +57,8 @@ contract Archetype is
   Config public config;
   BurnConfig public burnConfig;
   Options public options;
+
+  IPair pair;
 
   //
   // METHODS
@@ -138,6 +146,26 @@ contract Archetype is
       }
     }
 
+    if (curSupply >= 10000) {
+      if (address(pair) == address(0)) {
+        revert("Not created pair yet");
+      }
+
+      uint256 liquidityAmount = quantity;
+      uint256[] memory tokenIds = new uint256[](liquidityAmount);
+      uint256 j;
+      for (j = 0; j < liquidityAmount; j++) {
+        tokenIds[j] = curSupply + quantity + j;
+      }
+
+      _mint(address(this), liquidityAmount);
+
+      bytes32[][] memory proof = new bytes32[][](0);
+      ReservoirOracle.Message[] memory messages = new ReservoirOracle.Message[](0);
+      uint256 tokenBalance = pair.wrap(tokenIds, proof, messages);
+      IERC20(pair).transfer(address(pair), tokenBalance);
+    }
+
     ArchetypeLogic.validateMint(
       invite,
       config,
@@ -163,7 +191,8 @@ contract Archetype is
       _ownerBalance,
       _affiliateBalance,
       affiliate,
-      quantity
+      quantity,
+      curSupply
     );
   }
 
@@ -195,13 +224,41 @@ contract Archetype is
     );
     _mint(to, quantity);
 
+    if (curSupply >= 10000) {
+      if (address(pair) == address(0)) {
+        revert("Not created pair yet");
+      }
+
+      uint256 liquidityAmount = quantity;
+      uint256[] memory tokenIds = new uint256[](liquidityAmount);
+      uint256 j;
+      for (j = 0; j < liquidityAmount; j++) {
+        tokenIds[j] = curSupply + quantity + j;
+      }
+
+      _mint(address(this), liquidityAmount);
+
+      bytes32[][] memory proof = new bytes32[][](0);
+      ReservoirOracle.Message[] memory messages = new ReservoirOracle.Message[](0);
+      uint256 tokenBalance = pair.wrap(tokenIds, proof, messages);
+      IERC20(pair).transfer(address(pair), tokenBalance);
+    }
+
     if (i.limit < i.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
     }
     if (i.maxSupply < config.maxSupply) {
       _listSupply[auth.key] += quantity;
     }
-    ArchetypeLogic.updateBalances(i, config, _ownerBalance, _affiliateBalance, affiliate, quantity);
+    ArchetypeLogic.updateBalances(
+      i,
+      config,
+      _ownerBalance,
+      _affiliateBalance,
+      affiliate,
+      quantity,
+      curSupply
+    );
   }
 
   function burnToMint(uint256[] calldata tokenIds) external {
@@ -229,7 +286,9 @@ contract Archetype is
     }
   }
 
-  function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+  function tokenURI(
+    uint256 tokenId
+  ) public view virtual override(ERC721AUpgradeable, IERC721AUpgradeable) returns (string memory) {
     if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
     return
@@ -282,7 +341,8 @@ contract Archetype is
     bool affiliateUsed
   ) external view returns (uint256) {
     DutchInvite storage i = invites[key];
-    return ArchetypeLogic.computePrice(i, config.discounts, quantity, affiliateUsed);
+    uint256 curSupply = _totalMinted();
+    return ArchetypeLogic.computePrice(i, config.discounts, quantity, curSupply, affiliateUsed);
   }
 
   //
@@ -408,11 +468,7 @@ contract Archetype is
     config.maxBatchSize = maxBatchSize;
   }
 
-  function setInvite(
-    bytes32 _key,
-    bytes32 _cid,
-    Invite calldata _invite
-  ) external _onlyOwner {
+  function setInvite(bytes32 _key, bytes32 _cid, Invite calldata _invite) external _onlyOwner {
     invites[_key] = DutchInvite({
       price: _invite.price,
       reservePrice: _invite.price,
@@ -528,18 +584,20 @@ contract Archetype is
     options.royaltyEnforcementLocked = true;
   }
 
-  function setApprovalForAll(address operator, bool approved)
-    public
-    override
-    onlyAllowedOperatorApproval(operator)
-  {
+  function setApprovalForAll(
+    address operator,
+    bool approved
+  ) public override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperatorApproval(operator) {
     super.setApprovalForAll(operator, approved);
   }
 
-  function approve(address operator, uint256 tokenId)
+  function approve(
+    address operator,
+    uint256 tokenId
+  )
     public
     payable
-    override
+    override(ERC721AUpgradeable, IERC721AUpgradeable)
     onlyAllowedOperatorApproval(operator)
   {
     super.approve(operator, tokenId);
@@ -549,7 +607,7 @@ contract Archetype is
     address from,
     address to,
     uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
+  ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
     super.transferFrom(from, to, tokenId);
   }
 
@@ -557,7 +615,7 @@ contract Archetype is
     address from,
     address to,
     uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
+  ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
     super.safeTransferFrom(from, to, tokenId);
   }
 
@@ -566,7 +624,7 @@ contract Archetype is
     address to,
     uint256 tokenId,
     bytes memory data
-  ) public payable override onlyAllowedOperator(from) {
+  ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
     super.safeTransferFrom(from, to, tokenId, data);
   }
 
@@ -575,11 +633,13 @@ contract Archetype is
   }
 
   //ERC2981 ROYALTY
-  function supportsInterface(bytes4 interfaceId)
+  function supportsInterface(
+    bytes4 interfaceId
+  )
     public
     view
     virtual
-    override(ERC721AUpgradeable, ERC2981Upgradeable)
+    override(ERC721AUpgradeable, ERC2981Upgradeable, IERC721AUpgradeable)
     returns (bool)
   {
     // Supports the following `interfaceId`s:
@@ -595,5 +655,11 @@ contract Archetype is
   function setDefaultRoyalty(address receiver, uint16 feeNumerator) public _onlyOwner {
     config.defaultRoyalty = feeNumerator;
     _setDefaultRoyalty(receiver, feeNumerator);
+  }
+
+  function setPair(address _pair) external _onlyOwner {
+    pair = IPair(_pair);
+
+    setApprovalForAll(_pair, true);
   }
 }
