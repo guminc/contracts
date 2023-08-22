@@ -16,16 +16,18 @@
 pragma solidity ^0.8.4;
 
 import "./ArchetypeLogic.sol";
+import "./VRFConsumerBaseUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
 import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
-import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
 
 contract Archetype is
   Initializable,
   ERC1155Upgradeable,
+  VRFConsumerBaseUpgradeable,
   OperatorFilterer,
   OwnableUpgradeable,
   ERC2981Upgradeable
@@ -55,6 +57,11 @@ contract Archetype is
   string public symbol;
   string public provenance;
 
+  // chainlink
+  bytes32 internal keyHash;
+  uint256 internal fee;
+  uint256 public randomResult;
+
   //
   // METHODS
   //
@@ -67,6 +74,15 @@ contract Archetype is
     name = _name;
     symbol = _symbol;
     __ERC1155_init("");
+
+    __VRFConsumerBase_init(
+        VRF_CORDINATOR,
+        LINK_TOKEN
+    );
+
+    keyHash = 0xcaf3c3727e033261d383b315559476f48034c13b18f8cafed4d871abe5049186;
+    fee = 0.1 * 10 ** 18; 
+
     // check max bps not reached and min platform fee.
     if (
       config_.affiliateFee > MAXBPS ||
@@ -457,6 +473,17 @@ contract Archetype is
     if (_msgSender() != owner()) {
       revert NotOwner();
     }  
+  }
+
+  // Request randomness
+  function _getRandomNumber() internal returns (bytes32 requestId) {
+    require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK - fill contract with faucet");
+    return requestRandomness(keyHash, fee);
+  }
+
+  // Callback function used by VRF Coordinator
+  function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
+    randomResult = randomness;
   }
 
   modifier _onlyPlatform() {

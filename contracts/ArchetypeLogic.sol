@@ -126,6 +126,10 @@ struct ValidationArgs {
 address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
 address constant BATCH = 0x6Bc558A6DC48dEfa0e7022713c23D65Ab26e4Fa7;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
+// vrf sepolia
+address constant VRF_CORDINATOR = 0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625;
+bytes32 constant VRF_KEYHASH = 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c;
+address constant LINK_TOKEN = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
 
 library ArchetypeLogic {
   //

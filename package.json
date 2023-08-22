@@ -27,6 +27,8 @@
   },
   "homepage": "https://github.com/scatter-art/contracts#readme",
   "dependencies": {
+    "@chainlink/contracts": "^0.6.1",
+    "@chainlink/hardhat-chainlink": "^0.0.2",
     "concurrently": "6.4.0",
     "ethereumjs-util": "7.1.4",
     "ipfsh": "0.0.6",
