@@ -28,8 +28,6 @@ import "./caviar/ICaviar.sol";
 import "./caviar/IPair.sol";
 import "./caviar/ReservoirOracle.sol";
 
-import "hardhat/console.sol";
-
 contract Archetype is
   ERC721A__Initializable,
   ERC721AUpgradeable,
