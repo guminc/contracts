@@ -414,9 +414,9 @@ library ArchetypeLogic {
         bool success = false;
         // send to ownerAltPayout if set and owner is withdrawing
         if (msgSender == owner && config.ownerAltPayout != address(0)) {
-          (success, ) = payable(config.ownerAltPayout).call{ value: wad }("");
+          (success, ) = payable(config.ownerAltPayout).call{value: wad}("");
         } else {
-          (success, ) = msgSender.call{ value: wad }("");
+          (success, ) = msgSender.call{value: wad}("");
         }
         if (!success) {
           revert TransferFailed();

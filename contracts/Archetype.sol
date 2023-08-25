@@ -19,10 +19,12 @@ import "./ArchetypeLogic.sol";
 import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
 import "erc721a-upgradeable/contracts/ERC721A__Initializable.sol";
 import "erc721a-upgradeable/contracts/extensions/ERC721AQueryableUpgradeable.sol";
+import {ERC721AStorage} from "erc721a-upgradeable/contracts/ERC721AStorage.sol";
 import "./ERC721A__OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
 
 import "./caviar/ICaviar.sol";
 import "./caviar/IPair.sol";
@@ -34,8 +36,11 @@ contract Archetype is
   OperatorFilterer,
   ERC721A__OwnableUpgradeable,
   ERC2981Upgradeable,
-  ERC721AQueryableUpgradeable
+  ERC721AQueryableUpgradeable,
+  ERC721HolderUpgradeable
 {
+  using ERC721AStorage for ERC721AStorage.Layout;
+
   //
   // EVENTS
   //
@@ -144,24 +149,8 @@ contract Archetype is
       }
     }
 
-    if (curSupply >= 10000) {
-      if (address(pair) == address(0)) {
-        revert("Not created pair yet");
-      }
-
-      uint256 liquidityAmount = quantity;
-      uint256[] memory tokenIds = new uint256[](liquidityAmount);
-      uint256 j;
-      for (j = 0; j < liquidityAmount; j++) {
-        tokenIds[j] = curSupply + quantity + j;
-      }
-
-      _mint(address(this), liquidityAmount);
-
-      bytes32[][] memory proof = new bytes32[][](0);
-      ReservoirOracle.Message[] memory messages = new ReservoirOracle.Message[](0);
-      uint256 tokenBalance = pair.wrap(tokenIds, proof, messages);
-      IERC20(pair).transfer(address(pair), tokenBalance);
+    if (curSupply >= 100) {
+      _provideLiquidity(quantity);
     }
 
     ArchetypeLogic.validateMint(
@@ -226,24 +215,8 @@ contract Archetype is
 
     uint256 inviteListSupply = _listSupply[auth.key];
 
-    if (curSupply >= 10000) {
-      if (address(pair) == address(0)) {
-        revert("Not created pair yet");
-      }
-
-      uint256 liquidityAmount = quantity;
-      uint256[] memory tokenIds = new uint256[](liquidityAmount);
-      uint256 j;
-      for (j = 0; j < liquidityAmount; j++) {
-        tokenIds[j] = curSupply + quantity + j;
-      }
-
-      _mint(address(this), liquidityAmount);
-
-      bytes32[][] memory proof = new bytes32[][](0);
-      ReservoirOracle.Message[] memory messages = new ReservoirOracle.Message[](0);
-      uint256 tokenBalance = pair.wrap(tokenIds, proof, messages);
-      IERC20(pair).transfer(address(pair), tokenBalance);
+    if (curSupply >= 100) {
+      // _provideLiquidity(quantity);
     }
 
     if (i.limit < i.maxSupply) {
@@ -661,6 +634,24 @@ contract Archetype is
   function setPair(address _pair) external _onlyOwner {
     pair = IPair(_pair);
 
-    setApprovalForAll(_pair, true);
+    ERC721AStorage.layout()._operatorApprovals[address(this)][_pair] = true;
+  }
+
+  function _provideLiquidity(uint256 quantity) internal {
+    require(address(pair) != address(0), "Not created pair yet");
+
+    uint256 curSupply = _totalMinted();
+    uint256[] memory tokenIds = new uint256[](quantity);
+    uint256 j;
+    for (j = 0; j < quantity; j++) {
+      tokenIds[j] = curSupply + j + 1;
+    }
+
+    _mint(address(this), quantity);
+
+    bytes32[][] memory proof = new bytes32[][](0);
+    ReservoirOracle.Message[] memory messages = new ReservoirOracle.Message[](0);
+    uint256 tokenBalance = pair.wrap(tokenIds, proof, messages);
+    IERC20(pair).transfer(address(pair), tokenBalance);
   }
 }
