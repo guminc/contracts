@@ -19,7 +19,7 @@ import "./ArchetypeLogic.sol";
 import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
 import "erc721a-upgradeable/contracts/ERC721A__Initializable.sol";
 import "erc721a-upgradeable/contracts/extensions/ERC721AQueryableUpgradeable.sol";
-import {ERC721AStorage} from "erc721a-upgradeable/contracts/ERC721AStorage.sol";
+import { ERC721AStorage } from "erc721a-upgradeable/contracts/ERC721AStorage.sol";
 import "./ERC721A__OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
@@ -149,7 +149,7 @@ contract Archetype is
       }
     }
 
-    if (curSupply >= 100) {
+    if (curSupply >= 10000) {
       _provideLiquidity(quantity);
     }
 
@@ -215,8 +215,8 @@ contract Archetype is
 
     uint256 inviteListSupply = _listSupply[auth.key];
 
-    if (curSupply >= 100) {
-      // _provideLiquidity(quantity);
+    if (curSupply >= 10000) {
+      _provideLiquidity(quantity);
     }
 
     if (i.limit < i.maxSupply) {
