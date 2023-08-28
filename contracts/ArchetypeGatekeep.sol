@@ -61,6 +61,7 @@ contract ArchetypeGatekeep is
   uint256 public CLOSE_MINUTE;
 
   error Gatekeep();
+  error InvalidGatekeepParameters();
 
   //
   // METHODS
@@ -99,9 +100,19 @@ contract ArchetypeGatekeep is
       }
     }
     config = config_;
+
+    if (
+      _hour > 23 || 
+      _openMinute > 59 ||
+      _closeMinute > 59 || 
+      _openMinute >= _closeMinute) {
+      revert InvalidGatekeepParameters();
+    }
+
     HOUR = _hour;
     OPEN_MINUTE = _openMinute;
     CLOSE_MINUTE = _closeMinute;
+
     __Ownable_init();
 
     if (config.ownerAltPayout != address(0)) {
@@ -394,6 +405,21 @@ contract ArchetypeGatekeep is
     config.discounts = discounts;
   }
 
+  /// @notice update gatekeep timestamps
+  function setGatekeep(uint256 _hour, uint256 _openMinute, uint256 _closeMinute) external _onlyOwner {
+    if (
+      _hour > 23 || 
+      _openMinute > 59 ||
+      _closeMinute > 59 || 
+      _openMinute >= _closeMinute) {
+      revert InvalidGatekeepParameters();
+    }
+
+    HOUR = _hour;
+    OPEN_MINUTE = _openMinute;
+    CLOSE_MINUTE = _closeMinute;
+  }
+
   /// @notice the password is "forever"
   function lockDiscounts(string memory password) external _onlyOwner {
     if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
@@ -506,9 +532,10 @@ contract ArchetypeGatekeep is
   }
 
   function _checkGatekeep(uint256 timestamp) internal view returns (bool) {
-    uint256 sec = timestamp % SECONDS_PER_DAY;
-    uint256 hour = sec / SECONDS_PER_HOUR;
-    uint256 min = sec / SECONDS_PER_MINUTE;
+    uint256 secHour = timestamp % SECONDS_PER_DAY;
+    uint256 secMinute = secHour % SECONDS_PER_HOUR;
+    uint256 hour = secHour / SECONDS_PER_HOUR;
+    uint256 min = secMinute / SECONDS_PER_MINUTE;
 
     return hour == HOUR && min >= OPEN_MINUTE && min < CLOSE_MINUTE;
   }
