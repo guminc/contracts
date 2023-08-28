@@ -25,14 +25,10 @@ let DEFAULT_CONFIG: IArchetypeConfig;
 // this is an IPFS content ID which stores a list of addresses ({address: string[]})
 // eg: https://ipfs.io/ipfs/bafkreih2kyxirba6a6dyzt4tsdqb5iim3soprumtewq6garaohkfknqlaq
 // utility for converting CID to bytes32: https://github.com/factoria-org/ipfsh
-const CID_DEFAULT = "Qmbro8pnECVvjwWH6J9KyFXR8isquPFNgbUiHDGXhYnmFn";
 
 const CID_ZERO = "bafkreiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 const ZERO = "0x0000000000000000000000000000000000000000";
-const BURN = "0x000000000000000000000000000000000000dEaD";
-const HASHONE = "0x0000000000000000000000000000000000000000000000000000000000000001";
-const HASH256 = "0x00000000000000000000000000000000000000000000000000000000000000ff";
 
 describe("FactoryGatekeep", function () {
     let Archetype: ArchetypeGatekeep__factory;
