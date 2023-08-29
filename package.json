@@ -6,8 +6,8 @@
   "scripts": {
     "preTest": "node test/preTest.js",
     "postTest": "node test/postTest.js",
-    "test": "npm run preTest && npx hardhat test test/archetype.test.ts && npm run postTest",
-    "test:gatekeep": "npm run preTest && npx hardhat test test/archetypeGatekeep.test.ts && npm run postTest",
+    "test:legacy": "npm run preTest && npx hardhat test test/archetype.test.ts && npm run postTest",
+    "test": "npm run preTest && npx hardhat test test/archetypeGatekeep.test.ts && npm run postTest",
     "test:specific": "npm run preTest && hardhat test test/archetype.test --grep && npm run postTest",
     "start": "concurrently \"cd api && npm start\" \"cd app && npm run dev\"",
     "deploy": "npx hardhat run scripts/deployArchetype.ts --network localhost",
