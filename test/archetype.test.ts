@@ -1868,16 +1868,16 @@ describe("Factory", function () {
     // batchTransaction tx sent 0.1 extra eth
     // Use rescueETH method to save eth
     const recipient_ = minter2.address;
-    let ethbalance = await ethers.provider.getBalance(minter2.address);
+    const ethbalance = await ethers.provider.getBalance(minter2.address);
     await archetypeBatch.connect(owner).rescueETH(recipient_);
-    let diff =
+    const diff =
       (await ethers.provider.getBalance(minter2.address)).toBigInt() - ethbalance.toBigInt();
 
     expect(Number(diff)).to.be.equal(Number(ethers.utils.parseEther("0.1")));
   });
 
   it("test batch msg sender vs tx origin logic", async function () {
-    const [accountZero, accountOne, accountTwo, accountThree] = await ethers.getSigners();
+    const [accountZero, accountOne] = await ethers.getSigners();
 
     const owner = accountZero;
     const minter = accountOne;
@@ -1943,10 +1943,9 @@ describe("Factory", function () {
   });
 
   it("test batching owner method", async function () {
-    const [accountZero, accountOne, accountTwo, accountThree] = await ethers.getSigners();
+    const [accountZero] = await ethers.getSigners();
 
     const owner = accountZero;
-    const minter = accountOne;
 
     const newCollectionMint = await factory.createCollection(
       owner.address,
