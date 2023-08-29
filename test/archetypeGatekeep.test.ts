@@ -1,12 +1,12 @@
 import { ethers, upgrades } from "hardhat";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { 
-    ArchetypeGatekeep__factory, 
-    ArchetypeGatekeep as IArchetype,
-    ArchetypeLogic__factory,
-    ArchetypeGatekeep,
-    FactoryGatekeep__factory, 
+import {
+  Archetype__factory,
+  Archetype as IArchetype,
+  ArchetypeLogic__factory,
+  Archetype,
+  Factory__factory,
 } from "../typechain";
 import { IArchetypeConfig } from "../lib/types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -30,15 +30,15 @@ const CID_ZERO = "bafkreiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 const ZERO = "0x0000000000000000000000000000000000000000";
 
-describe("FactoryGatekeep", function () {
-    let Archetype: ArchetypeGatekeep__factory;
-    let archetype: IArchetype;
-    let ArchetypeLogic: ArchetypeLogic__factory;
-    let archetypeLogic: Contract;
-    let Factory: FactoryGatekeep__factory;
-    let factory: Contract;
+describe("Factory", function () {
+  let Archetype: Archetype__factory;
+  let archetype: IArchetype;
+  let ArchetypeLogic: ArchetypeLogic__factory;
+  let archetypeLogic: Contract;
+  let Factory: Factory__factory;
+  let factory: Contract;
 
-    before(async function () {
+  before(async function () {
     AFFILIATE_SIGNER = (await ethers.getSigners())[4]; // account[4]
     DEFAULT_CONFIG = {
       baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
@@ -62,7 +62,7 @@ describe("FactoryGatekeep", function () {
 
     ArchetypeLogic = await ethers.getContractFactory("ArchetypeLogic");
     archetypeLogic = await ArchetypeLogic.deploy();
-    Archetype = await ethers.getContractFactory("ArchetypeGatekeep", {
+    Archetype = await ethers.getContractFactory("Archetype", {
       libraries: {
         ArchetypeLogic: archetypeLogic.address,
       },
@@ -71,7 +71,7 @@ describe("FactoryGatekeep", function () {
     archetype = await Archetype.deploy();
     await archetype.deployed();
 
-    Factory = await ethers.getContractFactory("FactoryGatekeep");
+    Factory = await ethers.getContractFactory("Factory");
     factory = await upgrades.deployProxy(Factory, [archetype.address], {
       initializer: "initialize",
     });
@@ -100,7 +100,7 @@ describe("FactoryGatekeep", function () {
       DEFAULT_CONFIG,
       DEFAULT_HOUR,
       DEFAULT_OPEN_MINUTE,
-      DEFAULT_CLOSE_MINUTE,
+      DEFAULT_CLOSE_MINUTE
     );
 
     const result = await newCollection.wait();
@@ -134,7 +134,7 @@ describe("FactoryGatekeep", function () {
       DEFAULT_CONFIG,
       DEFAULT_HOUR,
       DEFAULT_OPEN_MINUTE,
-      DEFAULT_CLOSE_MINUTE,
+      DEFAULT_CLOSE_MINUTE
     );
 
     const result = await newCollection.wait();
@@ -213,9 +213,9 @@ describe("FactoryGatekeep", function () {
 
     expect(await nft.balanceOf(accountZero.address)).to.equal(1);
 
-    await expect(nft.connect(accountZero).transferFrom(accountZero.address, accountOne.address, 1)).to.be.revertedWith(
-      "Gatekeep()"
-    );
+    await expect(
+      nft.connect(accountZero).transferFrom(accountZero.address, accountOne.address, 1)
+    ).to.be.revertedWith("Gatekeep()");
   });
 
   it("should succeed to transfer inside of gatekeep window", async function () {
@@ -267,7 +267,7 @@ describe("FactoryGatekeep", function () {
     await nft.connect(accountZero).setApprovalForAll(accountOne.address, true);
 
     // Create a new Date object for the current UTC date and time
-    let date = new Date();
+    const date = new Date();
 
     // Set the UTC hours to 1 and the UTC minutes to 20
     date.setUTCHours(1, 20, 0, 0); // This sets hours, minutes, seconds, and milliseconds
@@ -336,7 +336,7 @@ describe("FactoryGatekeep", function () {
     await nft.connect(accountZero).setApprovalForAll(accountOne.address, true);
 
     // Create a new Date object for the current UTC date and time
-    let date = new Date();
+    const date = new Date();
 
     // Set the UTC hours to 1 and the UTC minutes to 20
     date.setUTCHours(1, 20, 0, 0); // This sets hours, minutes, seconds, and milliseconds
@@ -413,7 +413,7 @@ describe("FactoryGatekeep", function () {
     await nft.connect(accountZero).setApprovalForAll(accountOne.address, true);
 
     // Create a new Date object for the current UTC date and time
-    let date = new Date();
+    const date = new Date();
 
     // Set the UTC hours to 1 and the UTC minutes to 20
     date.setUTCHours(1, 20, 0, 0); // This sets hours, minutes, seconds, and milliseconds
@@ -435,7 +435,7 @@ describe("FactoryGatekeep", function () {
     await nft.connect(owner).setGatekeep(19, 20, 25);
 
     // Create a new Date object for the current UTC date and time
-    let date2 = new Date();
+    const date2 = new Date();
 
     // Set the UTC hours to 1 and the UTC minutes to 20
     date2.setUTCHours(5, 5, 0, 0); // This sets hours, minutes, seconds, and milliseconds
@@ -455,5 +455,4 @@ describe("FactoryGatekeep", function () {
     expect(await nft.balanceOf(accountZero.address)).to.equal(0);
     expect(await nft.balanceOf(accountOne.address)).to.equal(2);
   });
-
 });
