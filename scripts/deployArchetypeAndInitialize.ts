@@ -2,6 +2,8 @@ import { ethers, run } from "hardhat";
 import * as readlineSync from 'readline-sync';
 import { ArchetypeLogic } from "../typechain";
 
+const ZERO = "0x0000000000000000000000000000000000000000";
+
 async function main() {
 
   // set to empty for new deploy
@@ -39,11 +41,25 @@ async function main() {
   const deployerAddress = await deployer.getAddress();
 
   let archetypeLogic: ArchetypeLogic;
-  const ArchetypeLogicFactory = await ethers.getContractFactory("ArchetypeLogic");
+  const ArchetypeLogic = await ethers.getContractFactory("ArchetypeLogic");
   if (LIBRARY_ADDRESS === "") {
-    archetypeLogic = await ArchetypeLogicFactory.deploy()
+    archetypeLogic = await ArchetypeLogic.deploy()
   } else {
-    archetypeLogic = ArchetypeLogicFactory.attach(LIBRARY_ADDRESS)
+    archetypeLogic = ArchetypeLogic.attach(LIBRARY_ADDRESS)
+  }
+
+
+  // Check the library
+  const expectedBytecode = (await ethers.getContractFactory("ArchetypeLogic")).bytecode;
+  const actualBytecode = await ethers.provider.getCode(archetypeLogic.address);
+  const matchRate = calculateMatchRate(expectedBytecode, actualBytecode)
+
+  if (matchRate > 90) {
+    console.log("ArchetypeLogic bytecode matches");
+  } else {
+    console.log("ArchetypeLogic bytecode has a match rate of", matchRate,
+                "make sure its the correct address. Exiting ...");
+    process.exit(1);
   }
 
   const Archetype = await ethers.getContractFactory("Archetype", {
@@ -69,3 +85,27 @@ main()
     console.error(error);
     process.exit(1);
   });
+
+/*
+  Uses a sliding window approach, chunkBytecode produces overlapping chunks.
+  E.g., for "ABCDEF" and chunk size 3, we get ["ABC", "BCD", "CDE", "DEF"]. 
+  This ensures better matching, especially when bytecodes have minor offsets.
+*/
+  function calculateMatchRate(bytecode1: string, bytecode2: string): number {
+    function chunkBytecode(bytecode: string, chunkSize: number): string[] {
+      const chunks = [];
+      for (let i = 0; i <= bytecode.length - chunkSize; i++) {
+          chunks.push(bytecode.slice(i, i + chunkSize));
+      }
+      return chunks;
+    }
+
+    const chunkSize = 10;
+    const chunks1 = chunkBytecode(bytecode1, chunkSize);
+    const chunks2 = new Set(chunkBytecode(bytecode2, chunkSize));
+
+    const commonChunks = chunks1.filter(chunk => chunks2.has(chunk)).length;
+
+    const maxPossibleMatches = Math.max(chunks1.length, chunks2.size);
+    return (commonChunks / maxPossibleMatches) * 100;
+}
