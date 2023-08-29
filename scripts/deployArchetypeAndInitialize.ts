@@ -7,8 +7,8 @@ const ZERO = "0x0000000000000000000000000000000000000000";
 async function main() {
 
   // set to empty for new deploy
-  // const LIBRARY_ADDRESS: string = "0xE11FcB03d07CDbf3D2870105b6d6BbF78d44acf5" // SEPOLIA 0.6.0
-  const LIBRARY_ADDRESS: string = "0x73cA112A50C4eAb928AaE07aAF96944d431720EF" // MAINNET 0.6.0
+  const LIBRARY_ADDRESS: string = "0xE11FcB03d07CDbf3D2870105b6d6BbF78d44acf5" // SEPOLIA 0.6.0
+  // const LIBRARY_ADDRESS: string = "0x73cA112A50C4eAb928AaE07aAF96944d431720EF" // MAINNET 0.6.0
   const NAME: string = "my nft"
   const SYMBOL: string = "MYNFT"
   const CONFIG = {
@@ -54,11 +54,11 @@ async function main() {
   const actualBytecode = await ethers.provider.getCode(archetypeLogic.address);
   const matchRate = calculateMatchRate(expectedBytecode, actualBytecode)
 
+  console.log("ArchetypeLogic bytecode has a match rate of", matchRate)
   if (matchRate > 90) {
-    console.log("ArchetypeLogic bytecode matches");
+    console.log("ArchetypeLogic bytecode match passes");
   } else {
-    console.log("ArchetypeLogic bytecode has a match rate of", matchRate,
-                "make sure its the correct address. Exiting ...");
+    console.log("ArchetypeLogic bytecode match fails, make sure its the correct address. Exiting ...");
     process.exit(1);
   }
 
