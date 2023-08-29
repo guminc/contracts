@@ -144,7 +144,7 @@ describe("Factory", function () {
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.08"),
-      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      start: 0,
       end: 0,
       limit: 300,
       maxSupply: DEFAULT_CONFIG.maxSupply,
@@ -188,7 +188,7 @@ describe("Factory", function () {
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.08"),
-      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      start: 0,
       end: 0,
       limit: 300,
       maxSupply: DEFAULT_CONFIG.maxSupply,
@@ -236,7 +236,7 @@ describe("Factory", function () {
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.08"),
-      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      start: 0,
       end: 0,
       limit: 300,
       maxSupply: DEFAULT_CONFIG.maxSupply,
@@ -303,7 +303,7 @@ describe("Factory", function () {
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.08"),
-      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      start: 0,
       end: 0,
       limit: 300,
       maxSupply: DEFAULT_CONFIG.maxSupply,
@@ -378,7 +378,7 @@ describe("Factory", function () {
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.08"),
-      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      start: 0,
       end: 0,
       limit: 300,
       maxSupply: DEFAULT_CONFIG.maxSupply,
