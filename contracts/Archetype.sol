@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.6.0
+// Archetype-Gatekeep v0.6.0 - @PopPunkOnChain
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -23,6 +23,21 @@ import "./ERC721A__OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
+
+struct GatekeepConfig {
+  uint16 openHour;
+  uint16 closeHour;
+  uint16 openMinute;
+  uint16 closeMinute;
+}
+
+uint256 constant SECONDS_PER_DAY = 24 * 60 * 60;
+uint256 constant SECONDS_PER_HOUR = 60 * 60;
+uint256 constant SECONDS_PER_MINUTE = 60;
+
+
+error Gatekeep();
+error InvalidGatekeepParameters();
 
 contract Archetype is
   ERC721A__Initializable,
@@ -50,18 +65,8 @@ contract Archetype is
 
   Config public config;
   BurnConfig public burnConfig;
+  GatekeepConfig public gatekeepConfig;
   Options public options;
-
-  uint256 constant SECONDS_PER_DAY = 24 * 60 * 60;
-  uint256 constant SECONDS_PER_HOUR = 60 * 60;
-  uint256 constant SECONDS_PER_MINUTE = 60;
-
-  uint256 public HOUR;
-  uint256 public OPEN_MINUTE;
-  uint256 public CLOSE_MINUTE;
-
-  error Gatekeep();
-  error InvalidGatekeepParameters();
 
   //
   // METHODS
@@ -70,10 +75,8 @@ contract Archetype is
     string memory name,
     string memory symbol,
     Config calldata config_,
-    address _receiver,
-    uint256 _hour,
-    uint256 _openMinute,
-    uint256 _closeMinute
+    GatekeepConfig calldata gatekeepConfig_,
+    address _receiver
   ) external initializerERC721A {
     __ERC721A_init(name, symbol);
     // check max bps not reached and min platform fee.
@@ -101,13 +104,11 @@ contract Archetype is
     }
     config = config_;
 
-    if (_hour > 23 || _openMinute > 59 || _closeMinute > 59 || _openMinute >= _closeMinute) {
+    if (gatekeepConfig_.closeHour > 23 || gatekeepConfig_.closeMinute > 59 ||
+        gatekeepConfig_.openHour >= gatekeepConfig_.closeHour || gatekeepConfig_.openMinute >= gatekeepConfig_.closeMinute) {
       revert InvalidGatekeepParameters();
     }
-
-    HOUR = _hour;
-    OPEN_MINUTE = _openMinute;
-    CLOSE_MINUTE = _closeMinute;
+    gatekeepConfig = gatekeepConfig_;
 
     __Ownable_init();
 
@@ -403,17 +404,20 @@ contract Archetype is
 
   /// @notice update gatekeep timestamps
   function setGatekeep(
-    uint256 _hour,
-    uint256 _openMinute,
-    uint256 _closeMinute
+    uint16 openHour,
+    uint16 closeHour,
+    uint16 openMinute,
+    uint16 closeMinute
   ) external _onlyOwner {
-    if (_hour > 23 || _openMinute > 59 || _closeMinute > 59 || _openMinute >= _closeMinute) {
+    if (closeHour > 23 || closeMinute > 59 || openHour >= closeHour || openMinute >= closeMinute) {
       revert InvalidGatekeepParameters();
     }
-
-    HOUR = _hour;
-    OPEN_MINUTE = _openMinute;
-    CLOSE_MINUTE = _closeMinute;
+    gatekeepConfig = GatekeepConfig({
+      openHour: openHour,
+      closeHour: closeHour,
+      openMinute: openMinute,
+      closeMinute: closeMinute
+    });
   }
 
   /// @notice the password is "forever"
@@ -529,7 +533,8 @@ contract Archetype is
     uint256 hour = secHour / SECONDS_PER_HOUR;
     uint256 min = secMinute / SECONDS_PER_MINUTE;
 
-    return hour == HOUR && min >= OPEN_MINUTE && min < CLOSE_MINUTE;
+    return hour >= gatekeepConfig.openHour && hour < gatekeepConfig.closeHour &&
+           min >= gatekeepConfig.openMinute && min < gatekeepConfig.closeMinute;
   }
 
   modifier _onlyPlatform() {

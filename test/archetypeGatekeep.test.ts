@@ -17,9 +17,12 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const DEFAULT_NAME = "Pookie";
 const DEFAULT_SYMBOL = "POOKIE";
-const DEFAULT_HOUR = 13;
-const DEFAULT_OPEN_MINUTE = 15;
-const DEFAULT_CLOSE_MINUTE = 25;
+const DEFAULT_GATEKEEP_CONFIG = {
+  openHour: 13,
+  closeHour: 14,
+  openMinute: 15,
+  closeMinute: 25
+};
 let AFFILIATE_SIGNER: SignerWithAddress;
 let DEFAULT_CONFIG: IArchetypeConfig;
 // this is an IPFS content ID which stores a list of addresses ({address: string[]})
@@ -98,9 +101,7 @@ describe("Factory", function () {
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
       DEFAULT_CONFIG,
-      DEFAULT_HOUR,
-      DEFAULT_OPEN_MINUTE,
-      DEFAULT_CLOSE_MINUTE
+      DEFAULT_GATEKEEP_CONFIG,
     );
 
     const result = await newCollection.wait();
@@ -111,15 +112,15 @@ describe("Factory", function () {
 
     const symbol = await nft.symbol();
     const owner = await nft.owner();
-    const hour = await nft.HOUR();
-    const openMinute = await nft.OPEN_MINUTE();
-    const closeMinute = await nft.CLOSE_MINUTE();
+
+    const gatekeepConfig = await nft.gatekeepConfig();
 
     expect(symbol).to.equal(DEFAULT_SYMBOL);
     expect(owner).to.equal(accountOne.address);
-    expect(hour).to.equal(DEFAULT_HOUR);
-    expect(openMinute).to.equal(DEFAULT_OPEN_MINUTE);
-    expect(closeMinute).to.equal(DEFAULT_CLOSE_MINUTE);
+    expect(gatekeepConfig.openHour).to.equal(DEFAULT_GATEKEEP_CONFIG.openHour);
+    expect(gatekeepConfig.closeHour).to.equal(DEFAULT_GATEKEEP_CONFIG.closeHour);
+    expect(gatekeepConfig.openMinute).to.equal(DEFAULT_GATEKEEP_CONFIG.openMinute);
+    expect(gatekeepConfig.closeMinute).to.equal(DEFAULT_GATEKEEP_CONFIG.closeMinute);
   });
 
   it("should mint if public sale is set", async function () {
@@ -132,9 +133,7 @@ describe("Factory", function () {
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
       DEFAULT_CONFIG,
-      DEFAULT_HOUR,
-      DEFAULT_OPEN_MINUTE,
-      DEFAULT_CLOSE_MINUTE
+      DEFAULT_GATEKEEP_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -178,9 +177,7 @@ describe("Factory", function () {
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
       DEFAULT_CONFIG,
-      DEFAULT_HOUR,
-      DEFAULT_OPEN_MINUTE,
-      DEFAULT_CLOSE_MINUTE
+      DEFAULT_GATEKEEP_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -228,9 +225,7 @@ describe("Factory", function () {
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
       DEFAULT_CONFIG,
-      DEFAULT_HOUR,
-      DEFAULT_OPEN_MINUTE,
-      DEFAULT_CLOSE_MINUTE
+      DEFAULT_GATEKEEP_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -297,9 +292,7 @@ describe("Factory", function () {
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
       DEFAULT_CONFIG,
-      DEFAULT_HOUR,
-      DEFAULT_OPEN_MINUTE,
-      DEFAULT_CLOSE_MINUTE
+      DEFAULT_GATEKEEP_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -355,7 +348,7 @@ describe("Factory", function () {
 
     expect(await nft.balanceOf(accountOne.address)).to.equal(1);
 
-    await nft.connect(owner).setGatekeep(5, 5, 10);
+    await nft.connect(owner).setGatekeep(5, 6, 5, 10);
 
     await expect(
       nft.connect(accountZero).transferFrom(accountZero.address, accountOne.address, 1)
@@ -374,9 +367,7 @@ describe("Factory", function () {
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
       DEFAULT_CONFIG,
-      DEFAULT_HOUR,
-      DEFAULT_OPEN_MINUTE,
-      DEFAULT_CLOSE_MINUTE
+      DEFAULT_GATEKEEP_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -432,7 +423,7 @@ describe("Factory", function () {
 
     expect(await nft.balanceOf(accountOne.address)).to.equal(1);
 
-    await nft.connect(owner).setGatekeep(19, 20, 25);
+    await nft.connect(owner).setGatekeep(19, 20, 20, 25);
 
     // Create a new Date object for the current UTC date and time
     const date2 = new Date();
