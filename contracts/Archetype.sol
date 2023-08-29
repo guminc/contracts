@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.6.0
+// Archetype-Gatekeep v0.6.0 - @PopPunkOnChain
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -23,6 +23,21 @@ import "./ERC721A__OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
+
+struct GatekeepConfig {
+  uint16 openHour;
+  uint16 closeHour;
+  uint16 openMinute;
+  uint16 closeMinute;
+}
+
+uint256 constant SECONDS_PER_DAY = 24 * 60 * 60;
+uint256 constant SECONDS_PER_HOUR = 60 * 60;
+uint256 constant SECONDS_PER_MINUTE = 60;
+
+
+error Gatekeep();
+error InvalidGatekeepParameters();
 
 contract Archetype is
   ERC721A__Initializable,
@@ -50,6 +65,7 @@ contract Archetype is
 
   Config public config;
   BurnConfig public burnConfig;
+  GatekeepConfig public gatekeepConfig;
   Options public options;
 
   //
@@ -59,6 +75,7 @@ contract Archetype is
     string memory name,
     string memory symbol,
     Config calldata config_,
+    GatekeepConfig calldata gatekeepConfig_,
     address _receiver
   ) external initializerERC721A {
     __ERC721A_init(name, symbol);
@@ -86,6 +103,13 @@ contract Archetype is
       }
     }
     config = config_;
+
+    if (gatekeepConfig_.closeHour > 23 || gatekeepConfig_.closeMinute > 59 ||
+        gatekeepConfig_.openHour >= gatekeepConfig_.closeHour || gatekeepConfig_.openMinute >= gatekeepConfig_.closeMinute) {
+      revert InvalidGatekeepParameters();
+    }
+    gatekeepConfig = gatekeepConfig_;
+
     __Ownable_init();
 
     if (config.ownerAltPayout != address(0)) {
@@ -378,6 +402,24 @@ contract Archetype is
     config.discounts = discounts;
   }
 
+  /// @notice update gatekeep timestamps
+  function setGatekeep(
+    uint16 openHour,
+    uint16 closeHour,
+    uint16 openMinute,
+    uint16 closeMinute
+  ) external _onlyOwner {
+    if (closeHour > 23 || closeMinute > 59 || openHour >= closeHour || openMinute >= closeMinute) {
+      revert InvalidGatekeepParameters();
+    }
+    gatekeepConfig = GatekeepConfig({
+      openHour: openHour,
+      closeHour: closeHour,
+      openMinute: openMinute,
+      closeMinute: closeMinute
+    });
+  }
+
   /// @notice the password is "forever"
   function lockDiscounts(string memory password) external _onlyOwner {
     if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
@@ -408,11 +450,7 @@ contract Archetype is
     config.maxBatchSize = maxBatchSize;
   }
 
-  function setInvite(
-    bytes32 _key,
-    bytes32 _cid,
-    Invite calldata _invite
-  ) external _onlyOwner {
+  function setInvite(bytes32 _key, bytes32 _cid, Invite calldata _invite) external _onlyOwner {
     invites[_key] = DutchInvite({
       price: _invite.price,
       reservePrice: _invite.price,
@@ -489,6 +527,16 @@ contract Archetype is
     return msg.sender == BATCH ? tx.origin : msg.sender;
   }
 
+  function _checkGatekeep(uint256 timestamp) internal view returns (bool) {
+    uint256 secHour = timestamp % SECONDS_PER_DAY;
+    uint256 secMinute = secHour % SECONDS_PER_HOUR;
+    uint256 hour = secHour / SECONDS_PER_HOUR;
+    uint256 min = secMinute / SECONDS_PER_MINUTE;
+
+    return hour >= gatekeepConfig.openHour && hour < gatekeepConfig.closeHour &&
+           min >= gatekeepConfig.openMinute && min < gatekeepConfig.closeMinute;
+  }
+
   modifier _onlyPlatform() {
     if (_msgSender() != PLATFORM) {
       revert NotPlatform();
@@ -528,20 +576,17 @@ contract Archetype is
     options.royaltyEnforcementLocked = true;
   }
 
-  function setApprovalForAll(address operator, bool approved)
-    public
-    override
-    onlyAllowedOperatorApproval(operator)
-  {
+  function setApprovalForAll(
+    address operator,
+    bool approved
+  ) public override onlyAllowedOperatorApproval(operator) {
     super.setApprovalForAll(operator, approved);
   }
 
-  function approve(address operator, uint256 tokenId)
-    public
-    payable
-    override
-    onlyAllowedOperatorApproval(operator)
-  {
+  function approve(
+    address operator,
+    uint256 tokenId
+  ) public payable override onlyAllowedOperatorApproval(operator) {
     super.approve(operator, tokenId);
   }
 
@@ -550,6 +595,7 @@ contract Archetype is
     address to,
     uint256 tokenId
   ) public payable override onlyAllowedOperator(from) {
+    if (!_checkGatekeep(block.timestamp)) revert Gatekeep();
     super.transferFrom(from, to, tokenId);
   }
 
@@ -558,6 +604,7 @@ contract Archetype is
     address to,
     uint256 tokenId
   ) public payable override onlyAllowedOperator(from) {
+    if (!_checkGatekeep(block.timestamp)) revert Gatekeep();
     super.safeTransferFrom(from, to, tokenId);
   }
 
@@ -567,6 +614,7 @@ contract Archetype is
     uint256 tokenId,
     bytes memory data
   ) public payable override onlyAllowedOperator(from) {
+    if (!_checkGatekeep(block.timestamp)) revert Gatekeep();
     super.safeTransferFrom(from, to, tokenId, data);
   }
 
@@ -575,13 +623,9 @@ contract Archetype is
   }
 
   //ERC2981 ROYALTY
-  function supportsInterface(bytes4 interfaceId)
-    public
-    view
-    virtual
-    override(ERC721AUpgradeable, ERC2981Upgradeable)
-    returns (bool)
-  {
+  function supportsInterface(
+    bytes4 interfaceId
+  ) public view virtual override(ERC721AUpgradeable, ERC2981Upgradeable) returns (bool) {
     // Supports the following `interfaceId`s:
     // - IERC165: 0x01ffc9a7
     // - IERC721: 0x80ac58cd

@@ -10,6 +10,7 @@ export type { IERC1155MetadataURIUpgradeable } from "./IERC1155MetadataURIUpgrad
 export type { IERC1155ReceiverUpgradeable } from "./IERC1155ReceiverUpgradeable";
 export type { IERC1155Upgradeable } from "./IERC1155Upgradeable";
 export type { IERC20Upgradeable } from "./IERC20Upgradeable";
+export type { ERC721Upgradeable } from "./ERC721Upgradeable";
 export type { IERC721MetadataUpgradeable } from "./IERC721MetadataUpgradeable";
 export type { IERC721ReceiverUpgradeable } from "./IERC721ReceiverUpgradeable";
 export type { IERC721Upgradeable } from "./IERC721Upgradeable";
@@ -33,7 +34,6 @@ export type { ERC721AIERC721Receiver } from "./ERC721AIERC721Receiver";
 export type { ERC721A } from "./ERC721A";
 export type { ERC721AQueryable } from "./ERC721AQueryable";
 export type { F0 } from "./F0";
-export type { ERC721Upgradeable } from "./ERC721Upgradeable";
 export type { Factory } from "./Factory";
 export type { HelloWorld } from "./HelloWorld";
 export type { IERC721A } from "./IERC721A";
@@ -54,6 +54,7 @@ export { IERC1155MetadataURIUpgradeable__factory } from "./factories/IERC1155Met
 export { IERC1155ReceiverUpgradeable__factory } from "./factories/IERC1155ReceiverUpgradeable__factory";
 export { IERC1155Upgradeable__factory } from "./factories/IERC1155Upgradeable__factory";
 export { IERC20Upgradeable__factory } from "./factories/IERC20Upgradeable__factory";
+export { ERC721Upgradeable__factory } from "./factories/ERC721Upgradeable__factory";
 export { IERC721MetadataUpgradeable__factory } from "./factories/IERC721MetadataUpgradeable__factory";
 export { IERC721ReceiverUpgradeable__factory } from "./factories/IERC721ReceiverUpgradeable__factory";
 export { IERC721Upgradeable__factory } from "./factories/IERC721Upgradeable__factory";
@@ -77,7 +78,6 @@ export { ERC721AIERC721Receiver__factory } from "./factories/ERC721AIERC721Recei
 export { ERC721A__factory } from "./factories/ERC721A__factory";
 export { ERC721AQueryable__factory } from "./factories/ERC721AQueryable__factory";
 export { F0__factory } from "./factories/F0__factory";
-export { ERC721Upgradeable__factory } from "./factories/ERC721Upgradeable__factory";
 export { Factory__factory } from "./factories/Factory__factory";
 export { HelloWorld__factory } from "./factories/HelloWorld__factory";
 export { IERC721A__factory } from "./factories/IERC721A__factory";

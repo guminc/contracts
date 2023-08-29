@@ -126,6 +126,7 @@ struct BurnConfig {
 
 address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
 address constant BATCH = 0x6Bc558A6DC48dEfa0e7022713c23D65Ab26e4Fa7;
+
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 
 library ArchetypeLogic {

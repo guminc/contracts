@@ -6,7 +6,8 @@
   "scripts": {
     "preTest": "node test/preTest.js",
     "postTest": "node test/postTest.js",
-    "test": "npm run preTest && npx hardhat test test/archetype.test.ts && npm run postTest",
+    "test:legacy": "npm run preTest && npx hardhat test test/archetype.test.ts && npm run postTest",
+    "test": "npm run preTest && npx hardhat test test/archetypeGatekeep.test.ts && npm run postTest",
     "test:specific": "npm run preTest && hardhat test test/archetype.test --grep && npm run postTest",
     "start": "concurrently \"cd api && npm start\" \"cd app && npm run dev\"",
     "deploy": "npx hardhat run scripts/deployArchetype.ts --network localhost",
@@ -27,11 +28,13 @@
     "concurrently": "6.4.0",
     "ethereumjs-util": "7.1.4",
     "ipfsh": "0.0.6",
+    "readline-sync": "^1.4.10",
     "solady": "^0.0.19"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.9",
     "@nomiclabs/hardhat-ethers": "2.0.5",
-    "@nomiclabs/hardhat-etherscan": "3.0.3",
+    "@nomiclabs/hardhat-etherscan": "^3.0.3",
     "@nomiclabs/hardhat-truffle5": "2.0.3",
     "@nomiclabs/hardhat-waffle": "2.0.1",
     "@nomiclabs/hardhat-web3": "2.0.0",
