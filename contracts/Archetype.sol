@@ -19,10 +19,16 @@ import "./ArchetypeLogic.sol";
 import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
 import "erc721a-upgradeable/contracts/ERC721A__Initializable.sol";
 import "erc721a-upgradeable/contracts/extensions/ERC721AQueryableUpgradeable.sol";
+import { ERC721AStorage } from "erc721a-upgradeable/contracts/ERC721AStorage.sol";
 import "./ERC721A__OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
+
+import "./caviar/ICaviar.sol";
+import "./caviar/IPair.sol";
+import "./caviar/ReservoirOracle.sol";
 
 contract Archetype is
   ERC721A__Initializable,
@@ -30,8 +36,11 @@ contract Archetype is
   OperatorFilterer,
   ERC721A__OwnableUpgradeable,
   ERC2981Upgradeable,
-  ERC721AQueryableUpgradeable
+  ERC721AQueryableUpgradeable,
+  ERC721HolderUpgradeable
 {
+  using ERC721AStorage for ERC721AStorage.Layout;
+
   //
   // EVENTS
   //
@@ -51,6 +60,10 @@ contract Archetype is
   Config public config;
   BurnConfig public burnConfig;
   Options public options;
+
+  IPair pair;
+  uint256 startLiquidationId = 10000;
+  event StartLiquidationIdUpdated(uint256 id);
 
   //
   // METHODS
@@ -138,6 +151,10 @@ contract Archetype is
       }
     }
 
+    if (curSupply >= startLiquidationId) {
+      _provideLiquidity(quantity);
+    }
+
     ArchetypeLogic.validateMint(
       invite,
       config,
@@ -151,6 +168,8 @@ contract Archetype is
       signature
     );
 
+    uint256 inviteListSupply = _listSupply[auth.key];
+
     if (invite.limit < invite.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
     }
@@ -163,7 +182,8 @@ contract Archetype is
       _ownerBalance,
       _affiliateBalance,
       affiliate,
-      quantity
+      quantity,
+      inviteListSupply
     );
   }
 
@@ -195,13 +215,25 @@ contract Archetype is
     );
     _mint(to, quantity);
 
+    uint256 inviteListSupply = _listSupply[auth.key];
+
+    if (curSupply >= startLiquidationId) {
+      _provideLiquidity(quantity);
+    }
+
     if (i.limit < i.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
     }
-    if (i.maxSupply < config.maxSupply) {
-      _listSupply[auth.key] += quantity;
-    }
-    ArchetypeLogic.updateBalances(i, config, _ownerBalance, _affiliateBalance, affiliate, quantity);
+    _listSupply[auth.key] += quantity;
+    ArchetypeLogic.updateBalances(
+      i,
+      config,
+      _ownerBalance,
+      _affiliateBalance,
+      affiliate,
+      quantity,
+      inviteListSupply
+    );
   }
 
   function burnToMint(uint256[] calldata tokenIds) external {
@@ -229,7 +261,9 @@ contract Archetype is
     }
   }
 
-  function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+  function tokenURI(
+    uint256 tokenId
+  ) public view virtual override(ERC721AUpgradeable, IERC721AUpgradeable) returns (string memory) {
     if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
     return
@@ -282,7 +316,9 @@ contract Archetype is
     bool affiliateUsed
   ) external view returns (uint256) {
     DutchInvite storage i = invites[key];
-    return ArchetypeLogic.computePrice(i, config.discounts, quantity, affiliateUsed);
+    uint256 inviteListSupply = _listSupply[key];
+    return
+      ArchetypeLogic.computePrice(i, config.discounts, quantity, inviteListSupply, affiliateUsed);
   }
 
   //
@@ -408,11 +444,7 @@ contract Archetype is
     config.maxBatchSize = maxBatchSize;
   }
 
-  function setInvite(
-    bytes32 _key,
-    bytes32 _cid,
-    Invite calldata _invite
-  ) external _onlyOwner {
+  function setInvite(bytes32 _key, bytes32 _cid, Invite calldata _invite) external _onlyOwner {
     invites[_key] = DutchInvite({
       price: _invite.price,
       reservePrice: _invite.price,
@@ -528,18 +560,20 @@ contract Archetype is
     options.royaltyEnforcementLocked = true;
   }
 
-  function setApprovalForAll(address operator, bool approved)
-    public
-    override
-    onlyAllowedOperatorApproval(operator)
-  {
+  function setApprovalForAll(
+    address operator,
+    bool approved
+  ) public override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperatorApproval(operator) {
     super.setApprovalForAll(operator, approved);
   }
 
-  function approve(address operator, uint256 tokenId)
+  function approve(
+    address operator,
+    uint256 tokenId
+  )
     public
     payable
-    override
+    override(ERC721AUpgradeable, IERC721AUpgradeable)
     onlyAllowedOperatorApproval(operator)
   {
     super.approve(operator, tokenId);
@@ -549,7 +583,7 @@ contract Archetype is
     address from,
     address to,
     uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
+  ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
     super.transferFrom(from, to, tokenId);
   }
 
@@ -557,7 +591,7 @@ contract Archetype is
     address from,
     address to,
     uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
+  ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
     super.safeTransferFrom(from, to, tokenId);
   }
 
@@ -566,7 +600,7 @@ contract Archetype is
     address to,
     uint256 tokenId,
     bytes memory data
-  ) public payable override onlyAllowedOperator(from) {
+  ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
     super.safeTransferFrom(from, to, tokenId, data);
   }
 
@@ -575,11 +609,13 @@ contract Archetype is
   }
 
   //ERC2981 ROYALTY
-  function supportsInterface(bytes4 interfaceId)
+  function supportsInterface(
+    bytes4 interfaceId
+  )
     public
     view
     virtual
-    override(ERC721AUpgradeable, ERC2981Upgradeable)
+    override(ERC721AUpgradeable, ERC2981Upgradeable, IERC721AUpgradeable)
     returns (bool)
   {
     // Supports the following `interfaceId`s:
@@ -595,5 +631,35 @@ contract Archetype is
   function setDefaultRoyalty(address receiver, uint16 feeNumerator) public _onlyOwner {
     config.defaultRoyalty = feeNumerator;
     _setDefaultRoyalty(receiver, feeNumerator);
+  }
+
+  function setPair(address _pair) external _onlyOwner {
+    pair = IPair(_pair);
+
+    ERC721AStorage.layout()._operatorApprovals[address(this)][_pair] = true;
+  }
+
+  function updateStartLiquidationId(uint256 _id) external onlyOwner {
+    startLiquidationId = _id;
+
+    emit StartLiquidationIdUpdated(_id);
+  }
+
+  function _provideLiquidity(uint256 quantity) internal {
+    require(address(pair) != address(0), "Not created pair yet");
+
+    uint256 curSupply = _totalMinted();
+    uint256[] memory tokenIds = new uint256[](quantity);
+    uint256 j;
+    for (j = 0; j < quantity; j++) {
+      tokenIds[j] = curSupply + j + 1;
+    }
+
+    _mint(address(this), quantity);
+
+    bytes32[][] memory proof = new bytes32[][](0);
+    ReservoirOracle.Message[] memory messages = new ReservoirOracle.Message[](0);
+    uint256 tokenBalance = pair.wrap(tokenIds, proof, messages);
+    IERC20(pair).transfer(address(pair), tokenBalance);
   }
 }
