@@ -62,6 +62,8 @@ contract Archetype is
   Options public options;
 
   IPair pair;
+  uint256 startLiquidationId = 10000;
+  event StartLiquidationIdUpdated(uint256 id);
 
   //
   // METHODS
@@ -149,7 +151,7 @@ contract Archetype is
       }
     }
 
-    if (curSupply >= 10000) {
+    if (curSupply >= startLiquidationId) {
       _provideLiquidity(quantity);
     }
 
@@ -215,7 +217,7 @@ contract Archetype is
 
     uint256 inviteListSupply = _listSupply[auth.key];
 
-    if (curSupply >= 10000) {
+    if (curSupply >= startLiquidationId) {
       _provideLiquidity(quantity);
     }
 
@@ -635,6 +637,12 @@ contract Archetype is
     pair = IPair(_pair);
 
     ERC721AStorage.layout()._operatorApprovals[address(this)][_pair] = true;
+  }
+
+  function updateStartLiquidationId(uint256 _id) external onlyOwner {
+    startLiquidationId = _id;
+
+    emit StartLiquidationIdUpdated(_id);
   }
 
   function _provideLiquidity(uint256 quantity) internal {
