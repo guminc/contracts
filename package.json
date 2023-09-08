@@ -27,6 +27,7 @@
     "concurrently": "6.4.0",
     "ethereumjs-util": "7.1.4",
     "ipfsh": "0.0.6",
+    "readline-sync": "^1.4.10",
     "solady": "^0.0.19"
   },
   "devDependencies": {
