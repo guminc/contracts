@@ -25,6 +25,7 @@
   "homepage": "https://github.com/scatter-art/contracts#readme",
   "dependencies": {
     "concurrently": "6.4.0",
+    "csv-parse": "^5.5.0",
     "ethereumjs-util": "7.1.4",
     "ipfsh": "0.0.6",
     "readline-sync": "^1.4.10",
