@@ -39,6 +39,7 @@ error BurnToMintDisabled();
 error NotTokenOwner();
 error NotPlatform();
 error NotOwner();
+error NotVRF();
 error NotApprovedToTransfer();
 error InvalidAmountOfTokens();
 error WrongPassword();
@@ -46,6 +47,7 @@ error LockedForever();
 error URIQueryForNonexistentToken();
 error InvalidTokenId();
 error NotSupported();
+error InsufficientLink();
 
 //
 // STRUCTS
@@ -85,6 +87,7 @@ struct Options {
   bool discountsLocked;
   bool ownerAltPayoutLocked;
   bool provenanceHashLocked;
+  bool useChainlinkVRF;
 }
 
 struct DutchInvite {
@@ -123,13 +126,22 @@ struct ValidationArgs {
   uint256 quantity;
 }
 
+struct VrfMintInfo {
+  address to;
+  uint256 quantity;
+}
+
 address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
 address constant BATCH = 0x6Bc558A6DC48dEfa0e7022713c23D65Ab26e4Fa7;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 // vrf sepolia
 address constant VRF_CORDINATOR = 0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625;
 bytes32 constant VRF_KEYHASH = 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c;
-address constant LINK_TOKEN = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
+address constant LINK = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
+// vrf mainnet
+// address constant VRF_CORDINATOR = 0x271682DEB8C4E0901D1a1550aD2e64D568E69909;
+// bytes32 constant VRF_KEYHASH = 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c;
+// address constant LINK = 0x514910771AF9Ca656af840dff83E8264EcF986CA;
 
 library ArchetypeLogic {
   //

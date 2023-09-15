@@ -16,7 +16,8 @@
 pragma solidity ^0.8.4;
 
 import "./ArchetypeLogic.sol";
-import "./VRFConsumerBaseUpgradeable.sol";
+import "./VRFConsumerBaseV2Upgradeable.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -27,7 +28,7 @@ import "closedsea/src/OperatorFilterer.sol";
 contract Archetype is
   Initializable,
   ERC1155Upgradeable,
-  VRFConsumerBaseUpgradeable,
+  VRFConsumerBaseV2Upgradeable,
   OperatorFilterer,
   OwnableUpgradeable,
   ERC2981Upgradeable
@@ -60,7 +61,8 @@ contract Archetype is
   // chainlink
   bytes32 internal keyHash;
   uint256 internal fee;
-  uint256 public randomResult;
+  VRFCoordinatorV2Interface internal vrfCoordinator;
+  mapping(uint256 => VrfMintInfo) public requestIdMintInfo;
 
   //
   // METHODS
@@ -75,11 +77,10 @@ contract Archetype is
     symbol = _symbol;
     __ERC1155_init("");
 
-    __VRFConsumerBase_init(
-        VRF_CORDINATOR,
-        LINK_TOKEN
+    __VRFConsumerBaseV2Upgradeable_init(
+      VRF_CORDINATOR
     );
-
+    vrfCoordinator = VRFCoordinatorV2Interface(VRF_CORDINATOR);
     keyHash = 0xcaf3c3727e033261d383b315559476f48034c13b18f8cafed4d871abe5049186;
     fee = 0.1 * 10 ** 18; 
 
@@ -157,20 +158,28 @@ contract Archetype is
       args
     );
 
-    uint16[] memory tokenIds;
-    uint256 seed = ArchetypeLogic.random();
-    tokenIds = ArchetypeLogic.getRandomTokenIds(
-      config.tokenPool,
-      quantity,
-      seed
-    );
+    if(options.useChainlinkVRF) {
+        uint256 requestId = requestRandomness(); // Assuming this function internally requests randomness from Chainlink VRF
+        requestIdMintInfo[requestId] = VrfMintInfo({
+          to: to,
+          quantity: quantity
+        });
+    } else {
+      uint16[] memory tokenIds;
+      uint256 seed = ArchetypeLogic.random();
+      tokenIds = ArchetypeLogic.getRandomTokenIds(
+        config.tokenPool,
+        quantity,
+        seed
+      );
 
-    for (uint256 j = 0; j < tokenIds.length; j++) {
-      bytes memory _data;
-      _mint(to, tokenIds[j], 1, _data);
-      _tokenSupply[tokenIds[j]] += 1;
-      // TODO: Analyze tradeoff of keeping this tokenSupply, we do not need it for validation
-      // Pros: on chain supply tracking, Cons: Extra storage write every mint
+      for (uint256 j = 0; j < tokenIds.length; j++) {
+        bytes memory _data;
+        _mint(to, tokenIds[j], 1, _data);
+        _tokenSupply[tokenIds[j]] += 1;
+        // TODO: Analyze tradeoff of keeping this tokenSupply, we do not need it for validation
+        // Pros: on chain supply tracking, Cons: Extra storage write every mint
+      }
     }
 
     if (i.limit < i.maxSupply) {
@@ -404,6 +413,10 @@ contract Archetype is
     config.maxBatchSize = maxBatchSize;
   }
 
+  function useChainlinkVRF() external _onlyOwner {
+    options.useChainlinkVRF = !options.useChainlinkVRF;
+  }
+
   function setInvite(
     bytes32 _key,
     bytes32 _cid,
@@ -476,14 +489,41 @@ contract Archetype is
   }
 
   // Request randomness
-  function _getRandomNumber() internal returns (bytes32 requestId) {
-    require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK - fill contract with faucet");
-    return requestRandomness(keyHash, fee);
+  function requestRandomness() internal returns (uint256 requestId) {
+      if(IERC20Upgradeable(LINK).balanceOf(address(this)) < fee) {
+        revert InsufficientLink();
+      }
+
+      uint16 minimumRequestConfirmations = 5;  // reaccess
+      uint32 callbackGasLimit = 200000;  // adjust based on testing
+
+      // Requesting the random numbers
+      requestId = vrfCoordinator.requestRandomWords(
+          keyHash,
+          1,
+          1,
+          minimumRequestConfirmations,
+          callbackGasLimit
+      );
   }
 
   // Callback function used by VRF Coordinator
-  function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
-    randomResult = randomness;
+  function fulfillRandomWords(uint256 requestId, uint256[] memory randomness) internal override {        
+    VrfMintInfo memory mintInfo = requestIdMintInfo[requestId];
+    uint16[] memory tokenIds;
+    tokenIds = ArchetypeLogic.getRandomTokenIds(
+      config.tokenPool,
+      mintInfo.quantity,
+      randomness[0]
+    );
+
+    for (uint256 j = 0; j < tokenIds.length; j++) {
+      bytes memory _data;
+      _mint(mintInfo.to, tokenIds[j], 1, _data);
+      _tokenSupply[tokenIds[j]] += 1;
+      // TODO: Analyze tradeoff of keeping this tokenSupply, we do not need it for validation
+      // Pros: on chain supply tracking, Cons: Extra storage write every mint
+    }
   }
 
   modifier _onlyPlatform() {
@@ -492,6 +532,13 @@ contract Archetype is
     }
     _;
   }
+  
+  // modifier _onlyVrf() {
+  //   if (_msgSender() != VRF_CORDINATOR) {
+  //     revert NotVRF();
+  //   }
+  //   _;
+  // }
 
   modifier _onlyOwner() {
     _isOwner();
