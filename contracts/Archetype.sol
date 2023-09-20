@@ -59,8 +59,6 @@ contract Archetype is
   string public provenance;
 
   // chainlink
-  bytes32 internal keyHash;
-  uint256 internal fee;
   VRFCoordinatorV2Interface internal vrfCoordinator;
   mapping(uint256 => VrfMintInfo) public requestIdMintInfo;
 
@@ -81,8 +79,6 @@ contract Archetype is
       VRF_CORDINATOR
     );
     vrfCoordinator = VRFCoordinatorV2Interface(VRF_CORDINATOR);
-    keyHash = 0xcaf3c3727e033261d383b315559476f48034c13b18f8cafed4d871abe5049186;
-    fee = 0.1 * 10 ** 18; 
 
     // check max bps not reached and min platform fee.
     if (
@@ -490,12 +486,25 @@ contract Archetype is
 
   // Request randomness
   function requestRandomness() internal returns (uint256 requestId) {
-      if(IERC20Upgradeable(LINK).balanceOf(address(this)) < fee) {
-        revert InsufficientLink();
-      }
+
+      // The gas lane to use, which specifies the maximum gas price to bump to.
+      // For a list of available gas lanes on each network,
+      // see https://docs.chain.link/docs/vrf/v2/supported-networks/#configurations
+      bytes32 keyHash = VRF_KEYHASH;
 
       uint16 minimumRequestConfirmations = 5;  // reaccess
-      uint32 callbackGasLimit = 200000;  // adjust based on testing
+
+      // adjust based on testing, we have to guess how much it will cost
+      // https://docs.chain.link/vrf/v2/estimating-costs?network=ethereum-mainnet
+      // EXPLANATION:
+      // Because the consuming contract directly pays the LINK for the request, the cost is calculated during the request and not during the callback when the randomness is fulfilled. Test your callback function to learn how to correctly estimate the callback gas limit.
+      // If the gas limit is underestimated, the callback fails and the consuming contract is still charged for the work done to generate the requested random values.
+      // If the gas limit is overestimated, the callback function will be executed but your contract is not refunded for the excess gas amount that you paid.
+      uint32 callbackGasLimit = 200000;  
+
+      // if(IERC20Upgradeable(LINK).balanceOf(address(this)) < fee) {
+      //   revert InsufficientLink();
+      // }
 
       // Requesting the random numbers
       requestId = vrfCoordinator.requestRandomWords(
