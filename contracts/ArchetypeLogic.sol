@@ -126,6 +126,11 @@ struct ValidationArgs {
   uint256 quantity;
 }
 
+struct VrfConfig {
+  bool enabled;
+  uint64 subId;
+}
+
 struct VrfMintInfo {
   address to;
   uint256 quantity;
@@ -245,6 +250,10 @@ library ArchetypeLogic {
 
     if (args.quantity > config.maxBatchSize) {
       revert MaxBatchSizeExceeded();
+    }
+
+    if (args.quantity > config.tokenPool.length) {
+      revert MaxSupplyExceeded();
     }
 
     uint256 cost = computePrice(i, config.discounts, args.quantity, args.affiliate != address(0));

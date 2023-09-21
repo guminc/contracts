@@ -59,8 +59,9 @@ contract Archetype is
   string public provenance;
 
   // chainlink
-  VRFCoordinatorV2Interface internal vrfCoordinator;
+  VrfConfig public vrfConfig;
   mapping(uint256 => VrfMintInfo) public requestIdMintInfo;
+  VRFCoordinatorV2Interface internal vrfCoordinator;
 
   //
   // METHODS
@@ -101,7 +102,7 @@ contract Archetype is
       }
     }
     uint16 maxToken = _findMax(config_.tokenPool);
-    _tokenSupply = new uint256[](maxToken + 1);
+    _tokenSupply = new uint256[](maxToken);
     config = config_;
     __Ownable_init();
 
@@ -154,7 +155,7 @@ contract Archetype is
       args
     );
 
-    if(options.useChainlinkVRF) {
+    if(vrfConfig.enabled) {
         uint256 requestId = requestRandomness(); // Assuming this function internally requests randomness from Chainlink VRF
         requestIdMintInfo[requestId] = VrfMintInfo({
           to: to,
@@ -172,7 +173,7 @@ contract Archetype is
       for (uint256 j = 0; j < tokenIds.length; j++) {
         bytes memory _data;
         _mint(to, tokenIds[j], 1, _data);
-        _tokenSupply[tokenIds[j]] += 1;
+        _tokenSupply[tokenIds[j] - 1] += 1;
         // TODO: Analyze tradeoff of keeping this tokenSupply, we do not need it for validation
         // Pros: on chain supply tracking, Cons: Extra storage write every mint
       }
@@ -299,7 +300,7 @@ contract Archetype is
     }
 
     // increase size of token supply array to match new max token
-    for (uint256 i = _tokenSupply.length; i <= maxToken; i++) {
+    for (uint256 i = _tokenSupply.length; i < maxToken; i++) {
       _tokenSupply.push(0);
     }
   }
@@ -409,8 +410,18 @@ contract Archetype is
     config.maxBatchSize = maxBatchSize;
   }
 
-  function useChainlinkVRF() external _onlyOwner {
-    options.useChainlinkVRF = !options.useChainlinkVRF;
+  function enableChainlinkVRF(uint64 subId) external _onlyOwner {
+    vrfConfig = VrfConfig({
+      enabled: true,
+      subId: subId
+    });
+  }
+
+  function disableChainlinkVRF() external _onlyOwner {
+    vrfConfig = VrfConfig({
+      enabled: false,
+      subId: 0
+    });
   }
 
   function setInvite(
@@ -494,13 +505,7 @@ contract Archetype is
 
       uint16 minimumRequestConfirmations = 5;  // reaccess
 
-      // adjust based on testing, we have to guess how much it will cost
-      // https://docs.chain.link/vrf/v2/estimating-costs?network=ethereum-mainnet
-      // EXPLANATION:
-      // Because the consuming contract directly pays the LINK for the request, the cost is calculated during the request and not during the callback when the randomness is fulfilled. Test your callback function to learn how to correctly estimate the callback gas limit.
-      // If the gas limit is underestimated, the callback fails and the consuming contract is still charged for the work done to generate the requested random values.
-      // If the gas limit is overestimated, the callback function will be executed but your contract is not refunded for the excess gas amount that you paid.
-      uint32 callbackGasLimit = 200000;  
+      uint32 callbackGasLimit = 2500000; // max limit
 
       // if(IERC20Upgradeable(LINK).balanceOf(address(this)) < fee) {
       //   revert InsufficientLink();
@@ -509,10 +514,10 @@ contract Archetype is
       // Requesting the random numbers
       requestId = vrfCoordinator.requestRandomWords(
           keyHash,
-          1,
-          1,
+          vrfConfig.subId,
           minimumRequestConfirmations,
-          callbackGasLimit
+          callbackGasLimit,
+          1
       );
   }
 
@@ -529,7 +534,7 @@ contract Archetype is
     for (uint256 j = 0; j < tokenIds.length; j++) {
       bytes memory _data;
       _mint(mintInfo.to, tokenIds[j], 1, _data);
-      _tokenSupply[tokenIds[j]] += 1;
+      _tokenSupply[tokenIds[j] - 1] += 1;
       // TODO: Analyze tradeoff of keeping this tokenSupply, we do not need it for validation
       // Pros: on chain supply tracking, Cons: Extra storage write every mint
     }
