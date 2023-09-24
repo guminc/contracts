@@ -16,7 +16,6 @@
 pragma solidity ^0.8.4;
 
 import "./ArchetypeLogic.sol";
-import "./VRFConsumerBaseV2Upgradeable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -28,7 +27,6 @@ import "closedsea/src/OperatorFilterer.sol";
 contract Archetype is
   Initializable,
   ERC1155Upgradeable,
-  VRFConsumerBaseV2Upgradeable,
   OperatorFilterer,
   OwnableUpgradeable,
   ERC2981Upgradeable
@@ -76,9 +74,6 @@ contract Archetype is
     symbol = _symbol;
     __ERC1155_init("");
 
-    __VRFConsumerBaseV2Upgradeable_init(
-      VRF_CORDINATOR
-    );
     vrfCoordinator = VRFCoordinatorV2Interface(VRF_CORDINATOR);
 
     // check max bps not reached and min platform fee.
@@ -465,6 +460,59 @@ contract Archetype is
   }
 
   //
+  // VRF
+  //
+  // Request randomness
+  function requestRandomness() internal returns (uint256 requestId) {
+
+      // The gas lane to use, which specifies the maximum gas price to bump to.
+      // For a list of available gas lanes on each network,
+      // see https://docs.chain.link/docs/vrf/v2/supported-networks/#configurations
+      bytes32 keyHash = VRF_KEYHASH;
+
+      uint16 minimumRequestConfirmations = 5;  // reaccess
+
+      uint32 callbackGasLimit = 2500000; // max limit
+
+      // Requesting the random numbers
+      requestId = vrfCoordinator.requestRandomWords(
+          keyHash,
+          vrfConfig.subId,
+          minimumRequestConfirmations,
+          callbackGasLimit,
+          1
+      );
+  }
+
+  // rawFulfillRandomness is called by VRFCoordinator when it receives a valid VRF
+  function rawFulfillRandomWords(
+      uint256 requestId,
+      uint256[] memory randomWords
+  ) external _onlyVrf {
+      fulfillRandomWords(requestId, randomWords);
+  }
+
+  function fulfillRandomWords(uint256 requestId, uint256[] memory randomness) internal {
+    VrfMintInfo memory mintInfo = requestIdMintInfo[requestId];
+    uint16[] memory tokenIds;
+    tokenIds = ArchetypeLogic.getRandomTokenIds(
+      config.tokenPool,
+      mintInfo.quantity,
+      randomness[0]
+    );
+
+    for (uint256 j = 0; j < tokenIds.length; j++) {
+      bytes memory _data;
+      _mint(mintInfo.to, tokenIds[j], 1, _data);
+      _tokenSupply[tokenIds[j] - 1] += 1;
+      // TODO: Analyze tradeoff of keeping this tokenSupply, we do not need it for validation
+      // Pros: on chain supply tracking, Cons: Extra storage write every mint
+    }
+
+    delete requestIdMintInfo[requestId];
+  }
+
+  //
   // INTERNAL
   //
   function _startTokenId() internal view virtual returns (uint256) {
@@ -495,50 +543,6 @@ contract Archetype is
     }  
   }
 
-  // Request randomness
-  function requestRandomness() internal returns (uint256 requestId) {
-
-      // The gas lane to use, which specifies the maximum gas price to bump to.
-      // For a list of available gas lanes on each network,
-      // see https://docs.chain.link/docs/vrf/v2/supported-networks/#configurations
-      bytes32 keyHash = VRF_KEYHASH;
-
-      uint16 minimumRequestConfirmations = 5;  // reaccess
-
-      uint32 callbackGasLimit = 2500000; // max limit
-
-      // if(IERC20Upgradeable(LINK).balanceOf(address(this)) < fee) {
-      //   revert InsufficientLink();
-      // }
-
-      // Requesting the random numbers
-      requestId = vrfCoordinator.requestRandomWords(
-          keyHash,
-          vrfConfig.subId,
-          minimumRequestConfirmations,
-          callbackGasLimit,
-          1
-      );
-  }
-
-  // Callback function used by VRF Coordinator
-  function fulfillRandomWords(uint256 requestId, uint256[] memory randomness) internal override {        
-    VrfMintInfo memory mintInfo = requestIdMintInfo[requestId];
-    uint16[] memory tokenIds;
-    tokenIds = ArchetypeLogic.getRandomTokenIds(
-      config.tokenPool,
-      mintInfo.quantity,
-      randomness[0]
-    );
-
-    for (uint256 j = 0; j < tokenIds.length; j++) {
-      bytes memory _data;
-      _mint(mintInfo.to, tokenIds[j], 1, _data);
-      _tokenSupply[tokenIds[j] - 1] += 1;
-      // TODO: Analyze tradeoff of keeping this tokenSupply, we do not need it for validation
-      // Pros: on chain supply tracking, Cons: Extra storage write every mint
-    }
-  }
 
   modifier _onlyPlatform() {
     if (_msgSender() != PLATFORM) {
@@ -547,12 +551,13 @@ contract Archetype is
     _;
   }
   
-  // modifier _onlyVrf() {
-  //   if (_msgSender() != VRF_CORDINATOR) {
-  //     revert NotVRF();
-  //   }
-  //   _;
-  // }
+  modifier _onlyVrf() {
+    // also allow owner the ability to fulfill vrf calls
+    if (_msgSender() != VRF_CORDINATOR && _msgSender() != owner()) {
+      revert NotVRF();
+    }
+    _;
+  }
 
   modifier _onlyOwner() {
     _isOwner();

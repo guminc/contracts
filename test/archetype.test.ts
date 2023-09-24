@@ -7,6 +7,7 @@ import {
   ArchetypeLogic__factory,
   ArchetypeBatch__factory,
   Factory__factory,
+  VRFCoordinatorV2Mock__factory,
 } from "../typechain";
 import Invitelist from "../lib/invitelist";
 import { IArchetypeConfig } from "../lib/types";
@@ -41,6 +42,8 @@ describe("Factory", function () {
   let archetypeBatch: Contract;
   let Factory: Factory__factory;
   let factory: Contract;
+  let VrfCoordinatorMock: VRFCoordinatorV2Mock__factory
+  let vrfCoordinatorMock: Contract;
 
   before(async function () {
     AFFILIATE_SIGNER = (await ethers.getSigners())[4]; // account[4]
@@ -88,6 +91,11 @@ describe("Factory", function () {
     await factory.deployed();
 
     console.log({ factoryAddress: factory.address, archetypeAddress: archetype.address });
+
+    VrfCoordinatorMock = await ethers.getContractFactory("VRFCoordinatorV2Mock");
+    vrfCoordinatorMock = await VrfCoordinatorMock.deploy(1, 1);
+
+    console.log({vrfCoordinator: vrfCoordinatorMock.address})
   });
 
   it("should have platform set to test account", async function () {
@@ -2192,6 +2200,135 @@ describe("Factory", function () {
       })
     ).to.be.revertedWith("MaxSupplyExceeded");
 
+  });
+
+  it("test chainlink mint", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+    const default_config = {
+      ...DEFAULT_CONFIG,
+      tokenPool: [1],
+    };
+
+    const owner = accountZero;
+    const minter = accountOne;
+
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      default_config
+    );
+    
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const nftMint = Archetype.attach(newCollectionAddressMint);
+
+    // setup chainlink
+    const subId = 1;
+    await vrfCoordinatorMock.createSubscription();
+    await vrfCoordinatorMock.fundSubscription(subId, ethers.utils.parseEther("7"))  
+    await vrfCoordinatorMock.addConsumer(subId, nftMint.address)
+    await nftMint.enableChainlinkVRF(subId);
+
+    await nftMint.connect(owner).setInvite(HASHONE, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("0.1"),
+      start: 0,
+      end: 0,
+      limit: 2 ** 32 - 1,
+      maxSupply: 2 ** 32 - 1,
+      unitSize: 0,
+      tokenIds: [],
+      tokenAddress: ZERO,
+    });
+
+    // initiate mint
+    const mintTx = await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: ethers.utils.parseEther("0.1") });
+    const mintResult = await mintTx.wait();
+    const reqId = mintResult.events[0].data.slice(2, 66); // extract request id
+    console.log(reqId)
+
+    // mint paid
+    await expect((await nftMint.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.095"));
+    // but token not received yet
+    await expect(await nftMint.totalSupply()).to.equal(0);
+
+    await vrfCoordinatorMock.fulfillRandomWords(reqId, nftMint.address)
+
+    // token minted after fulfillment
+    await expect(await nftMint.totalSupply()).to.equal(1);
+    await expect(await nftMint.tokenSupply(1)).to.equal(1);
+  });
+
+  it("test complext multi chainlink mint", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+    const default_config = {
+      ...DEFAULT_CONFIG,
+      tokenPool: [1, 1, 3, 4],
+    };
+
+    const owner = accountZero;
+    const minter = accountOne;
+
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      default_config
+    );
+    
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const nftMint = Archetype.attach(newCollectionAddressMint);
+
+    // setup chainlink
+    const subId = 1;
+    await vrfCoordinatorMock.createSubscription();
+    await vrfCoordinatorMock.fundSubscription(subId, ethers.utils.parseEther("7"))  
+    await vrfCoordinatorMock.addConsumer(subId, nftMint.address)
+    await nftMint.enableChainlinkVRF(subId);
+
+    await nftMint.connect(owner).setInvite(HASHONE, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("0.1"),
+      start: 0,
+      end: 0,
+      limit: 2 ** 32 - 1,
+      maxSupply: 2 ** 32 - 1,
+      unitSize: 0,
+      tokenIds: [],
+      tokenAddress: ZERO,
+    });
+
+    // initiate mint 1
+    const mintTx1 = await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: ethers.utils.parseEther("0.1") });
+    const mintResult1 = await mintTx1.wait();
+    const reqId1 = mintResult1.events[0].data.slice(2, 66); // extract request id
+    console.log(reqId1)
+
+     // initiate mint 2
+     const mintTx2 = await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: ethers.utils.parseEther("0.1") });
+     const mintResult2 = await mintTx2.wait();
+     const reqId2 = mintResult2.events[0].data.slice(2, 66); // extract request id
+     console.log(reqId2)
+
+      // initiate mint 3
+    const mintTx3 = await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: ethers.utils.parseEther("0.1") });
+    const mintResult3 = await mintTx3.wait();
+    const reqId3 = mintResult3.events[0].data.slice(2, 66); // extract request id
+    console.log(reqId3)
+
+    // mints paid
+    await expect((await nftMint.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.285"));
+    // but token not received yet
+    await expect(await nftMint.totalSupply()).to.equal(0);
+
+    await vrfCoordinatorMock.fulfillRandomWords(reqId1, nftMint.address)
+    await vrfCoordinatorMock.fulfillRandomWords(reqId2, nftMint.address)
+    await vrfCoordinatorMock.fulfillRandomWords(reqId3, nftMint.address)
+
+    // token minted after fulfillments
+    await expect(await nftMint.totalSupply()).to.equal(3);
+    const tokenPool = await nftMint.connect(owner).tokenPool();
+    await expect(tokenPool.length).to.be.equal(1);
   });
 });
 

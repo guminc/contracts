@@ -14,6 +14,12 @@ async function replaceConstants(filePath) {
     "0x5FbDB2315678afecb367f032d93F642f64180aa3"
   );
 
+  // Replace chainlink imports with mocks
+  data = data.replace(
+    "0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625",
+    "0x0165878A594ca255338adfa4d48449f69242Eb8F"
+  );
+
   // Write the updated data to the contract file
   fs.writeFileSync(filePath, data, "utf8");
 }
