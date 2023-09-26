@@ -52,7 +52,7 @@ describe("Factory", function () {
       affiliateSigner: AFFILIATE_SIGNER.address,
       ownerAltPayout: ZERO,
       superAffiliatePayout: ZERO,
-      tokenPool: generateTokenPool(50),
+      maxSupply: 50,
       maxBatchSize: 20,
       affiliateFee: 1500,
       platformFee: 500,
@@ -65,6 +65,7 @@ describe("Factory", function () {
         //   mintDiscount: number;
         // }];
       },
+      tokenPool: generateTokenPool(50),
     };
 
     ArchetypeBatch = await ethers.getContractFactory("ArchetypeBatch");
@@ -598,6 +599,7 @@ describe("Factory", function () {
         affiliateSigner: AFFILIATE_SIGNER.address,
         ownerAltPayout: ZERO,
         superAffiliatePayout: ZERO,
+        maxSupply: 50,
         tokenPool: generateTokenPool(50),
         maxBatchSize: 20,
         affiliateFee: 1500,
@@ -696,6 +698,7 @@ describe("Factory", function () {
         affiliateSigner: AFFILIATE_SIGNER.address,
         ownerAltPayout: ZERO,
         superAffiliatePayout: superAffiliate.address,
+        maxSupply: 50,
         tokenPool: generateTokenPool(50),
         maxBatchSize: 20,
         affiliateFee: 1500,
@@ -791,6 +794,7 @@ describe("Factory", function () {
         affiliateSigner: AFFILIATE_SIGNER.address,
         ownerAltPayout: ownerAltPayout.address,
         superAffiliatePayout: ZERO,
+        maxSupply: 50,
         tokenPool: generateTokenPool(50),
         maxBatchSize: 20,
         affiliateFee: 1500,
@@ -930,11 +934,17 @@ describe("Factory", function () {
     await nft.connect(owner).lockURI("forever");
     await expect(nft.connect(owner).setBaseURI("new test uri")).to.be.reverted;
 
-    // CHANGE MAX SUPPLY
+    // CHANGE TOKEN POOL
     await nft.connect(owner).updateTokenPool([6, 6, 6, 7], "forever");
     await expect(await nft.connect(owner).tokenPool()).to.deep.equal(DEFAULT_CONFIG.tokenPool.concat([6, 6, 6, 7]));
     await nft.connect(owner).lockTokenPool("forever");
     await expect(nft.connect(owner).updateTokenPool([8, 8, 9, 9], "forever")).to.be.reverted;
+
+    // CHANGE MAX SUPPLY
+    await nft.connect(owner).setMaxSupply(4, "forever");
+    await expect((await nft.connect(owner).config()).maxSupply).to.equal(4);
+    await nft.connect(owner).lockMaxSupply("forever");
+    await expect(nft.connect(owner).setMaxSupply(5, "forever")).to.be.reverted;
 
     // CHANGE AFFILIATE FEE
     await nft.connect(owner).setAffiliateFee(1000);
@@ -1107,7 +1117,7 @@ describe("Factory", function () {
 
   it("test max supply checks", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();
-    const default_config = { ...DEFAULT_CONFIG, maxBatchSize: 500, tokenPool: generateTokenPool(50) };
+    const default_config = { ...DEFAULT_CONFIG, maxBatchSize: 500, maxSupply: 50, tokenPool: generateTokenPool(50) };
 
     const owner = accountZero;
     const minter = accountOne;
@@ -1540,6 +1550,7 @@ describe("Factory", function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
     const default_config = {
       ...DEFAULT_CONFIG,
+      maxSupply: 2000,
       tokenPool: generateTokenPool(2000),
       maxBatchSize: 1000,
     };
@@ -1591,7 +1602,7 @@ describe("Factory", function () {
 
   it("test multiple public invite lists support in 0.5.1", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
-    const default_config = { ...DEFAULT_CONFIG, tokenPool: generateTokenPool(200), maxBatchSize: 100 };
+    const default_config = { ...DEFAULT_CONFIG, maxSupply: 200, tokenPool: generateTokenPool(200), maxBatchSize: 100 };
 
     const owner = accountZero;
     const minter = accountOne;
@@ -1657,7 +1668,7 @@ describe("Factory", function () {
 
   it("test erc1155 random tokenId mints", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
-    const default_config = { ...DEFAULT_CONFIG, maxSupply: new Array(50).fill(100), maxBatchSize: 1000 };
+    const default_config = { ...DEFAULT_CONFIG, maxSupply: 50, tokenPool: new Array(50).fill(100), maxBatchSize: 1000 };
 
     const owner = accountZero;
     const minter = accountOne;
@@ -1691,31 +1702,26 @@ describe("Factory", function () {
 
     await expect(await nftMint.totalSupply()).to.be.equal(1);
 
-    // // mint 10 more random tokenIds
-    // await nftMint
-    //   .connect(minter)
-    //   .mint({ key: ethers.constants.HashZero, proof: [] }, 10, ZERO, "0x", { value: 0 });
+    // mint 10 more random tokenIds
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 10, ZERO, "0x", { value: 0 });
 
-    // await expect(await nftMint.totalSupply()).to.be.equal(25);
+    await expect(await nftMint.totalSupply()).to.be.equal(11);
 
-    // // mint last 22 tokenIds
-    // await nftMint
-    //   .connect(minter)
-    //   .mint({ key: ethers.constants.HashZero, proof: [] }, 22, ZERO, "0x", { value: 0 });
+    // mint last tokenIds
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 39, ZERO, "0x", { value: 0 });
 
-    // // try to mint past max supply
-    // await expect(
-    //   nftMint.connect(minter2).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
-    //     value: 0,
-    //   })
-    // ).to.be.revertedWith("MaxSupplyExceeded");
+    // try to mint past max supply
+    await expect(
+      nftMint.connect(minter2).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: 0,
+      })
+    ).to.be.revertedWith("MaxSupplyExceeded");
 
-    // await expect(await nftMint.totalSupply()).to.be.equal(47);
-    // await expect(await nftMint.tokenSupply(1)).to.be.equal(15);
-    // await expect(await nftMint.tokenSupply(2)).to.be.equal(10);
-    // await expect(await nftMint.tokenSupply(3)).to.be.equal(0); // not included in list
-    // await expect(await nftMint.tokenSupply(4)).to.be.equal(2);
-    // await expect(await nftMint.tokenSupply(5)).to.be.equal(20);
+    await expect(await nftMint.totalSupply()).to.be.equal(50);
   });
 
   it("test unit size mint 1 get x functionality", async function () {
@@ -1812,6 +1818,7 @@ describe("Factory", function () {
     await expect(await nftMint.totalSupply()).to.be.equal(50);
 
     // update tokenPool with more tokenIds
+    await nftMint.connect(owner).setMaxSupply(57, "forever");
     await nftMint.connect(owner).updateTokenPool([6, 6, 6, 7, 7, 7, 1], "forever");
 
     await nftMint
@@ -1824,6 +1831,7 @@ describe("Factory", function () {
 
 
     // update again
+    await nftMint.connect(owner).setMaxSupply(61, "forever");
     await nftMint.connect(owner).updateTokenPool([20, 20, 20, 20], "forever");
 
     // mint 10 tokenId 5
@@ -2139,6 +2147,7 @@ describe("Factory", function () {
     const [accountZero, accountOne] = await ethers.getSigners();
     const default_config = {
       ...DEFAULT_CONFIG,
+      maxSupply: 500,
       tokenPool:
         Array(10).fill(1).concat(Array(20).fill(2)).concat(Array(40).fill(3)).concat(Array(30).fill(4)).concat(Array(100).fill(5)),
       maxBatchSize: 1000,
@@ -2198,7 +2207,7 @@ describe("Factory", function () {
       nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 11, ZERO, "0x", {
         value: 0,
       })
-    ).to.be.revertedWith("MaxSupplyExceeded");
+    ).to.be.revertedWith("TokenPoolEmpty");
 
   });
 
@@ -2206,6 +2215,7 @@ describe("Factory", function () {
     const [accountZero, accountOne] = await ethers.getSigners();
     const default_config = {
       ...DEFAULT_CONFIG,
+      maxSupply: 1,
       tokenPool: [1],
     };
 
@@ -2249,25 +2259,29 @@ describe("Factory", function () {
 
     // mint paid
     await expect((await nftMint.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.095"));
-    // but token not received yet
-    await expect(await nftMint.totalSupply()).to.equal(0);
+    // token counted but not received yet
+    await expect(await nftMint.totalSupply()).to.equal(1);
+    await expect(await nftMint.balanceOf(minter.address, 1)).to.equal(0);
+
 
     await vrfCoordinatorMock.fulfillRandomWords(reqId, nftMint.address)
 
     // token minted after fulfillment
+    await expect(await nftMint.balanceOf(minter.address, 1)).to.equal(1);
     await expect(await nftMint.totalSupply()).to.equal(1);
-    await expect(await nftMint.tokenSupply(1)).to.equal(1);
   });
 
-  it("test complext multi chainlink mint", async function () {
-    const [accountZero, accountOne] = await ethers.getSigners();
+  it("test complex multi chainlink mint", async function () {
+    const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
     const default_config = {
       ...DEFAULT_CONFIG,
-      tokenPool: [1, 1, 3, 4],
+      maxSupply: 5,
+      tokenPool: [1, 1, 1, 1, 1],
     };
 
     const owner = accountZero;
     const minter = accountOne;
+    const platform = accountTwo;
 
     const newCollectionMint = await factory.createCollection(
       owner.address,
@@ -2302,33 +2316,62 @@ describe("Factory", function () {
     const mintTx1 = await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: ethers.utils.parseEther("0.1") });
     const mintResult1 = await mintTx1.wait();
     const reqId1 = mintResult1.events[0].data.slice(2, 66); // extract request id
-    console.log(reqId1)
 
      // initiate mint 2
      const mintTx2 = await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: ethers.utils.parseEther("0.1") });
      const mintResult2 = await mintTx2.wait();
      const reqId2 = mintResult2.events[0].data.slice(2, 66); // extract request id
-     console.log(reqId2)
 
       // initiate mint 3
     const mintTx3 = await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: ethers.utils.parseEther("0.1") });
     const mintResult3 = await mintTx3.wait();
     const reqId3 = mintResult3.events[0].data.slice(2, 66); // extract request id
-    console.log(reqId3)
+
+    // initiate mint 4
+    const mintTx4 = await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 2, ZERO, "0x", { value: ethers.utils.parseEther("0.2") });
+    const mintResult4 = await mintTx4.wait();
+    const reqId4 = mintResult4.events[0].data.slice(2, 66); // extract request id
 
     // mints paid
-    await expect((await nftMint.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.285"));
+    await expect((await nftMint.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.475"));
     // but token not received yet
-    await expect(await nftMint.totalSupply()).to.equal(0);
+    await expect(await nftMint.totalSupply()).to.equal(5);
+    // but token not received yet
+    await expect(await nftMint.balanceOf(minter.address, 1)).to.equal(0);
 
+    // fullfill first 2
     await vrfCoordinatorMock.fulfillRandomWords(reqId1, nftMint.address)
     await vrfCoordinatorMock.fulfillRandomWords(reqId2, nftMint.address)
-    await vrfCoordinatorMock.fulfillRandomWords(reqId3, nftMint.address)
 
-    // token minted after fulfillments
-    await expect(await nftMint.totalSupply()).to.equal(3);
-    const tokenPool = await nftMint.connect(owner).tokenPool();
-    await expect(tokenPool.length).to.be.equal(1);
+    // 2 tokens minted after fulfillments
+    await expect(await nftMint.totalSupply()).to.equal(5);
+    await expect(await nftMint.balanceOf(minter.address, 1)).to.equal(2);
+    let tokenPool = await nftMint.connect(owner).tokenPool();
+    await expect(tokenPool.length).to.be.equal(3);
+
+    const randomSeed = 12342313432;
+    // should revert since reqId1 was already fulfilled
+    await expect(nftMint.connect(owner).rawFulfillRandomWords(reqId1, [randomSeed])).to.be.revertedWith("InvalidRequestId")
+    
+    // should revert since reqId 10 doesn't exist
+    await expect(nftMint.connect(owner).rawFulfillRandomWords(10, [randomSeed])).to.be.revertedWith("InvalidRequestId")
+
+    // should revert since minter is not approved
+    await expect(nftMint.connect(minter).rawFulfillRandomWords(reqId3, [randomSeed])).to.be.revertedWith("NotVRF")
+
+    // manually fulfill request from owner
+    await nftMint.connect(owner).rawFulfillRandomWords(reqId3, [randomSeed])
+
+    await expect(await nftMint.balanceOf(minter.address, 1)).to.equal(3);
+    tokenPool = await nftMint.connect(owner).tokenPool();
+    await expect(tokenPool.length).to.be.equal(2);
+
+    // manually fulfill request from platform
+    await nftMint.connect(platform).rawFulfillRandomWords(reqId4, [randomSeed/2])
+
+    await expect(await nftMint.balanceOf(minter.address, 1)).to.equal(5);
+    tokenPool = await nftMint.connect(owner).tokenPool();
+    await expect(tokenPool.length).to.be.equal(0);
   });
 });
 

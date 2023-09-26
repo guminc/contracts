@@ -28,6 +28,7 @@ error ExcessiveEthSent();
 error Erc20BalanceTooLow();
 error MaxSupplyExceeded();
 error ListMaxSupplyExceeded();
+error TokenPoolEmpty();
 error NumberOfMintsExceeded();
 error MintingPaused();
 error InvalidReferral();
@@ -46,8 +47,7 @@ error WrongPassword();
 error LockedForever();
 error URIQueryForNonexistentToken();
 error InvalidTokenId();
-error NotSupported();
-error InsufficientLink();
+error InvalidRequestId();
 
 //
 // STRUCTS
@@ -73,15 +73,17 @@ struct Config {
   address ownerAltPayout; // optional alternative address for owner withdrawals.
   address superAffiliatePayout; // optional super affiliate address, will receive half of platform fee if set.
   Discount discounts;
-  uint16[] tokenPool; // flattened address of all mintable tokens
+  uint32 maxSupply;
   uint16 maxBatchSize;
   uint16 affiliateFee; //BPS
   uint16 platformFee; //BPS
   uint16 defaultRoyalty; //BPS
+  uint16[] tokenPool; // flattened list of all mintable tokens
 }
 
 struct Options {
   bool uriLocked;
+  bool maxSupplyLocked;
   bool tokenPoolLocked;
   bool affiliateFeeLocked;
   bool discountsLocked;
@@ -124,6 +126,7 @@ struct ValidationArgs {
   address owner;
   address affiliate;
   uint256 quantity;
+  uint256 curSupply;
 }
 
 struct VrfConfig {
@@ -252,8 +255,12 @@ library ArchetypeLogic {
       revert MaxBatchSizeExceeded();
     }
 
-    if (args.quantity > config.tokenPool.length) {
+    if ((args.curSupply + args.quantity) > config.maxSupply) {
       revert MaxSupplyExceeded();
+    }
+
+    if (args.quantity > config.tokenPool.length) {
+      revert TokenPoolEmpty();
     }
 
     uint256 cost = computePrice(i, config.discounts, args.quantity, args.affiliate != address(0));

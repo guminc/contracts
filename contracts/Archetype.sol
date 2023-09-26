@@ -47,7 +47,7 @@ contract Archetype is
   mapping(address => OwnerBalance) private _ownerBalance;
   mapping(address => mapping(address => uint128)) private _affiliateBalance;
 
-  uint256[] private _tokenSupply;
+  uint256 public totalSupply;
 
   Config public config;
   Options public options;
@@ -96,8 +96,6 @@ contract Archetype is
         revert InvalidConfig();
       }
     }
-    uint16 maxToken = _findMax(config_.tokenPool);
-    _tokenSupply = new uint256[](maxToken);
     config = config_;
     __Ownable_init();
 
@@ -137,7 +135,8 @@ contract Archetype is
     ValidationArgs memory args = ValidationArgs({
         owner: owner(),
         affiliate: affiliate,
-        quantity: quantity
+        quantity: quantity,
+        curSupply: totalSupply
     });
 
     ArchetypeLogic.validateMint(
@@ -168,12 +167,10 @@ contract Archetype is
       for (uint256 j = 0; j < tokenIds.length; j++) {
         bytes memory _data;
         _mint(to, tokenIds[j], 1, _data);
-        _tokenSupply[tokenIds[j] - 1] += 1;
-        // TODO: Analyze tradeoff of keeping this tokenSupply, we do not need it for validation
-        // Pros: on chain supply tracking, Cons: Extra storage write every mint
       }
     }
 
+    totalSupply += quantity;
     if (i.limit < i.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
     }
@@ -185,7 +182,6 @@ contract Archetype is
   }
 
   function uri(uint256 tokenId) public view override returns (string memory) {
-    if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
     return
       bytes(config.baseUri).length != 0
         ? string(abi.encodePacked(config.baseUri, LibString.toString(tokenId)))
@@ -228,19 +224,6 @@ contract Archetype is
 
   function platform() external pure returns (address) {
     return PLATFORM;
-  }
-
-  function tokenSupply(uint256 tokenId) external view returns (uint256) {
-    if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
-    return _tokenSupply[tokenId - 1];
-  }
-
-  function totalSupply() external view returns (uint256) {
-    uint256 supply = 0;
-    for (uint256 i = 0; i < _tokenSupply.length; i++) {
-      supply += _tokenSupply[i];
-    }
-    return supply;
   }
 
   function tokenPool() external view returns (uint16[] memory) {
@@ -288,15 +271,8 @@ contract Archetype is
       revert LockedForever();
     }
 
-    uint16 maxToken = _findMax(newTokens);
-
     for (uint256 i = 0; i < newTokens.length; i++) {
       config.tokenPool.push(newTokens[i]);
-    }
-
-    // increase size of token supply array to match new max token
-    for (uint256 i = _tokenSupply.length; i < maxToken; i++) {
-      _tokenSupply.push(0);
     }
   }
 
@@ -315,6 +291,34 @@ contract Archetype is
 
     options.tokenPoolLocked = true;
   }
+
+  /// @notice the password is "forever"
+  // max supply cannot subceed total supply. Be careful changing.
+  function setMaxSupply(uint32 maxSupply, string memory password) external _onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+
+    if (options.maxSupplyLocked) {
+      revert LockedForever();
+    }
+
+    if (maxSupply < totalSupply) {
+      revert MaxSupplyExceeded();
+    }
+
+    config.maxSupply = maxSupply;
+  }
+
+  /// @notice the password is "forever"
+  function lockMaxSupply(string memory password) external _onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+
+    options.maxSupplyLocked = true;
+  }
+
 
   function setAffiliateFee(uint16 affiliateFee) external _onlyOwner {
     if (options.affiliateFeeLocked) {
@@ -462,9 +466,9 @@ contract Archetype is
   //
   // VRF
   //
+
   // Request randomness
   function requestRandomness() internal returns (uint256 requestId) {
-
       // The gas lane to use, which specifies the maximum gas price to bump to.
       // For a list of available gas lanes on each network,
       // see https://docs.chain.link/docs/vrf/v2/supported-networks/#configurations
@@ -488,12 +492,22 @@ contract Archetype is
   function rawFulfillRandomWords(
       uint256 requestId,
       uint256[] memory randomWords
-  ) external _onlyVrf {
-      fulfillRandomWords(requestId, randomWords);
+  ) external {
+      // Allow owner and platform to fulfill as backup
+      address msgSender = _msgSender();
+      if(msgSender == VRF_CORDINATOR || msgSender == PLATFORM || msgSender == owner()) {
+        fulfillRandomWords(requestId, randomWords);
+      } else {
+        revert NotVRF();
+      }
   }
 
   function fulfillRandomWords(uint256 requestId, uint256[] memory randomness) internal {
     VrfMintInfo memory mintInfo = requestIdMintInfo[requestId];
+    if(mintInfo.quantity == 0) {
+      revert InvalidRequestId();
+    }
+
     uint16[] memory tokenIds;
     tokenIds = ArchetypeLogic.getRandomTokenIds(
       config.tokenPool,
@@ -504,9 +518,6 @@ contract Archetype is
     for (uint256 j = 0; j < tokenIds.length; j++) {
       bytes memory _data;
       _mint(mintInfo.to, tokenIds[j], 1, _data);
-      _tokenSupply[tokenIds[j] - 1] += 1;
-      // TODO: Analyze tradeoff of keeping this tokenSupply, we do not need it for validation
-      // Pros: on chain supply tracking, Cons: Extra storage write every mint
     }
 
     delete requestIdMintInfo[requestId];
@@ -517,20 +528,6 @@ contract Archetype is
   //
   function _startTokenId() internal view virtual returns (uint256) {
     return 1;
-  }
-
-  function _exists(uint256 tokenId) internal view returns (bool) {
-    return tokenId > 0 && tokenId <= _tokenSupply.length;
-  }
-
-  function _findMax(uint16[] memory _tokenPool) internal pure returns (uint16) {
-    uint16 maxToken;
-    for (uint256 i = 0; i < _tokenPool.length; i++) {
-      if (_tokenPool[i] > maxToken) {
-          maxToken = _tokenPool[i];
-      }
-    }
-    return maxToken;
   }
 
   function _msgSender() internal view override returns (address) {
@@ -547,14 +544,6 @@ contract Archetype is
   modifier _onlyPlatform() {
     if (_msgSender() != PLATFORM) {
       revert NotPlatform();
-    }
-    _;
-  }
-  
-  modifier _onlyVrf() {
-    // also allow owner the ability to fulfill vrf calls
-    if (_msgSender() != VRF_CORDINATOR && _msgSender() != owner()) {
-      revert NotVRF();
     }
     _;
   }
