@@ -11,6 +11,7 @@
     "start": "concurrently \"cd api && npm start\" \"cd app && npm run dev\"",
     "deploy": "npx hardhat run scripts/deployArchetype.ts --network localhost",
     "network": "npx hardhat node",
+    "refund": "npx hardhat run scripts/batchSendEth.ts --network mainnet",
     "verify": "npx hardhat verify 0xc078Aed674c230cDD7ADD602E077797d08d8f0c2 --network goerli"
   },
   "repository": {
