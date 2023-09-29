@@ -158,6 +158,7 @@ library ArchetypeLogic {
     uint256 price = invite.price;
     uint256 cost;
     if (invite.interval > 0 && invite.delta > 0) {
+      // Apply dutch pricing
       uint256 diff = (((block.timestamp - invite.start) / invite.interval) * invite.delta);
       if (price > invite.reservePrice) {
         if (diff > price - invite.reservePrice) {
@@ -173,9 +174,10 @@ library ArchetypeLogic {
         }
       }
       cost = price * numTokens;
-    } else if (invite.interval == 0 && invite.delta > 0) {//Apply the linear curve 
+    } else if (invite.interval == 0 && invite.delta > 0) {
+      // Apply linear curve
       uint256 lastPrice = price + invite.delta * listSupply;
-      cost = lastPrice * numTokens + invite.delta * numTokens * (numTokens - 1) / 2;
+      cost = lastPrice * numTokens + (invite.delta * numTokens * (numTokens - 1)) / 2;
     } else {
       cost = price * numTokens;
     }
@@ -207,7 +209,9 @@ library ArchetypeLogic {
   ) public view {
     address msgSender = _msgSender();
     if (args.affiliate != address(0)) {
-      if (args.affiliate == PLATFORM || args.affiliate == args.owner || args.affiliate == msgSender) {
+      if (
+        args.affiliate == PLATFORM || args.affiliate == args.owner || args.affiliate == msgSender
+      ) {
         revert InvalidReferral();
       }
       validateAffiliate(args.affiliate, signature, config.affiliateSigner);
@@ -258,7 +262,13 @@ library ArchetypeLogic {
       revert MaxSupplyExceeded();
     }
 
-    uint256 cost = computePrice(i, config.discounts, args.quantity, args.listSupply, args.affiliate != address(0));
+    uint256 cost = computePrice(
+      i,
+      config.discounts,
+      args.quantity,
+      args.listSupply,
+      args.affiliate != address(0)
+    );
 
     if (i.tokenAddress != address(0)) {
       IERC20Upgradeable erc20Token = IERC20Upgradeable(i.tokenAddress);
@@ -353,7 +363,9 @@ library ArchetypeLogic {
     address tokenAddress = i.tokenAddress;
     uint128 value = uint128(msg.value);
     if (tokenAddress != address(0)) {
-      value = uint128(computePrice(i, config.discounts, quantity, listSupply, affiliate != address(0)));
+      value = uint128(
+        computePrice(i, config.discounts, quantity, listSupply, affiliate != address(0))
+      );
     }
 
     uint128 affiliateWad;

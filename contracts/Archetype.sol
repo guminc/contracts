@@ -148,14 +148,7 @@ contract Archetype is
       });
     }
 
-    ArchetypeLogic.validateMint(
-      invite,
-      config,
-      auth,
-      _minted,
-      signature,
-      args
-    );
+    ArchetypeLogic.validateMint(invite, config, auth, _minted, signature, args);
 
     if (invite.limit < invite.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
@@ -198,23 +191,24 @@ contract Archetype is
       });
     }
 
-    ArchetypeLogic.validateMint(
-      i,
-      config,
-      auth,
-      _minted,
-      signature,
-      args
-    );
+    ArchetypeLogic.validateMint(i, config, auth, _minted, signature, args);
     _mint(to, quantity);
-    
+
     if (i.limit < i.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
     }
     if (i.maxSupply < config.maxSupply) {
       _listSupply[auth.key] += quantity;
     }
-    ArchetypeLogic.updateBalances(i, config, _ownerBalance, _affiliateBalance, args.listSupply, affiliate, quantity);
+    ArchetypeLogic.updateBalances(
+      i,
+      config,
+      _ownerBalance,
+      _affiliateBalance,
+      args.listSupply,
+      affiliate,
+      quantity
+    );
   }
 
   function burnToMint(uint256[] calldata tokenIds) external {
@@ -295,8 +289,8 @@ contract Archetype is
     bool affiliateUsed
   ) external view returns (uint256) {
     DutchInvite storage i = invites[key];
-    uint256 inviteListSupply = _listSupply[key];
-    return ArchetypeLogic.computePrice(i, config.discounts, quantity, inviteListSupply, affiliateUsed);
+    uint256 listSupply = _listSupply[key];
+    return ArchetypeLogic.computePrice(i, config.discounts, quantity, listSupply, affiliateUsed);
   }
 
   //

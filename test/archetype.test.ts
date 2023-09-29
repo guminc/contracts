@@ -1605,8 +1605,8 @@ describe("Factory", function () {
 
     await expect(await nft.balanceOf(holder.address)).to.be.equal(3);
   });
-  
-    it("test Linear Curve", async function () {
+
+  it("test linear pricing curve", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();
 
     const owner = accountOne;
@@ -1633,7 +1633,7 @@ describe("Factory", function () {
       limit: 300,
       interval: 0, // 1000s,
       delta: ethers.utils.parseEther("0.01"),
-      maxSupply: DEFAULT_CONFIG.maxSupply-1, 
+      maxSupply: DEFAULT_CONFIG.maxSupply - 1,
       unitSize: 0,
       tokenAddress: ZERO,
     });
@@ -1643,7 +1643,6 @@ describe("Factory", function () {
       value: ethers.utils.parseEther("1"),
     });
 
-
     // try to mint at initial price, will revert
     await expect(
       nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
@@ -1651,11 +1650,11 @@ describe("Factory", function () {
       })
     ).to.be.revertedWith("InsufficientEthSent");
 
-    // mint at current price (1.01) in a linear curve 
+    // mint at current price (1.01) in a linear curve
     await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
       value: ethers.utils.parseEther("1.01"),
     });
-    
+
     // mint 10 nfts, current price=1.02 and the price of 10 nfts = 1.02*10 + 0.01*10*9/2=10.65
     await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 10, ZERO, "0x", {
       value: ethers.utils.parseEther("10.65"),
@@ -2130,14 +2129,13 @@ describe("Factory", function () {
     ).to.be.revertedWith("Blacklisted");
 
     const proof2 = invitelist.proof(accountOne.address);
-    
+
     // account one is not blacklisted
     await nft.connect(accountOne).mint({ key: root, proof: proof2 }, 1, ZERO, "0x", {
       value: ethers.utils.parseEther("0.08"),
     });
 
     expect(await nft.balanceOf(accountOne.address)).to.equal(1);
-
   });
 });
 
