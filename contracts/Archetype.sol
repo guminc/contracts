@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.6.0
+// Archetype v0.6.1
 //
 //        d8888                 888               888
 //       d88888                 888               888
