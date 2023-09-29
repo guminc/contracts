@@ -44,6 +44,7 @@ error NotApprovedToTransfer();
 error InvalidAmountOfTokens();
 error WrongPassword();
 error LockedForever();
+error Blacklisted();
 
 //
 // STRUCTS
@@ -97,6 +98,7 @@ struct DutchInvite {
   uint32 interval;
   uint32 unitSize; // mint 1 get x
   address tokenAddress;
+  bool isBlacklist;
 }
 
 struct Invite {
@@ -107,6 +109,7 @@ struct Invite {
   uint32 maxSupply;
   uint32 unitSize; // mint 1 get x
   address tokenAddress;
+  bool isBlacklist;
 }
 
 struct OwnerBalance {
@@ -204,8 +207,14 @@ library ArchetypeLogic {
       revert MintingPaused();
     }
 
-    if (!verify(auth, i.tokenAddress, msgSender)) {
-      revert WalletUnauthorizedToMint();
+    if (!i.isBlacklist) {
+      if (!verify(auth, i.tokenAddress, msgSender)) {
+        revert WalletUnauthorizedToMint();
+      }
+    } else {
+      if (verify(auth, i.tokenAddress, msgSender)) {
+        revert Blacklisted();
+      }
     }
 
     if (block.timestamp < i.start) {

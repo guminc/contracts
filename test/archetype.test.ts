@@ -264,6 +264,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     const invites = await nft.invites(ethers.constants.HashZero);
@@ -324,6 +325,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
     await nft.connect(owner).setInvite(root, ipfsh.ctod(CID_DEFAULT), {
       price: price,
@@ -333,6 +335,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     const invitePrivate = await nft.invites(root);
@@ -391,6 +394,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     // ended list rejectiong
@@ -465,6 +469,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     // test invalid signature
@@ -617,6 +622,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     // valid signature (from affiliateSigner)
@@ -703,6 +709,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     // valid signature (from affiliateSigner)
@@ -797,6 +804,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     await nft
@@ -986,6 +994,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     // mint 10 tokens
@@ -1123,6 +1132,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
     await nftBurn.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: 0,
@@ -1132,6 +1142,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     // mint some tokens
@@ -1217,6 +1228,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     // mint tokens from owner to holder address
@@ -1267,6 +1279,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     // mint tokens from owner to air drop list
@@ -1422,6 +1435,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: tokenAddress,
+      isBlacklist: false,
     });
 
     // try to mint tokens without approval
@@ -1495,6 +1509,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     // mint at full price
@@ -1557,6 +1572,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     // mint at full price
@@ -1617,6 +1633,7 @@ describe("Factory", function () {
       maxSupply: PublicMaxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     await nftMint
@@ -1663,6 +1680,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     await nftMint
@@ -1680,6 +1698,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     await nftMint.connect(minter2).mint({ key: HASHONE, proof: [] }, 20, ZERO, "0x", { value: 0 });
@@ -1693,6 +1712,7 @@ describe("Factory", function () {
       maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     await nftMint.connect(minter2).mint({ key: HASH256, proof: [] }, 40, ZERO, "0x", { value: 0 });
@@ -1726,6 +1746,7 @@ describe("Factory", function () {
       maxSupply: 36,
       unitSize: 12,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     // mint 1 get 12
@@ -1783,6 +1804,7 @@ describe("Factory", function () {
       maxSupply: 100,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     await nftMint.connect(owner).setInvite(HASHONE, ipfsh.ctod(CID_ZERO), {
@@ -1793,6 +1815,7 @@ describe("Factory", function () {
       maxSupply: 100,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     const targets = [
@@ -1906,6 +1929,7 @@ describe("Factory", function () {
       maxSupply: 100,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
@@ -1916,6 +1940,7 @@ describe("Factory", function () {
       maxSupply: 100,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     const targets = [nftMint.address, nftMint.address];
@@ -1985,6 +2010,76 @@ describe("Factory", function () {
 
     await expect((await nftMint.connect(owner).config()).maxSupply).to.be.equal(1000);
     await expect((await nftMint.connect(owner).config()).baseUri).to.be.equal("test");
+  });
+
+  it("test blacklist checks", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    const owner = accountOne;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+
+    const newCollectionAddress = result.events[0].address || "";
+
+    const nft = Archetype.attach(newCollectionAddress);
+
+    await sleep(1000);
+
+    const invitelist = new Invitelist([accountZero.address]);
+
+    const root = invitelist.root();
+    const proof = invitelist.proof(accountZero.address);
+
+    const price = ethers.utils.parseEther("0.08");
+
+    const today = new Date();
+    const tomorrow = today.setDate(today.getDate() + 1);
+
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("0.1"),
+      start: ethers.BigNumber.from(Math.floor(tomorrow / 1000)),
+      end: 0,
+      limit: 1000,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
+      unitSize: 0,
+      tokenAddress: ZERO,
+      isBlacklist: false,
+    });
+
+    await nft.connect(owner).setInvite(root, ipfsh.ctod(CID_DEFAULT), {
+      price: price,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      end: 0,
+      limit: 10,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
+      unitSize: 0,
+      tokenAddress: ZERO,
+      isBlacklist: true,
+    });
+
+    // account zero is blacklisted
+    await expect(
+      nft.connect(accountZero).mint({ key: root, proof: proof }, 1, ZERO, "0x", {
+        value: price.mul(1),
+      })
+    ).to.be.revertedWith("Blacklisted");
+
+    const proof2 = invitelist.proof(accountOne.address);
+    
+    // account one is not blacklisted
+    await nft.connect(accountOne).mint({ key: root, proof: proof2 }, 1, ZERO, "0x", {
+      value: ethers.utils.parseEther("0.08"),
+    });
+
+    expect(await nft.balanceOf(accountOne.address)).to.equal(1);
+
   });
 });
 

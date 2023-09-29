@@ -423,7 +423,8 @@ contract Archetype is
       maxSupply: _invite.maxSupply,
       interval: 0,
       unitSize: _invite.unitSize,
-      tokenAddress: _invite.tokenAddress
+      tokenAddress: _invite.tokenAddress,
+      isBlacklist: _invite.isBlacklist
     });
     emit Invited(_key, _cid);
   }
