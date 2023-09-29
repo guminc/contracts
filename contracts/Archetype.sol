@@ -119,7 +119,6 @@ contract Archetype is
     }
 
     DutchInvite storage invite = invites[auth.key];
-    uint256 curSupply = _totalMinted();
     uint256 quantity;
 
     for (uint256 i; i < toList.length; ) {
@@ -138,21 +137,25 @@ contract Archetype is
       }
     }
 
+    ValidationArgs memory args;
+    {
+      args = ValidationArgs({
+        owner: owner(),
+        affiliate: affiliate,
+        quantity: quantity,
+        curSupply: _totalMinted(),
+        listSupply: _listSupply[auth.key]
+      });
+    }
+
     ArchetypeLogic.validateMint(
       invite,
       config,
       auth,
-      quantity,
-      owner(),
-      affiliate,
-      curSupply,
       _minted,
-      _listSupply,
-      signature
+      signature,
+      args
     );
-    
-    uint256 inviteListSupply = _listSupply[auth.key];
-
 
     if (invite.limit < invite.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
@@ -165,9 +168,9 @@ contract Archetype is
       config,
       _ownerBalance,
       _affiliateBalance,
+      args.listSupply,
       affiliate,
-      quantity,
-      inviteListSupply
+      quantity
     );
   }
 
@@ -184,30 +187,34 @@ contract Archetype is
       quantity = quantity * i.unitSize;
     }
 
-    uint256 curSupply = _totalMinted();
+    ValidationArgs memory args;
+    {
+      args = ValidationArgs({
+        owner: owner(),
+        affiliate: affiliate,
+        quantity: quantity,
+        curSupply: _totalMinted(),
+        listSupply: _listSupply[auth.key]
+      });
+    }
+
     ArchetypeLogic.validateMint(
       i,
       config,
       auth,
-      quantity,
-      owner(),
-      affiliate,
-      curSupply,
       _minted,
-      _listSupply,
-      signature
+      signature,
+      args
     );
     _mint(to, quantity);
     
-    uint256 inviteListSupply = _listSupply[auth.key];
-
     if (i.limit < i.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
     }
     if (i.maxSupply < config.maxSupply) {
       _listSupply[auth.key] += quantity;
     }
-    ArchetypeLogic.updateBalances(i, config, _ownerBalance, _affiliateBalance, affiliate, quantity, inviteListSupply);
+    ArchetypeLogic.updateBalances(i, config, _ownerBalance, _affiliateBalance, args.listSupply, affiliate, quantity);
   }
 
   function burnToMint(uint256[] calldata tokenIds) external {
