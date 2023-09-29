@@ -3,7 +3,7 @@ export type IArchetypeConfig = {
   affiliateSigner: string;
   ownerAltPayout: string;
   superAffiliatePayout: string;
-  tokenPool: number[];
+  maxSupply: number;
   maxBatchSize: number;
   affiliateFee: number;
   platformFee: number;
@@ -15,4 +15,5 @@ export type IArchetypeConfig = {
       mintDiscount: number;
     }[];
   };
+  tokenPool: number[];
 };

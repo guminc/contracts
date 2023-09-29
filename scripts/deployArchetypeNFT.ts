@@ -3,27 +3,32 @@ import { ethers, run } from "hardhat";
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function main() {
+  const [signer] = await ethers.getSigners();
+
   const Factory = await ethers.getContractFactory("Factory");
 
-  const factory = Factory.attach("0xACCc072242b2B8BC0B7bA9Abeb6B5192fe533304");
+  const factory = Factory.attach("0x490265526998a921590dC73e732381D5E397d7A4");
 
   console.log("Contract Factory is:", factory.address);
 
+  const tokenPool = Array(40).fill(130).concat(Array(20).fill(131)).concat(Array(10).fill(132)).concat(Array(5).fill(133)).concat(Array(5).fill(134)).concat(Array(1).fill(135))
+
   const newContract = await factory.createCollection(
-    "0x60A59d7003345843BE285c15c7C78B62b61e0d7c",
-    "Pookie",
-    "POOKIE",
+    signer.address,
+    "test",
+    "TEST",
     {
-      unrevealedUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
       baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
       affiliateSigner: "0x1f285dD528cf4cDE3081C6d48D9df7A4F8FA9383",
-      maxSupply: 5000,
+      maxSupply: tokenPool.length,
+      tokenPool: tokenPool,
       maxBatchSize: 20,
       affiliateFee: 1500,
       platformFee: 500,
       ownerAltPayout: ethers.constants.AddressZero,
       superAffiliatePayout: ethers.constants.AddressZero,
-      discounts: { affiliateDiscount: null, mintTiers: [] },
+      defaultRoyalty: 500,
+      discounts: { affiliateDiscount: 0, mintTiers: [] },
     }
   );
 
