@@ -54,7 +54,6 @@ contract Archetype is
 
   string public name;
   string public symbol;
-  string public provenance;
 
   // chainlink
   VrfConfig public vrfConfig;
@@ -152,6 +151,7 @@ contract Archetype is
     if(vrfConfig.enabled) {
         uint256 requestId = requestRandomness(); // Assuming this function internally requests randomness from Chainlink VRF
         requestIdMintInfo[requestId] = VrfMintInfo({
+          key: auth.key,
           to: to,
           quantity: quantity
         });
@@ -160,6 +160,7 @@ contract Archetype is
       uint256 seed = ArchetypeLogic.random();
       tokenIds = ArchetypeLogic.getRandomTokenIds(
         config.tokenPool,
+        i.tokenIdsExcluded,
         quantity,
         seed
       );
@@ -414,24 +415,6 @@ contract Archetype is
     options.discountsLocked = true;
   }
 
-  /// @notice Set BAYC-style provenance once it's calculated
-  function setProvenanceHash(string memory provenanceHash) external _onlyOwner {
-    if (options.provenanceHashLocked) {
-      revert LockedForever();
-    }
-
-    provenance = provenanceHash;
-  }
-
-  /// @notice the password is "forever"
-  function lockProvenanceHash(string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
-    options.provenanceHashLocked = true;
-  }
-
   function setOwnerAltPayout(address ownerAltPayout) external _onlyOwner {
     if (options.ownerAltPayoutLocked) {
       revert LockedForever();
@@ -481,8 +464,8 @@ contract Archetype is
       maxSupply: _invite.maxSupply,
       interval: 0,
       unitSize: _invite.unitSize,
-      tokenIds: _invite.tokenIds,
-      tokenAddress: _invite.tokenAddress
+      tokenAddress: _invite.tokenAddress,
+      tokenIdsExcluded: _invite.tokenIdsExcluded
     });
     emit Invited(_key, _cid);
   }
@@ -554,6 +537,7 @@ contract Archetype is
     uint16[] memory tokenIds;
     tokenIds = ArchetypeLogic.getRandomTokenIds(
       config.tokenPool,
+      invites[mintInfo.key].tokenIdsExcluded,
       mintInfo.quantity,
       randomness[0]
     );

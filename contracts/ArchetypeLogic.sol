@@ -47,6 +47,7 @@ error WrongPassword();
 error LockedForever();
 error URIQueryForNonexistentToken();
 error InvalidTokenId();
+error MaxRetriesExceeded();
 error InvalidRequestId();
 
 //
@@ -72,12 +73,12 @@ struct Config {
   address affiliateSigner;
   address ownerAltPayout; // optional alternative address for owner withdrawals.
   address superAffiliatePayout; // optional super affiliate address, will receive half of platform fee if set.
-  Discount discounts;
   uint32 maxSupply;
   uint16 maxBatchSize;
   uint16 affiliateFee; //BPS
   uint16 platformFee; //BPS
   uint16 defaultRoyalty; //BPS
+  Discount discounts;
   uint16[] tokenPool; // flattened list of all mintable tokens
 }
 
@@ -103,8 +104,8 @@ struct DutchInvite {
   uint32 maxSupply;
   uint32 interval;
   uint32 unitSize; // mint 1 get x
-  uint16[] tokenIds; // token id mintable from this list, TODO: implement/remove
   address tokenAddress;
+  uint16[] tokenIdsExcluded; // token ids excluded from this list
 }
 
 struct Invite {
@@ -114,8 +115,8 @@ struct Invite {
   uint32 limit;
   uint32 maxSupply;
   uint32 unitSize; // mint 1 get x
-  uint16[] tokenIds; // token ids mintable from this list, TODO: implement/remove
   address tokenAddress;
+  uint16[] tokenIdsExcluded; // token ids excluded from this list
 }
 
 struct OwnerBalance {
@@ -136,6 +137,7 @@ struct VrfConfig {
 }
 
 struct VrfMintInfo {
+  bytes32 key;
   address to;
   uint256 quantity;
 }
@@ -415,24 +417,56 @@ library ArchetypeLogic {
 
   function getRandomTokenIds(
     uint16[] storage tokenPool,
+    uint16[] memory tokenIdsExcluded,
     uint256 quantity,
     uint256 seed
   ) public returns (uint16[] memory) {
-    uint16[] memory tokenIds = new uint16[](quantity);
+      uint16[] memory tokenIds = new uint16[](quantity);
 
-    for (uint256 i = 0; i < quantity; i++) {
-      if (tokenPool.length == 0) {
-        revert MaxSupplyExceeded();
+      uint256 retries = 0;
+      uint256 MAX_RETRIES = 5;
+
+      uint256 i = 0;
+      while (i < quantity) {
+          if (tokenPool.length == 0) {
+              revert MaxSupplyExceeded();
+          }
+
+          uint256 rand = uint256(keccak256(abi.encode(seed, i)));
+          uint256 randIdx = rand % tokenPool.length;
+          uint16 selectedToken = tokenPool[randIdx];
+
+          if (tokenIdsExcluded.length > 0 && isExcluded(selectedToken, tokenIdsExcluded)) {
+              // If the token is excluded, retry for this position in tokenIds array
+              seed = rand; // Update the seed for the next iteration
+              
+              retries++;
+              if (retries >= MAX_RETRIES) {
+                  revert MaxRetriesExceeded();
+              }
+              continue;
+          }
+
+          tokenIds[i] = selectedToken;
+
+          // remove token from pool
+          tokenPool[randIdx] = tokenPool[tokenPool.length - 1];
+          tokenPool.pop();
+
+          retries = 0;
+          i++;
       }
-      uint256 rand = uint256(keccak256(abi.encode(seed, i)));
-      uint256 randIdx = rand % tokenPool.length;
-      tokenIds[i] = tokenPool[randIdx];
 
-      // remove token from pool
-      tokenPool[randIdx] = tokenPool[tokenPool.length - 1];
-      tokenPool.pop();
-    }
-    return tokenIds;
+      return tokenIds;
+  }
+
+  function isExcluded(uint16 tokenId, uint16[] memory excludedList) internal view returns (bool) {
+      for (uint256 i = 0; i < excludedList.length; i++) {
+          if (tokenId == excludedList[i]) {
+              return true;
+          }
+      }
+      return false;
   }
 
   function random() public view returns (uint256) {
