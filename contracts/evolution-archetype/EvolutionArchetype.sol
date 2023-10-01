@@ -20,7 +20,7 @@ import  "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
-import "../ArchetypeLogic.sol";
+import "./EvolutionArchetypeLogic.sol";
 import "./ERC721S.sol";
 
 contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
@@ -128,7 +128,7 @@ contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
       }
     }
 
-    ArchetypeLogic.validateMint(
+    EvolutionArchetypeLogic.validateMint(
       invite,
       config,
       auth,
@@ -147,7 +147,7 @@ contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
     if (invite.maxSupply < config.maxSupply) {
       _listSupply[auth.key] += quantity;
     }
-    ArchetypeLogic.updateBalances(
+    EvolutionArchetypeLogic.updateBalances(
       invite,
       config,
       _ownerBalance,
@@ -171,7 +171,7 @@ contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
     }
 
     uint256 curSupply = totalSupply();
-    ArchetypeLogic.validateMint(
+    EvolutionArchetypeLogic.validateMint(
       i,
       config,
       auth,
@@ -191,7 +191,7 @@ contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
     if (i.maxSupply < config.maxSupply) {
       _listSupply[auth.key] += quantity;
     }
-    ArchetypeLogic.updateBalances(i, config, _ownerBalance, _affiliateBalance, affiliate, quantity);
+    EvolutionArchetypeLogic.updateBalances(i, config, _ownerBalance, _affiliateBalance, affiliate, quantity);
   }
 
   function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
@@ -210,7 +210,7 @@ contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
   }
 
   function withdrawTokens(address[] memory tokens) public {
-    ArchetypeLogic.withdrawTokens(config, _ownerBalance, _affiliateBalance, owner(), tokens);
+    EvolutionArchetypeLogic.withdrawTokens(config, _ownerBalance, _affiliateBalance, owner(), tokens);
   }
 
   function ownerBalance() external view returns (OwnerBalance memory) {
@@ -247,7 +247,7 @@ contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
     bool affiliateUsed
   ) external view returns (uint256) {
     DutchInvite storage i = invites[key];
-    return ArchetypeLogic.computePrice(i, config.discounts, quantity, affiliateUsed);
+    return EvolutionArchetypeLogic.computePrice(i, config.discounts, quantity, affiliateUsed);
   }
 
   //
