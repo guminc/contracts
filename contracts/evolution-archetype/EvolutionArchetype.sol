@@ -43,16 +43,20 @@ contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
 
   Config public config;
   Options public options;
+  bool private _initialized;
 
   //
   // METHODS
   //
   constructor(
-    string memory name,
-    string memory symbol,
-    Config memory config_,
+    string memory name, string memory symbol
+  ) ERC721S(name, symbol) { }
+
+  function initialize(
+    Config calldata config_,
     address _receiver
-  ) ERC721S(name, symbol) {
+  ) public onlyOwner {
+    require(!_initialized);
     // check max bps not reached and min platform fee.
     if (
       config_.affiliateFee > MAXBPS ||
@@ -83,6 +87,7 @@ contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
     } else {
       setDefaultRoyalty(_receiver, config.defaultRoyalty);
     }
+    _initialized = true;
   }
 
   //

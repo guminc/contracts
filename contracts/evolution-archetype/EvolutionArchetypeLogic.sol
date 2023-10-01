@@ -15,7 +15,6 @@
 
 pragma solidity ^0.8.4;
 
-import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "solady/src/utils/MerkleProofLib.sol";
 import "solady/src/utils/ECDSA.sol";
