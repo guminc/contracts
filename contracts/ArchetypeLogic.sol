@@ -460,7 +460,7 @@ library ArchetypeLogic {
       return tokenIds;
   }
 
-  function isExcluded(uint16 tokenId, uint16[] memory excludedList) internal view returns (bool) {
+  function isExcluded(uint16 tokenId, uint16[] memory excludedList) internal pure returns (bool) {
       for (uint256 i = 0; i < excludedList.length; i++) {
           if (tokenId == excludedList[i]) {
               return true;

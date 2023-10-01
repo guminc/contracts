@@ -275,7 +275,7 @@ describe("Factory", function () {
       end: 0,
       limit: 300,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       maxSupply: 500,
       tokenAddress: ZERO,
     });
@@ -335,7 +335,7 @@ describe("Factory", function () {
       limit: 1000,
       maxSupply: 5000,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
     await nft.connect(owner).setInvite(root, ipfsh.ctod(CID_DEFAULT), {
@@ -345,7 +345,7 @@ describe("Factory", function () {
       limit: 10,
       maxSupply: 5000,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -401,7 +401,7 @@ describe("Factory", function () {
       limit: 1000,
       maxSupply: 5000,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -440,7 +440,7 @@ describe("Factory", function () {
       limit: 0,
       maxSupply: 5000,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -485,7 +485,7 @@ describe("Factory", function () {
       limit: 300,
       maxSupply: 5000,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -639,7 +639,7 @@ describe("Factory", function () {
       limit: 300,
       maxSupply: 5000,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -727,7 +727,7 @@ describe("Factory", function () {
       limit: 300,
       maxSupply: 5000,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -823,7 +823,7 @@ describe("Factory", function () {
       limit: 300,
       maxSupply: 5000,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -888,7 +888,7 @@ describe("Factory", function () {
   //     limit: 300,
   //     maxSupply: 5000,
   //     randomize: true,
-  //     tokenIds: [1,2,3,4,5],
+  //     tokenIdsExcluded: [1,2,3,4,5],
   //     tokenAddress: ZERO,
   //   });
 
@@ -1020,7 +1020,7 @@ describe("Factory", function () {
   //     limit: 300,
   //     maxSupply: 5000,
   //     randomize: true,
-  //     tokenIds: [1,2,3,4,5],
+  //     tokenIdsExcluded: [1,2,3,4,5],
   //     tokenAddress: ZERO,
   //   });
 
@@ -1149,7 +1149,7 @@ describe("Factory", function () {
       limit: 500,
       maxSupply: 500,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -1203,7 +1203,7 @@ describe("Factory", function () {
       limit: 300,
       maxSupply: 5000,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -1260,7 +1260,7 @@ describe("Factory", function () {
   //     limit: 5000,
   //     maxSupply: 5000,
   //     unitSize: 0,
-  //     tokenIds: [],
+  //     tokenIdsExcluded: [],
   //     tokenAddress: ZERO,
   //   });
 
@@ -1373,7 +1373,7 @@ describe("Factory", function () {
       maxSupply: 5000,
       tokenAddress: tokenAddress,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
     });
 
     // try to mint tokens without approval
@@ -1450,7 +1450,7 @@ describe("Factory", function () {
       delta: ethers.utils.parseEther("0.1"),
       maxSupply: 5000,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -1517,7 +1517,7 @@ describe("Factory", function () {
       delta: ethers.utils.parseEther("1"),
       maxSupply: 5000,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -1588,7 +1588,7 @@ describe("Factory", function () {
       limit: PublicMaxSupply - 20,
       maxSupply: PublicMaxSupply,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -1640,7 +1640,7 @@ describe("Factory", function () {
       limit: 100,
       maxSupply: 100,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -1658,7 +1658,7 @@ describe("Factory", function () {
       limit: 20,
       maxSupply: 100,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -1672,7 +1672,7 @@ describe("Factory", function () {
       limit: 40,
       maxSupply: 100,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -1711,7 +1711,7 @@ describe("Factory", function () {
       limit: 100,
       maxSupply: 2 ** 32 - 1,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -1774,7 +1774,7 @@ describe("Factory", function () {
       limit: 24,
       maxSupply: 40,
       unitSize: 12,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -1834,7 +1834,7 @@ describe("Factory", function () {
       limit: 2 ** 32 - 1,
       maxSupply: 2 ** 32 - 1,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -1904,7 +1904,7 @@ describe("Factory", function () {
       limit: 2 ** 32 - 1,
       maxSupply: 2 ** 32 - 1,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
     // mint 1 random
@@ -2020,7 +2020,7 @@ describe("Factory", function () {
       maxSupply: 100,
       unitSize: 0,
       tokenAddress: ZERO,
-      tokenIds: [],
+      tokenIdsExcluded: [],
     });
 
     await nftMint.connect(owner).setInvite(HASHONE, ipfsh.ctod(CID_ZERO), {
@@ -2031,7 +2031,7 @@ describe("Factory", function () {
       maxSupply: 100,
       unitSize: 0,
       tokenAddress: ZERO,
-      tokenIds: [],
+      tokenIdsExcluded: [],
     });
 
     const targets = [
@@ -2139,7 +2139,7 @@ describe("Factory", function () {
       maxSupply: 100,
       unitSize: 0,
       tokenAddress: ZERO,
-      tokenIds: [],
+      tokenIdsExcluded: [],
     });
 
     await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
@@ -2150,7 +2150,7 @@ describe("Factory", function () {
       maxSupply: 100,
       unitSize: 0,
       tokenAddress: ZERO,
-      tokenIds: [],
+      tokenIdsExcluded: [],
     });
 
     const targets = [nftMint.address, nftMint.address];
@@ -2210,7 +2210,7 @@ describe("Factory", function () {
           maxSupply: 100,
           unitSize: 0,
           tokenAddress: ZERO,
-          tokenIds: [],
+          tokenIdsExcluded: [],
         },
       ]),
       nftMint.interface.encodeFunctionData("updateTokenPool", [[8, 10, 10], "forever"]),
@@ -2262,7 +2262,7 @@ describe("Factory", function () {
       limit: 2 ** 32 - 1,
       maxSupply: 2 ** 32 - 1,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
     await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: 0 });
@@ -2297,6 +2297,133 @@ describe("Factory", function () {
         value: 0,
       })
     ).to.be.revertedWith("TokenPoolEmpty");
+  });
+
+  it("test erc1155 random tokenId exclusion mints", async function () {
+    const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
+    const default_config = {
+      ...DEFAULT_CONFIG,
+      maxSupply: 100,
+      tokenPool: generateTokenPool(100),
+      maxBatchSize: 100,
+    };
+
+    const owner = accountZero;
+    const minter = accountOne;
+    const minter2 = accountTwo;
+
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      default_config
+    );
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const nftMint = Archetype.attach(newCollectionAddressMint);
+
+    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      end: 0,
+      limit: 2 ** 32 - 1,
+      maxSupply: 2 ** 32 - 1,
+      unitSize: 0,
+      tokenIdsExcluded: [1], // tokenIds 1 cannot be minted - 20% of the supply
+      tokenAddress: ZERO,
+    });
+
+    // mint 20 tokens
+    // we revert on the 5th retry
+    // At worst case on the 20th mint, the number of excluded tokens is 20/80 (25%)
+    // 0.25^(5 retries) = 0.09% chance that mint fails
+    // chance of it failing once in 20 mints assuming every mint is that worst case probability
+    // 1−(1−𝑝)𝑛 is 1.93%
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 20, ZERO, "0x", { value: 0 });
+
+    // mint 60 tokens
+    // This is basically guaranteed to revert, 20/21 of unmintable at the end.
+    await expect(
+      nftMint.connect(minter).mint({ key: ethers.constants.HashZero, proof: [] }, 60, ZERO, "0x", {
+        value: 0,
+      })
+    ).to.be.revertedWith("MaxRetriesExceeded");
+
+    await expect(await nftMint.totalSupply()).to.be.equal(20);
+    await expect(await nftMint.balanceOf(minter.address, 1)).to.be.equal(0);
+  });
+
+  it("test erc1155 random tokenId exclusion large scale mint", async function () {
+    const generateTokenPool = (tokenIds: number[], x: number): number[] =>
+      [].concat(...tokenIds.map(i => Array(x).fill(i)));
+    const tokenPool = generateTokenPool([130, 131, 135, 137, 138], 100)
+      .concat(generateTokenPool([132, 134, 139, 140, 141], 50))
+      .concat(generateTokenPool([142, 136], 10))
+      .concat(generateTokenPool([133, 143], 1));
+
+    const default_config = {
+      ...DEFAULT_CONFIG,
+      maxSupply: tokenPool.length,
+      tokenPool: tokenPool,
+      maxBatchSize: tokenPool.length,
+    };
+
+    const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
+    const owner = accountZero;
+    const minter = accountOne;
+    const minter2 = accountTwo;
+
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      default_config
+    );
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const nftMint = Archetype.attach(newCollectionAddressMint);
+
+    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      end: 0,
+      limit: 2 ** 32 - 1,
+      maxSupply: 2 ** 32 - 1,
+      unitSize: 0,
+      tokenIdsExcluded: [133, 143], // 133 and 143 are both 1/1s, 2/772 tokens excluded
+      tokenAddress: ZERO,
+    });
+
+    // mint entire supply
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 20, ZERO, "0x", { value: 0 });
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 700, ZERO, "0x", { value: 0 });
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 30, ZERO, "0x", { value: 0 });
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 10, ZERO, "0x", { value: 0 });
+
+    // the only tokens left at this point are 10 tokens + the excluded 2 tokens 133 and 143
+
+    // mint 12 tokens
+    await expect(
+      nftMint.connect(minter).mint({ key: ethers.constants.HashZero, proof: [] }, 12, ZERO, "0x", {
+        value: 0,
+      })
+    ).to.be.revertedWith("MaxRetriesExceeded");
+
+    await expect(await nftMint.totalSupply()).to.be.equal(760);
+    await expect(await nftMint.balanceOf(minter.address, 133)).to.be.equal(0);
+    await expect(await nftMint.balanceOf(minter.address, 143)).to.be.equal(0);
+    const remainingPool = await nftMint.connect(owner).tokenPool();
+    expect([133, 143].every(tokenId => remainingPool.includes(tokenId))).to.be.true;
   });
 
   it("test chainlink mint", async function () {
@@ -2335,7 +2462,7 @@ describe("Factory", function () {
       limit: 2 ** 32 - 1,
       maxSupply: 2 ** 32 - 1,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
@@ -2397,7 +2524,7 @@ describe("Factory", function () {
       limit: 2 ** 32 - 1,
       maxSupply: 2 ** 32 - 1,
       unitSize: 0,
-      tokenIds: [],
+      tokenIdsExcluded: [],
       tokenAddress: ZERO,
     });
 
