@@ -243,6 +243,42 @@ contract Archetype is
   // OWNER ONLY
   //
 
+  function airdropTo(
+    address[] calldata toList,
+    uint256[] calldata quantityList,
+    uint256[] calldata tokenIdList
+  ) external _onlyOwner {
+
+    if (options.airdropLocked) {
+      revert LockedForever();
+    }
+
+    if (quantityList.length != toList.length || quantityList.length != tokenIdList.length) {
+      revert InvalidConfig();
+    }
+
+    uint256 quantity;
+    for (uint256 i = 0; i < toList.length; i++) {
+      bytes memory _data;
+      _mint(toList[i], tokenIdList[i], quantityList[i], _data);
+      quantity += quantityList[i];
+    }
+
+    if ((totalSupply + quantity) > config.maxSupply) {
+      revert MaxSupplyExceeded();
+    }
+    totalSupply += quantity;
+  }
+
+  /// @notice the password is "forever"
+  function lockAirdrop(string memory password) external _onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+
+    options.airdropLocked = true;
+  }
+
   function setBaseURI(string memory baseUri) external _onlyOwner {
     if (options.uriLocked) {
       revert LockedForever();
@@ -279,8 +315,15 @@ contract Archetype is
   /// @notice the password is "forever"
   // token supply will be reset and contents will be lost forever. Be careful changing.
   function resetTokenPool(uint16[] memory newTokens, string memory password) external _onlyOwner {
-    delete config.tokenPool;
-    updateTokenPool(newTokens, password);
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+
+    if (options.tokenPoolLocked) {
+      revert LockedForever();
+    }
+
+    config.tokenPool = newTokens;
   }
 
   /// @notice the password is "forever"

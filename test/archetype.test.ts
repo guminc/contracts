@@ -31,7 +31,8 @@ const ZERO = "0x0000000000000000000000000000000000000000";
 const HASHONE = "0x0000000000000000000000000000000000000000000000000000000000000001";
 const HASH256 = "0x00000000000000000000000000000000000000000000000000000000000000ff";
 
-const generateTokenPool = (x: number): number[] => [].concat(...[1, 2, 3, 4, 5].map(i => Array(x/5).fill(i)));
+const generateTokenPool = (x: number): number[] =>
+  [].concat(...[1, 2, 3, 4, 5].map(i => Array(x / 5).fill(i)));
 
 describe("Factory", function () {
   let Archetype: Archetype__factory;
@@ -42,7 +43,7 @@ describe("Factory", function () {
   let archetypeBatch: Contract;
   let Factory: Factory__factory;
   let factory: Contract;
-  let VrfCoordinatorMock: VRFCoordinatorV2Mock__factory
+  let VrfCoordinatorMock: VRFCoordinatorV2Mock__factory;
   let vrfCoordinatorMock: Contract;
 
   before(async function () {
@@ -96,7 +97,7 @@ describe("Factory", function () {
     VrfCoordinatorMock = await ethers.getContractFactory("VRFCoordinatorV2Mock");
     vrfCoordinatorMock = await VrfCoordinatorMock.deploy(1, 1);
 
-    console.log({vrfCoordinator: vrfCoordinatorMock.address})
+    console.log({ vrfCoordinator: vrfCoordinatorMock.address });
   });
 
   it("should have platform set to test account", async function () {
@@ -670,7 +671,9 @@ describe("Factory", function () {
         value: ethers.utils.parseEther((0.081 * 20).toString()), // 10 % discount from using an affiliate, additional 10% for minting 20 = 0.081 per
       });
 
-    await expect((await nft.computePrice(ethers.constants.HashZero, 20, true))).to.equal(ethers.utils.parseEther((0.081 * 20).toString()));
+    await expect(await nft.computePrice(ethers.constants.HashZero, 20, true)).to.equal(
+      ethers.utils.parseEther((0.081 * 20).toString())
+    );
 
     await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("1.296")); // 80%
     await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.081")); // 5%
@@ -936,7 +939,9 @@ describe("Factory", function () {
 
     // CHANGE TOKEN POOL
     await nft.connect(owner).updateTokenPool([6, 6, 6, 7], "forever");
-    await expect(await nft.connect(owner).tokenPool()).to.deep.equal(DEFAULT_CONFIG.tokenPool.concat([6, 6, 6, 7]));
+    await expect(await nft.connect(owner).tokenPool()).to.deep.equal(
+      DEFAULT_CONFIG.tokenPool.concat([6, 6, 6, 7])
+    );
     await nft.connect(owner).lockTokenPool("forever");
     await expect(nft.connect(owner).updateTokenPool([8, 8, 9, 9], "forever")).to.be.reverted;
 
@@ -1117,7 +1122,12 @@ describe("Factory", function () {
 
   it("test max supply checks", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();
-    const default_config = { ...DEFAULT_CONFIG, maxBatchSize: 500, maxSupply: 50, tokenPool: generateTokenPool(50) };
+    const default_config = {
+      ...DEFAULT_CONFIG,
+      maxBatchSize: 500,
+      maxSupply: 50,
+      tokenPool: generateTokenPool(50),
+    };
 
     const owner = accountZero;
     const minter = accountOne;
@@ -1214,9 +1224,9 @@ describe("Factory", function () {
     ).to.be.revertedWith("ERC1155: mint to the zero address");
 
     let userBalance = 0;
-    for(let i = 0; i <= 5; i++) {
+    for (let i = 0; i <= 5; i++) {
       userBalance += (await nft.balanceOf(holder.address, i)).toNumber();
-    }    
+    }
     await expect(userBalance).to.be.equal(3);
     await expect(await nft.balanceOf(owner.address, 1)).to.be.equal(0);
   });
@@ -1387,9 +1397,9 @@ describe("Factory", function () {
     await nft.connect(holder).mint({ key: erc20PublicKey, proof: [] }, 3, ZERO, "0x");
 
     let userBalance = 0;
-    for(let i = 0; i <= 5; i++) {
+    for (let i = 0; i <= 5; i++) {
       userBalance += (await nft.balanceOf(holder.address, i)).toNumber();
-    }  
+    }
     await expect(userBalance).to.be.equal(3);
     await expect(await erc20.balanceOf(holder.address)).to.be.equal(0);
     await expect(await erc20.balanceOf(nft.address)).to.be.equal(ethers.utils.parseEther("3"));
@@ -1473,9 +1483,9 @@ describe("Factory", function () {
     });
 
     let userBalance = 0;
-    for(let i = 0; i <= 5; i++) {
+    for (let i = 0; i <= 5; i++) {
       userBalance += (await nft.balanceOf(holder.address, i)).toNumber();
-    } 
+    }
     await expect(userBalance).to.be.equal(3);
   });
 
@@ -1540,9 +1550,9 @@ describe("Factory", function () {
     });
 
     let userBalance = 0;
-    for(let i = 0; i <= 5; i++) {
+    for (let i = 0; i <= 5; i++) {
       userBalance += (await nft.balanceOf(holder.address, i)).toNumber();
-    } 
+    }
     await expect(userBalance).to.be.equal(3);
   });
 
@@ -1602,7 +1612,12 @@ describe("Factory", function () {
 
   it("test multiple public invite lists support in 0.5.1", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
-    const default_config = { ...DEFAULT_CONFIG, maxSupply: 200, tokenPool: generateTokenPool(200), maxBatchSize: 100 };
+    const default_config = {
+      ...DEFAULT_CONFIG,
+      maxSupply: 200,
+      tokenPool: generateTokenPool(200),
+      maxBatchSize: 100,
+    };
 
     const owner = accountZero;
     const minter = accountOne;
@@ -1668,7 +1683,12 @@ describe("Factory", function () {
 
   it("test erc1155 random tokenId mints", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
-    const default_config = { ...DEFAULT_CONFIG, maxSupply: 50, tokenPool: new Array(50).fill(100), maxBatchSize: 1000 };
+    const default_config = {
+      ...DEFAULT_CONFIG,
+      maxSupply: 50,
+      tokenPool: new Array(50).fill(100),
+      maxBatchSize: 1000,
+    };
 
     const owner = accountZero;
     const minter = accountOne;
@@ -1726,7 +1746,11 @@ describe("Factory", function () {
 
   it("test unit size mint 1 get x functionality", async function () {
     const [accountZero, accountOne, accountTwo, accountThree] = await ethers.getSigners();
-    const default_config = { ...DEFAULT_CONFIG, tokenPool: generateTokenPool(50), maxBatchSize: 50 };
+    const default_config = {
+      ...DEFAULT_CONFIG,
+      tokenPool: generateTokenPool(50),
+      maxBatchSize: 50,
+    };
 
     const owner = accountZero;
     const minter = accountOne;
@@ -1783,7 +1807,11 @@ describe("Factory", function () {
 
   it("test erc1155 increasing token pool supply", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
-    const default_config = { ...DEFAULT_CONFIG, tokenPool: generateTokenPool(50), maxBatchSize: 1000 };
+    const default_config = {
+      ...DEFAULT_CONFIG,
+      tokenPool: generateTokenPool(50),
+      maxBatchSize: 1000,
+    };
 
     const owner = accountZero;
     const minter = accountOne;
@@ -1828,7 +1856,6 @@ describe("Factory", function () {
     await expect(await nftMint.balanceOf(minter.address, 1)).to.be.equal(11); // 10 from initial + 1 from expansion
     await expect(await nftMint.balanceOf(minter.address, 6)).to.be.equal(3);
     await expect(await nftMint.balanceOf(minter.address, 7)).to.be.equal(3);
-
 
     // update again
     await nftMint.connect(owner).setMaxSupply(61, "forever");
@@ -1886,68 +1913,86 @@ describe("Factory", function () {
     await expect(await nftMint.totalSupply()).to.be.equal(1);
   });
 
-  // it("test erc1155 test batch mint verification", async function () {
-  //   const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
-  //   const default_config = {
-  //     ...DEFAULT_CONFIG,
-  //     maxSupply: new Array(500).fill(10),
-  //     maxBatchSize: 1000,
-  //   };
-  //   const owner = accountZero;
-  //   const minter = accountOne;
-  //   const minter2 = accountTwo;
+  it("test erc1155 batch mint owner airdrop", async function () {
+    const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
+    const default_config = {
+      ...DEFAULT_CONFIG,
+      maxSupply: 400,
+    };
+    const owner = accountZero;
+    const minter = accountOne;
+    const minter2 = accountTwo;
 
-  //   const newCollectionMint = await factory.createCollection(
-  //     owner.address,
-  //     DEFAULT_NAME,
-  //     DEFAULT_SYMBOL,
-  //     default_config
-  //   );
-  //   const resultMint = await newCollectionMint.wait();
-  //   const newCollectionAddressMint = resultMint.events[0].address || "";
-  //   const nftMint = Archetype.attach(newCollectionAddressMint);
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      default_config
+    );
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const nftMint = Archetype.attach(newCollectionAddressMint);
 
-  //   await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
-  //     price: 0,
-  //     start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-  //     end: 0,
-  //     limit: 2 ** 32 - 1,
-  //     maxSupply: 2 ** 32 - 1,
-  //     unitSize: 0,
-  //     tokenIds: [],
-  //     tokenAddress: ZERO,
-  //   });
+    // expect to throw when not called by owner
+    await expect(
+      nftMint
+        .connect(minter)
+        .airdropTo(
+          [minter.address, minter2.address, minter.address, owner.address],
+          [10, 10, 10, 10],
+          [1, 5, 240, 5],
+          { value: 0 }
+        )
+    ).to.be.revertedWith("NotOwner");
 
-  //   // expect validation to pickup that tokenId 5 is minting past its max supply
-  //   await expect(
-  //     nftMint
-  //       .connect(minter)
-  //       .batchMintTo(
-  //         { key: ethers.constants.HashZero, proof: [] },
-  //         [minter.address, minter2.address, minter.address, owner.address],
-  //         [10, 10, 10, 10],
-  //         [1, 5, 240, 5],
-  //         ZERO,
-  //         "0x",
-  //         { value: 0 }
-  //       )
-  //   ).to.be.revertedWith("MaxSupplyExceeded");
+    // expect validation to pickup that mint is passed max supply
+    await expect(
+      nftMint
+        .connect(owner)
+        .airdropTo(
+          [minter.address, minter2.address, minter.address, owner.address],
+          [100, 100, 100, 101],
+          [1, 5, 240, 6],
+          { value: 0 }
+        )
+    ).to.be.revertedWith("MaxSupplyExceeded");
 
-  //   await nftMint
-  //     .connect(minter)
-  //     .batchMintTo(
-  //       { key: ethers.constants.HashZero, proof: [] },
-  //       [minter.address, minter2.address, minter.address, owner.address],
-  //       [10, 10, 10, 10],
-  //       [1, 5, 240, 6],
-  //       ZERO,
-  //       "0x",
-  //       { value: 0 }
-  //     );
+    // expect payment not to be allowed
+    await expect(
+      nftMint
+        .connect(owner)
+        .airdropTo(
+          [minter.address, minter2.address, minter.address, owner.address],
+          [100, 100, 100, 101],
+          [1, 5, 240, 6],
+          { value: 1 }
+        )
+    ).to.be.reverted;
 
-  //   await expect(await nftMint.totalSupply()).to.be.equal(40);
-  // });
+    await nftMint
+      .connect(owner)
+      .airdropTo(
+        [minter.address, minter2.address, minter.address, owner.address],
+        [100, 100, 100, 100],
+        [1, 5, 240, 6],
+        { value: 0 }
+      );
 
+    // test lock
+    await nftMint.connect(owner).lockAirdrop("forever");
+    await expect(
+      nftMint
+        .connect(owner)
+        .airdropTo(
+          [minter.address, minter2.address, minter.address, owner.address],
+          [100, 100, 100, 101],
+          [1, 5, 240, 6],
+          { value: 0 }
+        )
+    ).to.be.revertedWith("LockedForever");
+
+    await expect(await nftMint.totalSupply()).to.be.equal(400);
+  });
 
   it("test batchTransactions method logic", async function () {
     const [accountZero, accountOne, accountTwo, accountThree] = await ethers.getSigners();
@@ -1975,7 +2020,7 @@ describe("Factory", function () {
       maxSupply: 100,
       unitSize: 0,
       tokenAddress: ZERO,
-      tokenIds: []
+      tokenIds: [],
     });
 
     await nftMint.connect(owner).setInvite(HASHONE, ipfsh.ctod(CID_ZERO), {
@@ -1986,17 +2031,46 @@ describe("Factory", function () {
       maxSupply: 100,
       unitSize: 0,
       tokenAddress: ZERO,
-      tokenIds: []
+      tokenIds: [],
     });
 
-    const targets = [nftMint.address, nftMint.address, nftMint.address, nftMint.address, nftMint.address];
+    const targets = [
+      nftMint.address,
+      nftMint.address,
+      nftMint.address,
+      nftMint.address,
+      nftMint.address,
+    ];
     const values = [0, 0, 0, ethers.utils.parseEther("0.2"), ethers.utils.parseEther("0.3")];
     const datas = [
-      nftMint.interface.encodeFunctionData("mintTo", [{ key: ethers.constants.HashZero, proof: [] }, 1, minter3.address, ZERO, "0x"]),
-      nftMint.interface.encodeFunctionData("mint", [{ key: ethers.constants.HashZero, proof: [] }, 2, ZERO, "0x"]),
-      nftMint.interface.encodeFunctionData("mintTo", [{ key: ethers.constants.HashZero, proof: [] }, 5, minter2.address, ZERO, "0x"]),
+      nftMint.interface.encodeFunctionData("mintTo", [
+        { key: ethers.constants.HashZero, proof: [] },
+        1,
+        minter3.address,
+        ZERO,
+        "0x",
+      ]),
+      nftMint.interface.encodeFunctionData("mint", [
+        { key: ethers.constants.HashZero, proof: [] },
+        2,
+        ZERO,
+        "0x",
+      ]),
+      nftMint.interface.encodeFunctionData("mintTo", [
+        { key: ethers.constants.HashZero, proof: [] },
+        5,
+        minter2.address,
+        ZERO,
+        "0x",
+      ]),
       nftMint.interface.encodeFunctionData("mint", [{ key: HASHONE, proof: [] }, 2, ZERO, "0x"]),
-      nftMint.interface.encodeFunctionData("mintTo", [{ key: HASHONE, proof: [] }, 3, minter2.address, ZERO, "0x"]),
+      nftMint.interface.encodeFunctionData("mintTo", [
+        { key: HASHONE, proof: [] },
+        3,
+        minter2.address,
+        ZERO,
+        "0x",
+      ]),
     ];
 
     // Execute batch transactions
@@ -2005,13 +2079,13 @@ describe("Factory", function () {
     });
 
     let balanceOfMinter = 0;
-    for(let i = 0; i <= 5; i++) {
+    for (let i = 0; i <= 5; i++) {
       balanceOfMinter += (await nftMint.balanceOf(minter.address, i)).toNumber();
     }
     let balanceOfMinter2 = 0;
-    for(let i = 0; i <= 5; i++) {
+    for (let i = 0; i <= 5; i++) {
       balanceOfMinter2 += (await nftMint.balanceOf(minter2.address, i)).toNumber();
-    }   
+    }
     const totalSupply = await nftMint.totalSupply();
 
     expect(balanceOfMinter).to.be.equal(4);
@@ -2019,9 +2093,9 @@ describe("Factory", function () {
     expect(totalSupply).to.be.equal(13);
 
     let balanceOfMinter3 = 0;
-    for(let i = 0; i <= 5; i++) {
+    for (let i = 0; i <= 5; i++) {
       balanceOfMinter3 += (await nftMint.balanceOf(minter3.address, i)).toNumber();
-    }       
+    }
     expect(balanceOfMinter3).to.be.equal(1);
 
     // batchTransaction tx sent 0.1 extra eth
@@ -2029,7 +2103,8 @@ describe("Factory", function () {
     const recipient_ = minter2.address;
     let ethbalance = await ethers.provider.getBalance(minter2.address);
     await archetypeBatch.connect(owner).rescueETH(recipient_);
-    let diff = (await ethers.provider.getBalance(minter2.address)).toBigInt() - ethbalance.toBigInt();
+    let diff =
+      (await ethers.provider.getBalance(minter2.address)).toBigInt() - ethbalance.toBigInt();
 
     expect(Number(diff)).to.be.equal(Number(ethers.utils.parseEther("0.1")));
   });
@@ -2064,7 +2139,7 @@ describe("Factory", function () {
       maxSupply: 100,
       unitSize: 0,
       tokenAddress: ZERO,
-      tokenIds: []
+      tokenIds: [],
     });
 
     await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
@@ -2075,13 +2150,18 @@ describe("Factory", function () {
       maxSupply: 100,
       unitSize: 0,
       tokenAddress: ZERO,
-      tokenIds: []
+      tokenIds: [],
     });
 
     const targets = [nftMint.address, nftMint.address];
     const values = [ethers.utils.parseEther("0.5"), 0];
     const datas = [
-      nftMint.interface.encodeFunctionData("mint", [{ key: ethers.constants.HashZero, proof: [] }, 5, ZERO, "0x"]),
+      nftMint.interface.encodeFunctionData("mint", [
+        { key: ethers.constants.HashZero, proof: [] },
+        5,
+        ZERO,
+        "0x",
+      ]),
       nftMint.interface.encodeFunctionData("mint", [{ key: root, proof: proof }, 5, ZERO, "0x"]),
     ];
 
@@ -2092,7 +2172,7 @@ describe("Factory", function () {
 
     // minter is validated through tx.origin
     let balanceOfMinter = 0;
-    for(let i = 0; i <= 5; i++) {
+    for (let i = 0; i <= 5; i++) {
       balanceOfMinter += (await nftMint.balanceOf(minter.address, i)).toNumber();
     }
     const totalSupply = await nftMint.totalSupply();
@@ -2102,10 +2182,10 @@ describe("Factory", function () {
 
   it("test batching owner method", async function () {
     const [accountZero, accountOne, accountTwo, accountThree] = await ethers.getSigners();
-  
+
     const owner = accountZero;
     const minter = accountOne;
-  
+
     const newCollectionMint = await factory.createCollection(
       owner.address,
       DEFAULT_NAME,
@@ -2119,16 +2199,20 @@ describe("Factory", function () {
     const targets = [nftMint.address, nftMint.address, nftMint.address];
     const values = [0, 0, 0];
     const datas = [
-      nftMint.interface.encodeFunctionData("setInvite", [ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
-        price: ethers.utils.parseEther("0.0"),
-        start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-        end: 0,
-        limit: 100,
-        maxSupply: 100,
-        unitSize: 0,
-        tokenAddress: ZERO,
-          tokenIds: []
-      }]),
+      nftMint.interface.encodeFunctionData("setInvite", [
+        ethers.constants.HashZero,
+        ipfsh.ctod(CID_ZERO),
+        {
+          price: ethers.utils.parseEther("0.0"),
+          start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+          end: 0,
+          limit: 100,
+          maxSupply: 100,
+          unitSize: 0,
+          tokenAddress: ZERO,
+          tokenIds: [],
+        },
+      ]),
       nftMint.interface.encodeFunctionData("updateTokenPool", [[8, 10, 10], "forever"]),
       nftMint.interface.encodeFunctionData("setBaseURI", ["test"]),
     ];
@@ -2138,9 +2222,10 @@ describe("Factory", function () {
       value: ethers.utils.parseEther("0.0"),
     });
 
-    await expect(await nftMint.connect(owner).tokenPool()).to.deep.equal(DEFAULT_CONFIG.tokenPool.concat([8, 10, 10]));
+    await expect(await nftMint.connect(owner).tokenPool()).to.deep.equal(
+      DEFAULT_CONFIG.tokenPool.concat([8, 10, 10])
+    );
     await expect((await nftMint.connect(owner).config()).baseUri).to.be.equal("test");
-
   });
 
   it("test erc1155 multiple rounds of token pools w/ tokenPool clearing", async function () {
@@ -2148,8 +2233,12 @@ describe("Factory", function () {
     const default_config = {
       ...DEFAULT_CONFIG,
       maxSupply: 500,
-      tokenPool:
-        Array(10).fill(1).concat(Array(20).fill(2)).concat(Array(40).fill(3)).concat(Array(30).fill(4)).concat(Array(100).fill(5)),
+      tokenPool: Array(10)
+        .fill(1)
+        .concat(Array(20).fill(2))
+        .concat(Array(40).fill(3))
+        .concat(Array(30).fill(4))
+        .concat(Array(100).fill(5)),
       maxBatchSize: 1000,
     };
 
@@ -2195,7 +2284,7 @@ describe("Factory", function () {
     // should be 75 tokens left
     let tokenPool = await nftMint.connect(owner).tokenPool();
     await expect(tokenPool.length).to.be.equal(75);
-    
+
     // lets clear the pool for new release
     await nftMint.connect(owner).resetTokenPool(Array(10).fill(7), "forever");
 
@@ -2208,7 +2297,6 @@ describe("Factory", function () {
         value: 0,
       })
     ).to.be.revertedWith("TokenPoolEmpty");
-
   });
 
   it("test chainlink mint", async function () {
@@ -2228,7 +2316,7 @@ describe("Factory", function () {
       DEFAULT_SYMBOL,
       default_config
     );
-    
+
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
     const nftMint = Archetype.attach(newCollectionAddressMint);
@@ -2236,8 +2324,8 @@ describe("Factory", function () {
     // setup chainlink
     const subId = 1;
     await vrfCoordinatorMock.createSubscription();
-    await vrfCoordinatorMock.fundSubscription(subId, ethers.utils.parseEther("7"))  
-    await vrfCoordinatorMock.addConsumer(subId, nftMint.address)
+    await vrfCoordinatorMock.fundSubscription(subId, ethers.utils.parseEther("7"));
+    await vrfCoordinatorMock.addConsumer(subId, nftMint.address);
     await nftMint.enableChainlinkVRF(subId);
 
     await nftMint.connect(owner).setInvite(HASHONE, ipfsh.ctod(CID_ZERO), {
@@ -2252,10 +2340,12 @@ describe("Factory", function () {
     });
 
     // initiate mint
-    const mintTx = await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: ethers.utils.parseEther("0.1") });
+    const mintTx = await nftMint
+      .connect(minter)
+      .mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: ethers.utils.parseEther("0.1") });
     const mintResult = await mintTx.wait();
     const reqId = mintResult.events[0].data.slice(2, 66); // extract request id
-    console.log(reqId)
+    console.log(reqId);
 
     // mint paid
     await expect((await nftMint.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.095"));
@@ -2263,8 +2353,7 @@ describe("Factory", function () {
     await expect(await nftMint.totalSupply()).to.equal(1);
     await expect(await nftMint.balanceOf(minter.address, 1)).to.equal(0);
 
-
-    await vrfCoordinatorMock.fulfillRandomWords(reqId, nftMint.address)
+    await vrfCoordinatorMock.fulfillRandomWords(reqId, nftMint.address);
 
     // token minted after fulfillment
     await expect(await nftMint.balanceOf(minter.address, 1)).to.equal(1);
@@ -2289,7 +2378,7 @@ describe("Factory", function () {
       DEFAULT_SYMBOL,
       default_config
     );
-    
+
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
     const nftMint = Archetype.attach(newCollectionAddressMint);
@@ -2297,8 +2386,8 @@ describe("Factory", function () {
     // setup chainlink
     const subId = 1;
     await vrfCoordinatorMock.createSubscription();
-    await vrfCoordinatorMock.fundSubscription(subId, ethers.utils.parseEther("7"))  
-    await vrfCoordinatorMock.addConsumer(subId, nftMint.address)
+    await vrfCoordinatorMock.fundSubscription(subId, ethers.utils.parseEther("7"));
+    await vrfCoordinatorMock.addConsumer(subId, nftMint.address);
     await nftMint.enableChainlinkVRF(subId);
 
     await nftMint.connect(owner).setInvite(HASHONE, ipfsh.ctod(CID_ZERO), {
@@ -2313,22 +2402,30 @@ describe("Factory", function () {
     });
 
     // initiate mint 1
-    const mintTx1 = await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: ethers.utils.parseEther("0.1") });
+    const mintTx1 = await nftMint
+      .connect(minter)
+      .mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: ethers.utils.parseEther("0.1") });
     const mintResult1 = await mintTx1.wait();
     const reqId1 = mintResult1.events[0].data.slice(2, 66); // extract request id
 
-     // initiate mint 2
-     const mintTx2 = await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: ethers.utils.parseEther("0.1") });
-     const mintResult2 = await mintTx2.wait();
-     const reqId2 = mintResult2.events[0].data.slice(2, 66); // extract request id
+    // initiate mint 2
+    const mintTx2 = await nftMint
+      .connect(minter)
+      .mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: ethers.utils.parseEther("0.1") });
+    const mintResult2 = await mintTx2.wait();
+    const reqId2 = mintResult2.events[0].data.slice(2, 66); // extract request id
 
-      // initiate mint 3
-    const mintTx3 = await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: ethers.utils.parseEther("0.1") });
+    // initiate mint 3
+    const mintTx3 = await nftMint
+      .connect(minter)
+      .mint({ key: HASHONE, proof: [] }, 1, ZERO, "0x", { value: ethers.utils.parseEther("0.1") });
     const mintResult3 = await mintTx3.wait();
     const reqId3 = mintResult3.events[0].data.slice(2, 66); // extract request id
 
     // initiate mint 4
-    const mintTx4 = await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 2, ZERO, "0x", { value: ethers.utils.parseEther("0.2") });
+    const mintTx4 = await nftMint
+      .connect(minter)
+      .mint({ key: HASHONE, proof: [] }, 2, ZERO, "0x", { value: ethers.utils.parseEther("0.2") });
     const mintResult4 = await mintTx4.wait();
     const reqId4 = mintResult4.events[0].data.slice(2, 66); // extract request id
 
@@ -2340,8 +2437,8 @@ describe("Factory", function () {
     await expect(await nftMint.balanceOf(minter.address, 1)).to.equal(0);
 
     // fullfill first 2
-    await vrfCoordinatorMock.fulfillRandomWords(reqId1, nftMint.address)
-    await vrfCoordinatorMock.fulfillRandomWords(reqId2, nftMint.address)
+    await vrfCoordinatorMock.fulfillRandomWords(reqId1, nftMint.address);
+    await vrfCoordinatorMock.fulfillRandomWords(reqId2, nftMint.address);
 
     // 2 tokens minted after fulfillments
     await expect(await nftMint.totalSupply()).to.equal(5);
@@ -2351,23 +2448,29 @@ describe("Factory", function () {
 
     const randomSeed = 12342313432;
     // should revert since reqId1 was already fulfilled
-    await expect(nftMint.connect(owner).rawFulfillRandomWords(reqId1, [randomSeed])).to.be.revertedWith("InvalidRequestId")
-    
+    await expect(
+      nftMint.connect(owner).rawFulfillRandomWords(reqId1, [randomSeed])
+    ).to.be.revertedWith("InvalidRequestId");
+
     // should revert since reqId 10 doesn't exist
-    await expect(nftMint.connect(owner).rawFulfillRandomWords(10, [randomSeed])).to.be.revertedWith("InvalidRequestId")
+    await expect(nftMint.connect(owner).rawFulfillRandomWords(10, [randomSeed])).to.be.revertedWith(
+      "InvalidRequestId"
+    );
 
     // should revert since minter is not approved
-    await expect(nftMint.connect(minter).rawFulfillRandomWords(reqId3, [randomSeed])).to.be.revertedWith("NotVRF")
+    await expect(
+      nftMint.connect(minter).rawFulfillRandomWords(reqId3, [randomSeed])
+    ).to.be.revertedWith("NotVRF");
 
     // manually fulfill request from owner
-    await nftMint.connect(owner).rawFulfillRandomWords(reqId3, [randomSeed])
+    await nftMint.connect(owner).rawFulfillRandomWords(reqId3, [randomSeed]);
 
     await expect(await nftMint.balanceOf(minter.address, 1)).to.equal(3);
     tokenPool = await nftMint.connect(owner).tokenPool();
     await expect(tokenPool.length).to.be.equal(2);
 
     // manually fulfill request from platform
-    await nftMint.connect(platform).rawFulfillRandomWords(reqId4, [randomSeed/2])
+    await nftMint.connect(platform).rawFulfillRandomWords(reqId4, [randomSeed / 2]);
 
     await expect(await nftMint.balanceOf(minter.address, 1)).to.equal(5);
     tokenPool = await nftMint.connect(owner).tokenPool();

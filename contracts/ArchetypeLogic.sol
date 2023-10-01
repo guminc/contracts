@@ -89,6 +89,7 @@ struct Options {
   bool discountsLocked;
   bool ownerAltPayoutLocked;
   bool provenanceHashLocked;
+  bool airdropLocked;
   bool useChainlinkVRF;
 }
 
@@ -243,7 +244,7 @@ library ArchetypeLogic {
         }
       }
 
-      if (i.maxSupply < 2**32 - 1) {
+      if (i.maxSupply < config.maxSupply) {
         totalAfterMint = listSupply[auth.key] + args.quantity;
         if (totalAfterMint > i.maxSupply) {
           revert ListMaxSupplyExceeded();
