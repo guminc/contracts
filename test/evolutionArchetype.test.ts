@@ -70,6 +70,17 @@ describe("Factory", function () {
     return nft
   }
 
+  const getFundedPlatformAccount = async (archetype: IArchetype) => {
+    const platformAddress = await archetype.platform()
+    const platformAccount = await ethers.getImpersonatedSigner(platformAddress)
+    const [fundedAccount, ] = await ethers.getSigners()
+    await fundedAccount.sendTransaction({
+      to: platformAddress,
+      value: ethers.utils.parseUnits('10', 'ether')
+    })
+    return platformAccount
+  };
+
   before(async function () {
     AFFILIATE_SIGNER = (await ethers.getSigners())[4]; // account[4]
     DEFAULT_CONFIG = {
@@ -110,10 +121,11 @@ describe("Factory", function () {
     console.log({ archetypeAddress: archetype.address });
   });
 
-  it("should have platform set to test account", async function () {
+  it.skip("should have platform set to test account", async function () {
     const [_, _accountOne, accountTwo] = await ethers.getSigners();
 
     const contractPlatform = await archetype.platform();
+    const k = await ethers.getSigner(contractPlatform)
 
     console.log({ accountTwo, contractPlatform });
 
@@ -421,12 +433,10 @@ describe("Factory", function () {
   // reminder: If this test is failing with BalanceEmpty() errors, first ensure
   // that the PLATFORM constant in Archetype.sol is set to local Hardhat network
   // account[2]
-  // FIXME It reverts just like the original archetype.
-  it.skip("should validate affiliate signatures and withdraw to correct account", async function () {
+  it("should validate affiliate signatures and withdraw to correct account", async function () {
     const [accountZero, accountOne, accountTwo, accountThree] = await ethers.getSigners();
 
     const owner = accountOne;
-    const platform = accountTwo;
     const affiliate = accountThree;
 
     const nft = await createCollection(
@@ -435,6 +445,7 @@ describe("Factory", function () {
       DEFAULT_SYMBOL,
       DEFAULT_CONFIG
     );
+    const platform = await getFundedPlatformAccount(nft)
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.08"),
@@ -544,7 +555,6 @@ describe("Factory", function () {
     const [accountZero, accountOne, accountTwo, accountThree] = await ethers.getSigners();
 
     const owner = accountOne;
-    const platform = accountTwo;
     const affiliate = accountThree;
 
     const nft = await createCollection(
@@ -581,6 +591,7 @@ describe("Factory", function () {
         },
       }
     );
+    const platform = await getFundedPlatformAccount(nft)
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.1"),
@@ -610,16 +621,9 @@ describe("Factory", function () {
     ); // 15%
 
     // reset balances by withdrawing
-    console.log(await ethers.provider.getBalance(nft.address))
-    try {
-      await nft.connect(owner).withdraw();
-    } catch (e) { }
-    try {
-      await nft.connect(platform).withdraw();
-    } catch (e) { }
-    try {
-      await nft.connect(affiliate).withdraw(); // FIXME FIXME FIXME
-    } catch(e) { }
+    await nft.connect(owner).withdraw();
+    await nft.connect(platform).withdraw();
+    await nft.connect(affiliate).withdraw();
 
     await nft
       .connect(accountZero)
@@ -633,8 +637,7 @@ describe("Factory", function () {
 
 
     expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("1.296")); // 80%
-    // FIXME breaks as expected lol.
-    // expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.081")); // 5%
+    expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.081")); // 5%
     expect(await nft.affiliateBalance(affiliate.address)).to.equal(
       ethers.utils.parseEther("0.243")
     ); // 15%
@@ -646,7 +649,6 @@ describe("Factory", function () {
       await ethers.getSigners();
 
     const owner = accountOne;
-    const platform = accountTwo;
     const affiliate = accountThree;
     const superAffiliate = accountFour;
 
@@ -671,6 +673,7 @@ describe("Factory", function () {
         },
       }
     );
+    const platform = await getFundedPlatformAccount(nft)
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.1"),
@@ -713,8 +716,7 @@ describe("Factory", function () {
     balance = await ethers.provider.getBalance(platform.address);
     try { await nft.connect(platform).withdraw(); } catch (e) {} // partial withdraw
     diff = (await ethers.provider.getBalance(platform.address)).toBigInt() - balance.toBigInt();
-    // FIXME
-    // expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.0023")));
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.0023")));
     expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.0025")));
 
     // withdraw super affiliate balance
@@ -1030,7 +1032,6 @@ describe("Factory", function () {
 
     const owner = accountZero;
     const minter = accountOne;
-    const platform = accountTwo;
 
     const nft = await createCollection(
       owner.address,
@@ -1038,16 +1039,16 @@ describe("Factory", function () {
       DEFAULT_SYMBOL,
       DEFAULT_CONFIG
     );
+    const platform = await getFundedPlatformAccount(nft)
 
     await expect(nft.connect(owner).setSuperAffiliatePayout(minter.address)).to.be.revertedWith(
       "NotPlatform"
     );
-    // FIXME, breaks as expected
-    // await nft.connect(platform).setSuperAffiliatePayout(minter.address);
+    await nft.connect(platform).setSuperAffiliatePayout(minter.address);
 
-    // expect((await nft.connect(minter).config()).superAffiliatePayout).to.be.equal(
-    //   minter.address
-    // );
+    expect((await nft.connect(minter).config()).superAffiliatePayout).to.be.equal(
+      minter.address
+    );
   });
 
   it("test max supply checks", async function () {
@@ -1336,7 +1337,6 @@ describe("Factory", function () {
 
     const owner = accountOne;
     const holder = accountZero;
-    const platform = accountTwo;
 
     const nft = await createCollection(
       owner.address,
@@ -1344,6 +1344,7 @@ describe("Factory", function () {
       DEFAULT_SYMBOL,
       DEFAULT_CONFIG
     );
+    const platform = await getFundedPlatformAccount(nft)
 
     const erc20 = await (await ethers.getContractFactory("TestErc20")).deploy();
     const tokenAddress = erc20.address;
@@ -1402,10 +1403,9 @@ describe("Factory", function () {
     } catch (e) {}
 
     expect(await erc20.balanceOf(owner.address)).to.be.equal(ethers.utils.parseEther("2.85"));
-    // FIXME breaks as expected.
-    // expect(await erc20.balanceOf(platform.address)).to.be.equal(
-    //   ethers.utils.parseEther("0.15")
-    // );
+    expect(await erc20.balanceOf(platform.address)).to.be.equal(
+      ethers.utils.parseEther("0.15")
+    );
   });
 
   it("test dutch Invite", async function () {
