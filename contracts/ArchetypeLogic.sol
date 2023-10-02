@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ArchetypeLogic v0.6.0
+// ArchetypeLogic v0.6.1
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -44,6 +44,7 @@ error NotApprovedToTransfer();
 error InvalidAmountOfTokens();
 error WrongPassword();
 error LockedForever();
+error Blacklisted();
 
 //
 // STRUCTS
@@ -97,6 +98,7 @@ struct DutchInvite {
   uint32 interval;
   uint32 unitSize; // mint 1 get x
   address tokenAddress;
+  bool isBlacklist;
 }
 
 struct Invite {
@@ -107,6 +109,7 @@ struct Invite {
   uint32 maxSupply;
   uint32 unitSize; // mint 1 get x
   address tokenAddress;
+  bool isBlacklist;
 }
 
 struct OwnerBalance {
@@ -122,6 +125,14 @@ struct BurnConfig {
   uint16 ratio;
   uint64 start;
   uint64 limit;
+}
+
+struct ValidationArgs {
+  address owner;
+  address affiliate;
+  uint256 quantity;
+  uint256 curSupply;
+  uint256 listSupply;
 }
 
 address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
@@ -141,10 +152,13 @@ library ArchetypeLogic {
     DutchInvite storage invite,
     Discount storage discounts,
     uint256 numTokens,
+    uint256 listSupply,
     bool affiliateUsed
   ) public view returns (uint256) {
     uint256 price = invite.price;
-    if (invite.interval != 0) {
+    uint256 cost;
+    if (invite.interval > 0 && invite.delta > 0) {
+      // Apply dutch pricing
       uint256 diff = (((block.timestamp - invite.start) / invite.interval) * invite.delta);
       if (price > invite.reservePrice) {
         if (diff > price - invite.reservePrice) {
@@ -159,9 +173,14 @@ library ArchetypeLogic {
           price = price + diff;
         }
       }
+      cost = price * numTokens;
+    } else if (invite.interval == 0 && invite.delta > 0) {
+      // Apply linear curve
+      uint256 lastPrice = price + invite.delta * listSupply;
+      cost = lastPrice * numTokens + (invite.delta * numTokens * (numTokens - 1)) / 2;
+    } else {
+      cost = price * numTokens;
     }
-
-    uint256 cost = price * numTokens;
 
     if (affiliateUsed) {
       cost = cost - ((cost * discounts.affiliateDiscount) / 10000);
@@ -184,28 +203,32 @@ library ArchetypeLogic {
     DutchInvite storage i,
     Config storage config,
     Auth calldata auth,
-    uint256 quantity,
-    address owner,
-    address affiliate,
-    uint256 curSupply,
     mapping(address => mapping(bytes32 => uint256)) storage minted,
-    mapping(bytes32 => uint256) storage listSupply,
-    bytes calldata signature
+    bytes calldata signature,
+    ValidationArgs memory args
   ) public view {
     address msgSender = _msgSender();
-    if (affiliate != address(0)) {
-      if (affiliate == PLATFORM || affiliate == owner || affiliate == msgSender) {
+    if (args.affiliate != address(0)) {
+      if (
+        args.affiliate == PLATFORM || args.affiliate == args.owner || args.affiliate == msgSender
+      ) {
         revert InvalidReferral();
       }
-      validateAffiliate(affiliate, signature, config.affiliateSigner);
+      validateAffiliate(args.affiliate, signature, config.affiliateSigner);
     }
 
     if (i.limit == 0) {
       revert MintingPaused();
     }
 
-    if (!verify(auth, i.tokenAddress, msgSender)) {
-      revert WalletUnauthorizedToMint();
+    if (!i.isBlacklist) {
+      if (!verify(auth, i.tokenAddress, msgSender)) {
+        revert WalletUnauthorizedToMint();
+      }
+    } else {
+      if (verify(auth, i.tokenAddress, msgSender)) {
+        revert Blacklisted();
+      }
     }
 
     if (block.timestamp < i.start) {
@@ -217,7 +240,7 @@ library ArchetypeLogic {
     }
 
     if (i.limit < i.maxSupply) {
-      uint256 totalAfterMint = minted[msgSender][auth.key] + quantity;
+      uint256 totalAfterMint = minted[msgSender][auth.key] + args.quantity;
 
       if (totalAfterMint > i.limit) {
         revert NumberOfMintsExceeded();
@@ -225,21 +248,27 @@ library ArchetypeLogic {
     }
 
     if (i.maxSupply < config.maxSupply) {
-      uint256 totalAfterMint = listSupply[auth.key] + quantity;
+      uint256 totalAfterMint = args.listSupply + args.quantity;
       if (totalAfterMint > i.maxSupply) {
         revert ListMaxSupplyExceeded();
       }
     }
 
-    if (quantity > config.maxBatchSize) {
+    if (args.quantity > config.maxBatchSize) {
       revert MaxBatchSizeExceeded();
     }
 
-    if ((curSupply + quantity) > config.maxSupply) {
+    if ((args.curSupply + args.quantity) > config.maxSupply) {
       revert MaxSupplyExceeded();
     }
 
-    uint256 cost = computePrice(i, config.discounts, quantity, affiliate != address(0));
+    uint256 cost = computePrice(
+      i,
+      config.discounts,
+      args.quantity,
+      args.listSupply,
+      args.affiliate != address(0)
+    );
 
     if (i.tokenAddress != address(0)) {
       IERC20Upgradeable erc20Token = IERC20Upgradeable(i.tokenAddress);
@@ -327,13 +356,16 @@ library ArchetypeLogic {
     Config storage config,
     mapping(address => OwnerBalance) storage _ownerBalance,
     mapping(address => mapping(address => uint128)) storage _affiliateBalance,
+    uint256 listSupply,
     address affiliate,
     uint256 quantity
   ) public {
     address tokenAddress = i.tokenAddress;
     uint128 value = uint128(msg.value);
     if (tokenAddress != address(0)) {
-      value = uint128(computePrice(i, config.discounts, quantity, affiliate != address(0)));
+      value = uint128(
+        computePrice(i, config.discounts, quantity, listSupply, affiliate != address(0))
+      );
     }
 
     uint128 affiliateWad;
