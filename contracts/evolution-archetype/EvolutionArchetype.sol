@@ -420,10 +420,6 @@ contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
   //
   // INTERNAL
   //
-  function _startTokenId() internal view virtual override returns (uint256) {
-    return 1;
-  }
-
   function _msgSender() internal view override returns (address) {
     return msg.sender == BATCH ? tx.origin : msg.sender;
   }
