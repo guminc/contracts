@@ -54,3 +54,7 @@ artifacts
 .secret*
 
 *.sw*
+
+getERC20Names.csv
+getWithdrawable.csv
+getWithdrawableTokens.csv
