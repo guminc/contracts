@@ -73,6 +73,16 @@ contract ERC721S is IERC721S {
         bytes32 internal constant _TRANSFER_EVENT_SIGNATURE =
             0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
 
+        // The `Locked`` event signature is given by:
+        // `keccak256(bytes("Locked(uint256)"))`.
+        bytes32 internal constant _LOCKED_EVENT_SIGNATURE=
+            0x032bc66be43dbccb7487781d168eb7bda224628a3b2c3388bdf69b532a3a1611;
+
+        // The `Unlocked`` event signature is given by:
+        // `keccak256(bytes("Unlocked(uint256)"))`.
+        bytes32 internal constant _UNLOCKED_EVENT_SIGNATURE =
+            0xf27b6ce5b2f5e68ddb2fd95a8a909d4ecf1daaac270935fff052feacb24f1842;
+
         // Selector for `TokenStaked()` error.
         bytes4 internal constant _TOKEN_STAKED_ERROR_SELECTOR = 0x538fd4df;
 
@@ -378,6 +388,20 @@ contract ERC721S is IERC721S {
         }
     }
 
+    // ERC5192 Implementation.
+    function locked(uint256 tokenId) external view override returns (bool) {
+        return _tokenIsStaked(_packedOwnershipOf(tokenId));
+    }
+
+    // NOTE Non otpimized because we dont need to for this use case. If we
+    // were to give multiple free mints to a single user, we should use an
+    // optimized unstaking function for multiple tokens that works like
+    // `_packedOwnershipOf`.
+    function unstake(uint256 tokenId) public {
+        if (!_tokenIsStaked(_packedOwnershipOf(tokenId))) assembly {
+            log2(0, 0, _UNLOCKED_EVENT_SIGNATURE, tokenId)
+        }
+    }
 
     // =============================================================
     //                      APPROVAL OPERATIONS
@@ -726,23 +750,21 @@ contract ERC721S is IERC721S {
             uint256 end = startTokenId + quantity;
             uint256 tokenId;
 
-            // TODO NOTE Still need to decide on this.
             // If staking on mint is enabled for this batch, emit 
             // a staked event for each tokenId.
-            // if (stakingTime != 0) {
-            //     tokenId = startTokenId;
-            //     do {
-            //         assembly {
-            //             // TODO Use Openseas staking standard.
-            //             // logN(
-            //             //     0,
-            //             //     0,
-            //             //     _STAKE_EVENT_SIGNATURE,
-            //             //     etc
-            //             // )
-            //         }
-            //     } while (++tokenId != end);
-            // }
+            if (stakingTime != 0) {
+                tokenId = startTokenId;
+                do {
+                    assembly {
+                        log2(
+                            0,
+                            0,
+                            _LOCKED_EVENT_SIGNATURE,
+                            tokenId
+                        )
+                    }
+                } while (++tokenId != end);
+            }
 
             tokenId = startTokenId;
             do {

@@ -14,6 +14,10 @@ import { IArchetypeConfig } from "../lib/types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import ipfsh from "ipfsh";
 import { Contract } from "ethers";
+import { 
+    createEvoCollection as createCollection,
+    getFundedPlatformAccount
+} from "../scripts/helpers";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -33,6 +37,7 @@ const BURN = "0x000000000000000000000000000000000000dEaD";
 const HASHONE = "0x0000000000000000000000000000000000000000000000000000000000000001";
 const HASH256 = "0x00000000000000000000000000000000000000000000000000000000000000ff";
 
+
 describe("Factory", function () {
   let Archetype: Archetype__factory;
   let archetype: IArchetype;
@@ -40,46 +45,6 @@ describe("Factory", function () {
   let archetypeLogic: Contract;
   let ArchetypeBatch: ArchetypeBatch__factory;
   let archetypeBatch: Contract;
-
-
-  const createCollection = async (
-    royaltiesAddress: string,
-    token_name: string,
-    token_symbol: string,
-    general_archetype_config: IArchetypeConfig,
-    deployer?: SignerWithAddress
-  ) => {
-    const [_, d1] = await ethers.getSigners()
-    if (!deployer) deployer = d1
-
-    ArchetypeLogic = await ethers.getContractFactory("EvolutionArchetypeLogic");
-    archetypeLogic = await ArchetypeLogic.connect(deployer).deploy();
-
-    const nft = await ethers
-      .getContractFactory(
-          'EvolutionArchetype',
-          { libraries: { EvolutionArchetypeLogic: archetypeLogic.address}}
-      ).then(c => c.connect(deployer).deploy(token_name, token_symbol))
-
-    await nft.deployed()
-    await nft
-      .connect(deployer) 
-      .initialize(general_archetype_config, royaltiesAddress)
-      .then(tx => tx.wait())
-
-    return nft
-  }
-
-  const getFundedPlatformAccount = async (archetype: IArchetype) => {
-    const platformAddress = await archetype.platform()
-    const platformAccount = await ethers.getImpersonatedSigner(platformAddress)
-    const [fundedAccount, ] = await ethers.getSigners()
-    await fundedAccount.sendTransaction({
-      to: platformAddress,
-      value: ethers.utils.parseUnits('10', 'ether')
-    })
-    return platformAccount
-  };
 
   before(async function () {
     AFFILIATE_SIGNER = (await ethers.getSigners())[4]; // account[4]

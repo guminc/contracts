@@ -4,10 +4,12 @@
 
 pragma solidity ^0.8.4;
 
+import "./IERC5192.sol";
+
 /**
  * @dev Interface of ERC721S.
  */
-interface IERC721S {
+interface IERC721S is IERC5192 {
     /**
      * The caller must own the token or be an approved operator.
      */
