@@ -94,6 +94,7 @@ struct DutchInvite {
   uint32 maxSupply;
   uint32 interval;
   uint32 unitSize; // mint 1 get x
+  uint32 stakingTime; // Optional, disabled if 0.
   address tokenAddress;
 }
 
@@ -104,6 +105,7 @@ struct Invite {
   uint32 limit;
   uint32 maxSupply;
   uint32 unitSize; // mint 1 get x
+  uint32 stakingTime; // Optional, disabled if 0.
   address tokenAddress;
 }
 

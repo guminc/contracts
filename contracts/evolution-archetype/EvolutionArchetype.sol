@@ -188,7 +188,7 @@ contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
       _listSupply,
       signature
     );
-    _mint(to, quantity);
+    _mintAndStake(to, quantity, i.stakingTime);
 
     if (i.limit < i.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
@@ -377,7 +377,7 @@ contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
   function setMaxBatchSize(uint32 maxBatchSize) external _onlyOwner {
     config.maxBatchSize = maxBatchSize;
   }
-
+    
   function setInvite(
     bytes32 _key,
     bytes32 _cid,
@@ -393,6 +393,7 @@ contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
       maxSupply: _invite.maxSupply,
       interval: 0,
       unitSize: _invite.unitSize,
+      stakingTime: _invite.stakingTime,
       tokenAddress: _invite.tokenAddress
     });
     emit Invited(_key, _cid);
