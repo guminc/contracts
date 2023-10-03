@@ -1,3 +1,24 @@
+# Erc1155-Random
+
+## Overview
+Erc1155-Random is designed for randomized minting of tokens. It incorporates decentralized randomness and token pool management to achieve fair and unique token distribution.
+
+### Randomness Logic:
+
+Erc1155-Random integrates two systems for randomness generation:
+
+Chainlink VRF Integration: A trusted and decentralized source of randomness, the Chainlink VRF (Verifiable Random Function) is utilized to ensure transparent and fair random number generation. When VRF is enabled, the randomness for minting operations is sourced externally from Chainlink's oracle network.
+
+Local Randomness Generation: In scenarios where Chainlink VRF isn't deployed, the contract has an inbuilt deterministic approach to generate random numbers. This can be gamed by MEV bots and is not recommended for high-stake collections.
+
+### Token Pool Logic:
+
+Token Pool Array: Central to the minting logic is the tokenPool, a list representing all mintable tokens. It acts as a reservoir from which tokens are drawn during the minting process.
+
+Token Selection: Tokens are minted by selecting them randomly from the tokenPool. However, certain tokens can be marked as excluded during specific operations. If a selected token is part of the excluded list, the minting process retries with another random selection. To maintain efficiency and prevent potential infinite loops, there's a set limit to the number of retries.
+
+Token Removal: Post-minting, to ensure uniqueness and to prevent re-minting of the same token, it is removed from the tokenPool.
+
 # Advanced Sample Hardhat Project
 
 This project demonstrates an advanced Hardhat use case, integrating other tools commonly used alongside Hardhat in the ecosystem.
