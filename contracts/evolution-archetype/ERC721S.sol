@@ -5,6 +5,7 @@ pragma solidity ^0.8.4;
 
 import "./IERC721S.sol";
 import "./IERC721Receiver.sol";
+import "erc721a-upgradeable/contracts/ERC721A__Initializable.sol";
 
 
 /**
@@ -19,7 +20,8 @@ import "./IERC721Receiver.sol";
  * In any of those cases, the user will be able to extend staking time, if not,
  * the token will get automatically unstaked to minimize contract interaction.
  */
-contract ERC721S is IERC721S {
+contract ERC721S is IERC721S, ERC721A__Initializable {
+
     // Bypass for a `--via-ir` bug (https://github.com/chiru-labs/ERC721A/pull/364).
     struct TokenApprovalRef {
         address value;
@@ -140,7 +142,10 @@ contract ERC721S is IERC721S {
     //                          CONSTRUCTOR
     // =============================================================
 
-    constructor(string memory name_, string memory symbol_) {
+
+    function __ERC721S_init(
+        string memory name_, string memory symbol_
+    ) internal onlyInitializingERC721A {
         _name = name_;
         _symbol = symbol_;
         _currentIndex = _startTokenId();

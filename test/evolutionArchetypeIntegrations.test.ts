@@ -39,6 +39,7 @@ const makePublicList = async (
     maxSupply,
     unitSize: 0,
     tokenAddress: ZERO,
+    stakingTime: 0
   })
   
 }

@@ -43,20 +43,17 @@ contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
 
   Config public config;
   Options public options;
-  bool private _initialized;
 
   //
   // METHODS
   //
-  constructor(
-    string memory name, string memory symbol
-  ) ERC721S(name, symbol) { }
-
   function initialize(
+    string memory name,
+    string memory symbol,
     Config calldata config_,
     address _receiver
-  ) public onlyOwner {
-    require(!_initialized);
+  ) external initializerERC721A {
+    __ERC721S_init(name, symbol);
     // check max bps not reached and min platform fee.
     if (
       config_.affiliateFee > MAXBPS ||
@@ -81,13 +78,15 @@ contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
       }
     }
     config = config_;
+    // If used with EIP1167, the proxy wont use the 
+    // constructor, thus we need to reset ownership.
+    _transferOwnership(msg.sender);
 
     if (config.ownerAltPayout != address(0)) {
       setDefaultRoyalty(config.ownerAltPayout, config.defaultRoyalty);
     } else {
       setDefaultRoyalty(_receiver, config.defaultRoyalty);
     }
-    _initialized = true;
   }
 
   //
@@ -188,7 +187,12 @@ contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
       _listSupply,
       signature
     );
-    _mintAndStake(to, quantity, i.stakingTime);
+
+    uint32 stakingTime = i.stakingTime;
+    // Wont overflow for this use case, but might overflow if supply is too high.
+    if (stakingTime > 0)
+      stakingTime = uint32(totalSupply() * 1 days);
+    _mintAndStake(to, quantity, stakingTime);
 
     if (i.limit < i.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
