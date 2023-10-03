@@ -50,6 +50,7 @@ contract Archetype is
   uint256 public totalSupply;
 
   Config public config;
+  BurnConfig public burnConfig;
   Options public options;
 
   string public name;
@@ -182,6 +183,36 @@ contract Archetype is
     ArchetypeLogic.updateBalances(i, config, _ownerBalance, _affiliateBalance, affiliate, quantity);
   }
 
+  // simple 1 to 1 burn to mint.
+  function burnToMint(uint256[] calldata tokenIdList, uint256[] calldata quantityList) external {
+
+    if(burnConfig.tokenAddress == address(0)) {
+      revert BurnToMintDisabled();
+    }
+
+    if (quantityList.length != tokenIdList.length) {
+      revert InvalidConfig();
+    }
+
+    address msgSender = _msgSender();
+    uint256 quantity = 0;
+    for (uint256 i; i < tokenIdList.length; i++) {
+      address burnAddress = burnConfig.burnAddress != address(0)
+        ? burnConfig.burnAddress
+        : address(0x000000000000000000000000000000000000dEaD);
+
+      bytes memory _data;
+      IERC1155Upgradeable(burnConfig.tokenAddress).safeTransferFrom(msgSender, burnAddress, tokenIdList[i], quantityList[i], _data);
+      _mint(msgSender, tokenIdList[i], quantityList[i], _data);
+      quantity += quantityList[i];
+    }
+
+    if ((totalSupply + quantity) > config.maxSupply) {
+      revert MaxSupplyExceeded();
+    }
+    totalSupply += quantity;
+  }
+
   function uri(uint256 tokenId) public view override returns (string memory) {
     return
       bytes(config.baseUri).length != 0
@@ -258,7 +289,7 @@ contract Archetype is
       revert InvalidConfig();
     }
 
-    uint256 quantity;
+    uint256 quantity = 0;
     for (uint256 i = 0; i < toList.length; i++) {
       bytes memory _data;
       _mint(toList[i], tokenIdList[i], quantityList[i], _data);
@@ -273,10 +304,7 @@ contract Archetype is
 
   /// @notice the password is "forever"
   function lockAirdrop(string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
+    _checkPassword(password);
     options.airdropLocked = true;
   }
 
@@ -290,20 +318,14 @@ contract Archetype is
 
   /// @notice the password is "forever"
   function lockURI(string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
+    _checkPassword(password);
     options.uriLocked = true;
   }
 
   /// @notice the password is "forever"
   // token supply cannot be decreased once minted. Be careful changing.
   function updateTokenPool(uint16[] memory newTokens, string memory password) public _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
+    _checkPassword(password);
     if (options.tokenPoolLocked) {
       revert LockedForever();
     }
@@ -316,10 +338,7 @@ contract Archetype is
   /// @notice the password is "forever"
   // token supply will be reset and contents will be lost forever. Be careful changing.
   function resetTokenPool(uint16[] memory newTokens, string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
+    _checkPassword(password);
     if (options.tokenPoolLocked) {
       revert LockedForever();
     }
@@ -329,20 +348,14 @@ contract Archetype is
 
   /// @notice the password is "forever"
   function lockTokenPool(string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
+    _checkPassword(password);
     options.tokenPoolLocked = true;
   }
 
   /// @notice the password is "forever"
   // max supply cannot subceed total supply. Be careful changing.
   function setMaxSupply(uint32 maxSupply, string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
+    _checkPassword(password);
     if (options.maxSupplyLocked) {
       revert LockedForever();
     }
@@ -356,10 +369,7 @@ contract Archetype is
 
   /// @notice the password is "forever"
   function lockMaxSupply(string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
+    _checkPassword(password);
     options.maxSupplyLocked = true;
   }
 
@@ -377,10 +387,7 @@ contract Archetype is
 
   /// @notice the password is "forever"
   function lockAffiliateFee(string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
+    _checkPassword(password);
     options.affiliateFeeLocked = true;
   }
 
@@ -408,10 +415,7 @@ contract Archetype is
 
   /// @notice the password is "forever"
   function lockDiscounts(string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
+    _checkPassword(password);
     options.discountsLocked = true;
   }
 
@@ -425,9 +429,7 @@ contract Archetype is
 
   /// @notice the password is "forever"
   function lockOwnerAltPayout(string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
+    _checkPassword(password);
     options.ownerAltPayoutLocked = true;
   }
 
@@ -480,6 +482,23 @@ contract Archetype is
     }
     invites[_key] = _dutchInvite;
     emit Invited(_key, _cid);
+  }
+
+  function enableBurnToMint(
+    address tokenAddress,
+    address burnAddress
+  ) external _onlyOwner {
+    burnConfig = BurnConfig({
+      tokenAddress: tokenAddress,
+      burnAddress: burnAddress
+    });
+  }
+
+  function disableBurnToMint() external _onlyOwner {
+    burnConfig = BurnConfig({
+      tokenAddress: address(0),
+      burnAddress: address(0)
+    });
   }
 
   //
@@ -559,6 +578,12 @@ contract Archetype is
 
   function _msgSender() internal view override returns (address) {
     return msg.sender == BATCH? tx.origin: msg.sender;
+  }
+
+  function _checkPassword(string memory password) internal pure {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
   }
 
   function _isOwner() internal view {

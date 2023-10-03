@@ -27,7 +27,7 @@ const CID_DEFAULT = "Qmbro8pnECVvjwWH6J9KyFXR8isquPFNgbUiHDGXhYnmFn";
 const CID_ZERO = "bafkreiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 const ZERO = "0x0000000000000000000000000000000000000000";
-// const BURN = "0x000000000000000000000000000000000000dEaD";
+const BURN = "0x000000000000000000000000000000000000dEaD";
 const HASHONE = "0x0000000000000000000000000000000000000000000000000000000000000001";
 const HASH256 = "0x00000000000000000000000000000000000000000000000000000000000000ff";
 
@@ -987,111 +987,93 @@ describe("Factory", function () {
     await expect(nft.connect(owner).setDiscounts(discount)).to.be.reverted;
   });
 
-  // it("test burn to mint functionality", async function () {
-  //   const [accountZero, accountOne] = await ethers.getSigners();
+  it("test burn to mint functionality", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
 
-  //   const owner = accountZero;
-  //   const minter = accountOne;
+    const owner = accountZero;
+    const minter = accountOne;
 
-  //   const newCollectionBurn = await factory.createCollection(
-  //     owner.address,
-  //     DEFAULT_NAME,
-  //     DEFAULT_SYMBOL,
-  //     DEFAULT_CONFIG
-  //   );
-  //   const resultBurn = await newCollectionBurn.wait();
-  //   const newCollectionAddressBurn = resultBurn.events[0].address || "";
-  //   const nftBurn = Archetype.attach(newCollectionAddressBurn);
+    const default_config = {
+      ...DEFAULT_CONFIG,
+      maxBatchSize: 10,
+      maxSupply: 10,
+      tokenPool: [1,1,1,1,1,2,2,2,2,2], // all tokens minted will be tokenId 1, 2
+    };
 
-  //   const newCollectionMint = await factory.createCollection(
-  //     owner.address,
-  //     DEFAULT_NAME,
-  //     DEFAULT_SYMBOL,
-  //     DEFAULT_CONFIG
-  //   );
-  //   const resultMint = await newCollectionMint.wait();
-  //   const newCollectionAddressMint = resultMint.events[0].address || "";
-  //   const nftMint = Archetype.attach(newCollectionAddressMint);
+    const newCollectionBurn = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      default_config
+    );
+    const resultBurn = await newCollectionBurn.wait();
+    const newCollectionAddressBurn = resultBurn.events[0].address || "";
+    const nftBurn = Archetype.attach(newCollectionAddressBurn);
 
-  //   await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 0, 5000);
-  //   await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
-  //     price: 0,
-  //     start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-  //     limit: 300,
-  //     maxSupply: 5000,
-  //     randomize: true,
-  //     tokenIdsExcluded: [1,2,3,4,5],
-  //     tokenAddress: ZERO,
-  //   });
+    const newCollectionMint = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      default_config
+    );
+    const resultMint = await newCollectionMint.wait();
+    const newCollectionAddressMint = resultMint.events[0].address || "";
+    const nftMint = Archetype.attach(newCollectionAddressMint);
 
-  //   // mint 10 tokens
-  //   await nftMint
-  //     .connect(minter)
-  //     .mint({ key: ethers.constants.HashZero, proof: [] }, 12, ZERO, "0x", {
-  //       value: 0,
-  //     });
+    await nftBurn.connect(owner).enableBurnToMint(nftMint.address, BURN);
+    await nftMint.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: 0,
+      end: 0,
+      limit: 300,
+      maxSupply: 5000,
+      unitSize: 0,
+      tokenIdsExcluded: [],
+      tokenAddress: ZERO,
+    });
 
-  //   // approve nftBurn to transfer tokens
-  //   await nftMint.connect(minter).setApprovalForAll(nftBurn.address, true);
+    // mint 10 tokens
+    await nftMint
+      .connect(minter)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 10, ZERO, "0x", {
+        value: 0,
+      });
 
-  //   // transfer away a token
-  //   await nftMint.connect(minter).transferFrom(minter.address, owner.address, 10);
+    // approve nftBurn to transfer tokens
+    await nftMint.connect(minter).setApprovalForAll(nftBurn.address, true);
 
-  //   // try to burn unowned token
-  //   await expect(nftBurn.connect(minter).burnToMint([9, 10])).to.be.revertedWith("NotTokenOwner");
+    // transfer away a token
+    await nftMint.connect(minter).safeTransferFrom(minter.address, owner.address, 2, 1, "0x");
 
-  //   // try to burn invalid number of tokens
-  //   await expect(nftBurn.connect(minter).burnToMint([9])).to.be.revertedWith(
-  //     "InvalidAmountOfTokens"
-  //   );
+    // try to burn unowned token
+    await expect(nftBurn.connect(minter).burnToMint([3], [1])).to.be.revertedWith("ERC1155: insufficient balance for transfer");
 
-  //   // burn 2 tokens and collect 1 token in new collection
-  //   await nftBurn.connect(minter).burnToMint([2, 4]);
+    // try to burn invalid number of tokens
+    await expect(nftBurn.connect(minter).burnToMint([1, 2], [30, 30])).to.be.revertedWith(
+      "ERC1155: insufficient balance for transfer"
+    );
 
-  //   // burn 4 tokens and collect 2 tokens in new collection
-  //   await nftBurn.connect(minter).burnToMint([1, 3, 5, 8]);
+    // burn 1 of each tokenId
+    await nftBurn.connect(minter).burnToMint([1, 2], [1, 1]);
 
-  //   // disable burn to mint
-  //   await nftBurn.connect(owner).disableBurnToMint();
+    // burn 2 of token 1 and 3 of token 2
+    await nftBurn.connect(minter).burnToMint([1, 2], [2, 3]);
 
-  //   // burn will fail as burn is disabled
-  //   await expect(nftBurn.connect(minter).burnToMint([11, 12])).to.be.revertedWith(
-  //     "BurnToMintDisabled"
-  //   );
+    // disable burn to mint
+    await nftBurn.connect(owner).disableBurnToMint();
 
-  //   // re-enable with time set in future
-  //   await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 10000000000, 5000);
+    // burn will fail as burn is disabled
+    await expect(nftBurn.connect(minter).burnToMint([1, 2], [1, 1])).to.be.revertedWith(
+      "BurnToMintDisabled"
+    );
 
-  //   // burn will fail as burn is time is set in future
-  //   await expect(nftBurn.connect(minter).burnToMint([11, 12])).to.be.revertedWith(
-  //     "MintNotYetStarted"
-  //   );
+    await expect(await nftMint.balanceOf(BURN, 1)).to.be.equal(3);
+    await expect(await nftMint.balanceOf(BURN, 2)).to.be.equal(4);
+    await expect(await nftBurn.balanceOf(minter.address, 1)).to.be.equal(3);
+    await expect(await nftBurn.balanceOf(minter.address, 2)).to.be.equal(4);
+    await expect(await nftBurn.totalSupply()).to.be.equal(7);
 
-  //   // re-enable again with valid config
-  //   await nftBurn.connect(owner).enableBurnToMint(nftMint.address, false, 2, 0, 5000);
-
-  //   // burn 4 tokens and collect 2 tokens in new collection
-  //   await nftBurn.connect(minter).burnToMint([11, 12]);
-
-  //   // re-enable again with valid reversed config
-  //   await nftBurn.connect(owner).enableBurnToMint(nftMint.address, true, 4, 0, 5000);
-
-  //   // burn 1 tokens and collect 4 tokens in new collection
-  //   await nftBurn.connect(minter).burnToMint([7]);
-
-  //   await expect(await nftMint.ownerOf(1)).to.be.equal(BURN);
-  //   await expect(await nftMint.ownerOf(2)).to.be.equal(BURN);
-  //   await expect(await nftMint.ownerOf(3)).to.be.equal(BURN);
-  //   await expect(await nftMint.ownerOf(4)).to.be.equal(BURN);
-  //   await expect(await nftMint.ownerOf(5)).to.be.equal(BURN);
-  //   await expect(await nftMint.ownerOf(7)).to.be.equal(BURN);
-  //   await expect(await nftMint.ownerOf(8)).to.be.equal(BURN);
-  //   await expect(await nftMint.ownerOf(11)).to.be.equal(BURN);
-  //   await expect(await nftMint.ownerOf(12)).to.be.equal(BURN);
-  //   await expect(await nftMint.balanceOf(minter.address)).to.be.equal(2);
-
-  //   await expect(await nftBurn.balanceOf(minter.address)).to.be.equal(8);
-  // });
+  });
 
   it("test platform only modifier", async function () {
     const [accountZero, accountOne, accountTwo] = await ethers.getSigners();
