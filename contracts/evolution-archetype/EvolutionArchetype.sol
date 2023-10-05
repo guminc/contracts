@@ -188,11 +188,13 @@ contract EvolutionArchetype is OperatorFilterer, Ownable, ERC721S, ERC2981 {
       signature
     );
 
+    /*
     uint32 stakingTime = i.stakingTime;
     // Wont overflow for this use case, but might overflow if supply is too high.
     if (stakingTime > 0)
       stakingTime = uint32(totalSupply() * 1 days);
-    _mintAndStake(to, quantity, stakingTime);
+    */
+    _mintAndStake(to, quantity, i.stakingTime);
 
     if (i.limit < i.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;

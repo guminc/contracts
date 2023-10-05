@@ -276,7 +276,7 @@ describe("Factory", function () {
 
     console.log({ invites });
 
-    await sleep(1000);
+    await sleep(1);
 
     console.log("current time", Math.floor(Date.now() / 1000));
 

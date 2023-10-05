@@ -405,7 +405,7 @@ contract ERC721S is IERC721S, ERC721A__Initializable {
     function unstake(uint256 tokenId) public {
         if (!_tokenIsStaked(_packedOwnershipOf(tokenId))) assembly {
             log2(0, 0, _UNLOCKED_EVENT_SIGNATURE, tokenId)
-        }
+        } else _revert(TokenStaked.selector);
     }
 
     // =============================================================
