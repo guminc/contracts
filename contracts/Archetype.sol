@@ -150,7 +150,7 @@ contract Archetype is
     );
 
     if(vrfConfig.enabled) {
-        uint256 requestId = requestRandomness(); // Assuming this function internally requests randomness from Chainlink VRF
+        uint256 requestId = requestRandomness(); // request randomness from Chainlink VRF
         requestIdMintInfo[requestId] = VrfMintInfo({
           key: auth.key,
           to: to,
@@ -519,11 +519,10 @@ contract Archetype is
       // see https://docs.chain.link/docs/vrf/v2/supported-networks/#configurations
       bytes32 keyHash = VRF_KEYHASH;
 
-      uint16 minimumRequestConfirmations = 5;  // reaccess
-
+      uint16 minimumRequestConfirmations = 5;
       uint32 callbackGasLimit = 2500000; // max limit
 
-      // Requesting the random numbers
+      // Requesting random numbers
       requestId = vrfCoordinator.requestRandomWords(
           keyHash,
           vrfConfig.subId,
