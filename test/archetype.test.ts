@@ -938,12 +938,12 @@ describe("Factory", function () {
     await expect(nft.connect(owner).setBaseURI("new test uri")).to.be.reverted;
 
     // CHANGE TOKEN POOL
-    await nft.connect(owner).updateTokenPool([6, 6, 6, 7], "forever");
+    await nft.connect(owner).appendTokenPool([6, 6, 6, 7], "forever");
     await expect(await nft.connect(owner).tokenPool()).to.deep.equal(
       DEFAULT_CONFIG.tokenPool.concat([6, 6, 6, 7])
     );
     await nft.connect(owner).lockTokenPool("forever");
-    await expect(nft.connect(owner).updateTokenPool([8, 8, 9, 9], "forever")).to.be.reverted;
+    await expect(nft.connect(owner).appendTokenPool([8, 8, 9, 9], "forever")).to.be.reverted;
 
     // CHANGE MAX SUPPLY
     await nft.connect(owner).setMaxSupply(4, "forever");
@@ -1829,7 +1829,7 @@ describe("Factory", function () {
 
     // update tokenPool with more tokenIds
     await nftMint.connect(owner).setMaxSupply(57, "forever");
-    await nftMint.connect(owner).updateTokenPool([6, 6, 6, 7, 7, 7, 1], "forever");
+    await nftMint.connect(owner).appendTokenPool([6, 6, 6, 7, 7, 7, 1], "forever");
 
     await nftMint
       .connect(minter)
@@ -1841,7 +1841,7 @@ describe("Factory", function () {
 
     // update again
     await nftMint.connect(owner).setMaxSupply(61, "forever");
-    await nftMint.connect(owner).updateTokenPool([20, 20, 20, 20], "forever");
+    await nftMint.connect(owner).appendTokenPool([20, 20, 20, 20], "forever");
 
     // mint 10 tokenId 5
     await nftMint
@@ -1873,7 +1873,7 @@ describe("Factory", function () {
     const nftMint = Archetype.attach(newCollectionAddressMint);
 
     // Due to gas limit of 30 million in tx, need to split in two txs
-    await nftMint.connect(owner).updateTokenPool(generateTokenPool(5000), "forever");
+    await nftMint.connect(owner).appendTokenPool(generateTokenPool(5000), "forever");
 
     const tokenPool = await nftMint.connect(owner).tokenPool();
     await expect(tokenPool.length).to.be.equal(10000);
@@ -2195,7 +2195,7 @@ describe("Factory", function () {
           tokenIdsExcluded: [],
         },
       ]),
-      nftMint.interface.encodeFunctionData("updateTokenPool", [[8, 10, 10], "forever"]),
+      nftMint.interface.encodeFunctionData("appendTokenPool", [[8, 10, 10], "forever"]),
       nftMint.interface.encodeFunctionData("setBaseURI", ["test"]),
     ];
 
@@ -2257,7 +2257,7 @@ describe("Factory", function () {
     await expect(await nftMint.totalSupply()).to.be.equal(150);
 
     // lets add 100 more tokens to the pool
-    await nftMint.connect(owner).updateTokenPool(Array(100).fill(6), "forever");
+    await nftMint.connect(owner).appendTokenPool(Array(100).fill(6), "forever");
 
     // mint 75 tokens
     await nftMint.connect(minter).mint({ key: HASHONE, proof: [] }, 75, ZERO, "0x", { value: 0 });
@@ -2268,7 +2268,7 @@ describe("Factory", function () {
     await expect(tokenPool.length).to.be.equal(75);
 
     // lets clear the pool for new release
-    await nftMint.connect(owner).resetTokenPool(Array(10).fill(7), "forever");
+    await nftMint.connect(owner).replaceTokenPool(Array(10).fill(7), "forever");
 
     tokenPool = await nftMint.connect(owner).tokenPool();
     await expect(tokenPool.length).to.be.equal(10);

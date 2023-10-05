@@ -323,8 +323,8 @@ contract Archetype is
   }
 
   /// @notice the password is "forever"
-  // token supply cannot be decreased once minted. Be careful changing.
-  function updateTokenPool(uint16[] memory newTokens, string memory password) public _onlyOwner {
+  // token pool will be appended. Be careful changing.
+  function appendTokenPool(uint16[] memory newTokens, string memory password) public _onlyOwner {
     _checkPassword(password);
     if (options.tokenPoolLocked) {
       revert LockedForever();
@@ -336,8 +336,8 @@ contract Archetype is
   }
 
   /// @notice the password is "forever"
-  // token supply will be reset and contents will be lost forever. Be careful changing.
-  function resetTokenPool(uint16[] memory newTokens, string memory password) external _onlyOwner {
+  // token pool will be completely replaced. Be careful changing.
+  function replaceTokenPool(uint16[] memory newTokens, string memory password) external _onlyOwner {
     _checkPassword(password);
     if (options.tokenPoolLocked) {
       revert LockedForever();
