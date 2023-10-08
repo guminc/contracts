@@ -40,7 +40,6 @@ async function getTokenPool() {
     const tokenId = Number(record["Token ID"]);
     const rarity = record["Rarity"];
     const distributionCount = rarityDistribution[rarity];
-    console.log(tokenId)
 
     for (let i = 0; i < distributionCount; i++) {
       tokenPool.push(tokenId);
@@ -87,33 +86,36 @@ async function main() {
     process.exit();
   }
 
-  const achetypeProxy = await upgrades.deployProxy(
-    Archetype,
-    [
-      name,
-      symbol,
-      {
-        baseUri: baseUri,
-        affiliateSigner: affiliateSigner,
-        maxSupply: maxSupply,
-        tokenPool: tokenPool,
-        maxBatchSize: 100,
-        affiliateFee: affiliateFee,
-        platformFee: 500,
-        ownerAltPayout: ethers.constants.AddressZero,
-        superAffiliatePayout: ethers.constants.AddressZero,
-        defaultRoyalty: 500,
-        discounts: { affiliateDiscount: affiliateDiscount, mintTiers: [] },
-      },
-      signer.address,
-    ],
+  const achetypeProxy = await upgrades.deployProxy(Archetype, [], {
+    unsafeAllowLinkedLibraries: true,
+    initializer: false,
+  });
+
+  console.log({ achetypeProxy: achetypeProxy.address });
+  console.log("initializing");
+
+  const tx = await achetypeProxy.initialize(
+    name,
+    symbol,
     {
-      initializer: "initialize",
-      unsafeAllowLinkedLibraries: true,
-    }
+      baseUri: baseUri,
+      affiliateSigner: affiliateSigner,
+      maxSupply: maxSupply,
+      tokenPool: tokenPool,
+      maxBatchSize: 100,
+      affiliateFee: affiliateFee,
+      platformFee: 500,
+      ownerAltPayout: ethers.constants.AddressZero,
+      superAffiliatePayout: ethers.constants.AddressZero,
+      defaultRoyalty: 500,
+      discounts: { affiliateDiscount: affiliateDiscount, mintTiers: [] },
+    },
+    signer.address
   );
 
-  console.log({ achetypeProxy });
+  const receipt = await tx.wait();
+  console.log(receipt);
+  console.log("done");
 }
 
 main()
