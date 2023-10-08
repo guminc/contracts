@@ -153,6 +153,7 @@ uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 // vrf sepolia
 address constant VRF_CORDINATOR = 0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625;
 bytes32 constant VRF_KEYHASH = 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c;
+
 // vrf mainnet
 // address constant VRF_CORDINATOR = 0x271682DEB8C4E0901D1a1550aD2e64D568E69909;
 // bytes32 constant VRF_KEYHASH = 0x8af398995b04c28e9951adb9721ef74c74f93e6a478f39e7e0777be13527e7ef;
@@ -424,52 +425,52 @@ library ArchetypeLogic {
     uint256 quantity,
     uint256 seed
   ) public returns (uint16[] memory) {
-      uint16[] memory tokenIds = new uint16[](quantity);
+    uint16[] memory tokenIds = new uint16[](quantity);
 
-      uint256 retries = 0;
-      uint256 MAX_RETRIES = 5;
+    uint256 retries = 0;
+    uint256 MAX_RETRIES = 5;
 
-      uint256 i = 0;
-      while (i < quantity) {
-          if (tokenPool.length == 0) {
-              revert MaxSupplyExceeded();
-          }
-
-          uint256 rand = uint256(keccak256(abi.encode(seed, i)));
-          uint256 randIdx = rand % tokenPool.length;
-          uint16 selectedToken = tokenPool[randIdx];
-
-          if (tokenIdsExcluded.length > 0 && isExcluded(selectedToken, tokenIdsExcluded)) {
-              // If the token is excluded, retry for this position in tokenIds array
-              seed = rand; // Update the seed for the next iteration
-              
-              retries++;
-              if (retries >= MAX_RETRIES) {
-                  revert MaxRetriesExceeded();
-              }
-              continue;
-          }
-
-          tokenIds[i] = selectedToken;
-
-          // remove token from pool
-          tokenPool[randIdx] = tokenPool[tokenPool.length - 1];
-          tokenPool.pop();
-
-          retries = 0;
-          i++;
+    uint256 i = 0;
+    while (i < quantity) {
+      if (tokenPool.length == 0) {
+        revert MaxSupplyExceeded();
       }
 
-      return tokenIds;
+      uint256 rand = uint256(keccak256(abi.encode(seed, i)));
+      uint256 randIdx = rand % tokenPool.length;
+      uint16 selectedToken = tokenPool[randIdx];
+
+      if (tokenIdsExcluded.length > 0 && isExcluded(selectedToken, tokenIdsExcluded)) {
+        // If the token is excluded, retry for this position in tokenIds array
+        seed = rand; // Update the seed for the next iteration
+
+        retries++;
+        if (retries >= MAX_RETRIES) {
+          revert MaxRetriesExceeded();
+        }
+        continue;
+      }
+
+      tokenIds[i] = selectedToken;
+
+      // remove token from pool
+      tokenPool[randIdx] = tokenPool[tokenPool.length - 1];
+      tokenPool.pop();
+
+      retries = 0;
+      i++;
+    }
+
+    return tokenIds;
   }
 
   function isExcluded(uint16 tokenId, uint16[] memory excludedList) internal pure returns (bool) {
-      for (uint256 i = 0; i < excludedList.length; i++) {
-          if (tokenId == excludedList[i]) {
-              return true;
-          }
+    for (uint256 i = 0; i < excludedList.length; i++) {
+      if (tokenId == excludedList[i]) {
+        return true;
       }
-      return false;
+    }
+    return false;
   }
 
   function random() public view returns (uint256) {
@@ -478,6 +479,6 @@ library ArchetypeLogic {
   }
 
   function _msgSender() internal view returns (address) {
-    return msg.sender == BATCH? tx.origin: msg.sender;
+    return msg.sender == BATCH ? tx.origin : msg.sender;
   }
 }
