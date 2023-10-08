@@ -76,6 +76,9 @@ async function main() {
   const affiliateDiscount = 1000;
   const affiliateFee = 2000;
   const tokenPool = await getTokenPool();
+
+  console.log({ tokenPool });
+
   const maxSupply = tokenPool.length;
 
   console.log({
@@ -95,7 +98,7 @@ async function main() {
     process.exit();
   }
 
-  const achetypeProxy = await upgrades.deployProxy(
+  const archetypeProxy = await upgrades.deployProxy(
     Archetype,
     [
       name,
@@ -121,7 +124,15 @@ async function main() {
     }
   );
 
-  console.log({ achetypeProxy });
+  console.log({ archetypeProxy });
+
+  await archetypeProxy.deployed();
+
+  console.log({
+    proxy: archetypeProxy.address,
+    admin: await upgrades.erc1967.getAdminAddress(archetypeProxy.address),
+    implementation: await upgrades.erc1967.getImplementationAddress(archetypeProxy.address),
+  });
 }
 
 main()

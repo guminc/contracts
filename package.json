@@ -15,7 +15,7 @@
     "deploy": "npx hardhat run scripts/deployArchetype.ts --network sepolia",
     "deploy:random": "npx hardhat run scripts/deployArchetypeRandomProxy.ts --network sepolia",
     "network": "npx hardhat node",
-    "verify": "npx hardhat verify 0xE1ab75C9a140d2dc521D45F2CdbD9D39903d3297 --network sepolia"
+    "verify": "npx hardhat verify 0xa2c23c9FD21953360D83A4E41A9D8c129949379c --network sepolia"
   },
   "repository": {
     "type": "git",
@@ -31,8 +31,10 @@
     "@chainlink/contracts": "^0.6.1",
     "@chainlink/hardhat-chainlink": "^0.0.2",
     "concurrently": "6.4.0",
+    "csv-parse": "^5.5.1",
     "ethereumjs-util": "7.1.4",
     "ipfsh": "0.0.6",
+    "readline-sync": "^1.4.10",
     "solady": "^0.0.19"
   },
   "devDependencies": {
