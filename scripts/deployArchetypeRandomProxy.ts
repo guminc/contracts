@@ -26,10 +26,10 @@ async function getTokenPool() {
   const records = await parseCsv(csvContent);
 
   const rarityDistribution = {
-    R1: 35,
-    R2: 30,
-    R3: 25,
-    R4: 15,
+    R1: 37,
+    R2: 34,
+    R3: 24,
+    R4: 21,
     R5: 10,
     R6: 1,
   };
@@ -38,7 +38,7 @@ async function getTokenPool() {
 
   for (const record of records) {
     const tokenId = Number(record["Token ID"]);
-    const rarity = record["Rarity"];
+    const rarity = record.Rarity;
     const distributionCount = rarityDistribution[rarity];
 
     for (let i = 0; i < distributionCount; i++) {
@@ -66,7 +66,7 @@ async function main() {
   const affiliateSigner = "0x1f285dD528cf4cDE3081C6d48D9df7A4F8FA9383";
   const affiliateDiscount = 1000;
   const affiliateFee = 2000;
-  let tokenPool = await getTokenPool();
+  const tokenPool = await getTokenPool();
   const maxSupply = tokenPool.length;
 
   console.log({
