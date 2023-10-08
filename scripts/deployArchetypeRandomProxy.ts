@@ -25,14 +25,6 @@ async function getTokenPool() {
   const csvContent = fs.readFileSync(path.join(__dirname, "./data/card_details.csv"), "utf-8");
   const records = await parseCsv(csvContent);
 
-  // const rarityDistribution = {
-  //   R1: 35,
-  //   R2: 30,
-  //   R3: 25,
-  //   R4: 15,
-  //   R5: 10,
-  //   R6: 1,
-  // };
   const rarityDistribution = {
     R1: 37,
     R2: 34,
@@ -48,7 +40,6 @@ async function getTokenPool() {
     const tokenId = Number(record["Token ID"]);
     const rarity = record.Rarity;
     const distributionCount = rarityDistribution[rarity];
-    console.log(tokenId);
 
     for (let i = 0; i < distributionCount; i++) {
       tokenPool.push(tokenId);
@@ -98,31 +89,10 @@ async function main() {
     process.exit();
   }
 
-  const archetypeProxy = await upgrades.deployProxy(
-    Archetype,
-    [
-      name,
-      symbol,
-      {
-        baseUri: baseUri,
-        affiliateSigner: affiliateSigner,
-        maxSupply: maxSupply,
-        tokenPool: tokenPool,
-        maxBatchSize: 100,
-        affiliateFee: affiliateFee,
-        platformFee: 500,
-        ownerAltPayout: ethers.constants.AddressZero,
-        superAffiliatePayout: ethers.constants.AddressZero,
-        defaultRoyalty: 500,
-        discounts: { affiliateDiscount: affiliateDiscount, mintTiers: [] },
-      },
-      signer.address,
-    ],
-    {
-      initializer: "initialize",
-      unsafeAllowLinkedLibraries: true,
-    }
-  );
+  const archetypeProxy = await upgrades.deployProxy(Archetype, [], {
+    unsafeAllowLinkedLibraries: true,
+    initializer: false,
+  });
 
   console.log({ archetypeProxy });
 
@@ -133,6 +103,31 @@ async function main() {
     admin: await upgrades.erc1967.getAdminAddress(archetypeProxy.address),
     implementation: await upgrades.erc1967.getImplementationAddress(archetypeProxy.address),
   });
+
+  console.log("initializing...");
+
+  const tx = await archetypeProxy.initialize(
+    name,
+    symbol,
+    {
+      baseUri: baseUri,
+      affiliateSigner: affiliateSigner,
+      maxSupply: maxSupply,
+      tokenPool: tokenPool,
+      maxBatchSize: 100,
+      affiliateFee: affiliateFee,
+      platformFee: 500,
+      ownerAltPayout: ethers.constants.AddressZero,
+      superAffiliatePayout: ethers.constants.AddressZero,
+      defaultRoyalty: 500,
+      discounts: { affiliateDiscount: affiliateDiscount, mintTiers: [] },
+    },
+    signer.address
+  );
+
+  const receipt = await tx.wait();
+  console.log({ receipt });
+  console.log("done");
 }
 
 main()
