@@ -32,15 +32,15 @@ async function main() {
   const actualBytecode = await ethers.provider.getCode(archetypeBatch.address);
   const matchRate = calculateMatchRate(expectedBytecode, actualBytecode);
 
-  console.log("ArchetypeBatch bytecode has a match rate of", matchRate);
-  if (matchRate > 90) {
-    console.log("ArchetypeBatch bytecode match passes");
-  } else {
-    console.log(
-      "ArchetypeBatch bytecode match fails, make sure its the correct address. Exiting ..."
-    );
-    process.exit(1);
-  }
+    console.log("ArchetypeBatch bytecode has a match rate of", matchRate);
+    if (matchRate > 90) {
+      console.log("ArchetypeBatch bytecode match passes");
+    } else {
+      console.log(
+        "ArchetypeBatch bytecode match fails, make sure its the correct address. Exiting ..."
+      );
+      process.exit(1);
+    }
 
   const TOKEN_ADDRESS: string = "0x750ee3529D13819E00E4e67063D6e500870d5AF3";
   const tokenContract = await ethers.getContractAt("IERC1155", TOKEN_ADDRESS);
@@ -61,17 +61,29 @@ async function main() {
   console.log(`Distributing tokens from address: ${signer.address}`);
 
   // Formulate the calls
-  const targets = Array(recipientList.length).fill(TOKEN_ADDRESS);
-  const values = Array(recipientList.length).fill(0);
-  const datas = targets.map((target, i) =>
-    tokenContract.interface.encodeFunctionData("safeTransferFrom", [
-      signer.address,
-      recipientList[i],
-      ownedTokenIds[i],
-      quantityList[i],
-      "0x",
-    ])
-  );
+  const targets: string[] = [];
+  const values: number[] = [];
+  const datas: string[] = [];
+
+  let i = 0;
+  for (let j = 0; j < recipientList.length; j++) {
+    for (let k = 0; k < quantityList[j]; k++) {
+      targets.push(TOKEN_ADDRESS); // This remains the token address for each entry
+      values.push(0); // This remains 0 for each entry
+
+      console.log({ receiver: recipientList[j], tokenId: ownedTokenIds[i], quantity: 1 });
+      const data = tokenContract.interface.encodeFunctionData("safeTransferFrom", [
+        signer.address,
+        recipientList[j],
+        ownedTokenIds[i],
+        1,
+        "0x",
+      ]);
+
+      datas.push(data);
+      i++;
+    }
+  }
 
   console.log({ targets, values, datas, tokenIdsToSend: ownedTokenIds });
 
