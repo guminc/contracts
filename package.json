@@ -15,7 +15,7 @@
     "deploy": "npx hardhat run scripts/deployArchetype.ts --network sepolia",
     "deploy:random": "npx hardhat run scripts/deployArchetypeRandomProxy.ts --network sepolia",
     "network": "npx hardhat node",
-    "verify": "npx hardhat verify 0xa2c23c9FD21953360D83A4E41A9D8c129949379c --network sepolia"
+    "verify": "npx hardhat verify 0x30e718C873c8b3649AEFf5D917C967D0bD85b729 --network sepolia"
   },
   "repository": {
     "type": "git",
