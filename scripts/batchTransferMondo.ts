@@ -66,9 +66,9 @@ async function main() {
   const datas = targets.map((target, i) =>
     tokenContract.interface.encodeFunctionData("safeTransferFrom", [
       signer.address,
-      target,
+      recipientList[i],
       ownedTokenIds[i],
-      values[i],
+      quantityList[i],
       "0x",
     ])
   );
