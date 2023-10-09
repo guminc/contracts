@@ -32,15 +32,15 @@ async function main() {
   const actualBytecode = await ethers.provider.getCode(archetypeBatch.address);
   const matchRate = calculateMatchRate(expectedBytecode, actualBytecode);
 
-    console.log("ArchetypeBatch bytecode has a match rate of", matchRate);
-    if (matchRate > 90) {
-      console.log("ArchetypeBatch bytecode match passes");
-    } else {
-      console.log(
-        "ArchetypeBatch bytecode match fails, make sure its the correct address. Exiting ..."
-      );
-      process.exit(1);
-    }
+  console.log("ArchetypeBatch bytecode has a match rate of", matchRate);
+  if (matchRate > 90) {
+    console.log("ArchetypeBatch bytecode match passes");
+  } else {
+    console.log(
+      "ArchetypeBatch bytecode match fails, make sure its the correct address. Exiting ..."
+    );
+    process.exit(1);
+  }
 
   const TOKEN_ADDRESS: string = "0x750ee3529D13819E00E4e67063D6e500870d5AF3";
   const tokenContract = await ethers.getContractAt("IERC1155", TOKEN_ADDRESS);
@@ -53,8 +53,8 @@ async function main() {
   console.log({ recipientList, quantityList });
 
   const ownedTokenIds = [
-    213, 237, 172, 169, 247, 211, 177, 140, 151, 241, 232, 230, 142, 188, 249, 228, 211, 245, 152, 157,
-    163, 187,
+    213, 237, 172, 169, 247, 211, 177, 140, 151, 241, 232, 230, 142, 188, 249, 228, 211, 245, 152,
+    157, 163, 187,
   ];
 
   const [signer] = await ethers.getSigners();
