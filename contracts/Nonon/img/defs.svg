@@ -1,0 +1,157 @@
+  <defs>
+    <filter id="b" width="383.619" height="273.619" x="347.9" y="402.9" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+      <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
+      <feOffset dx="4" dy="4" />
+      <feGaussianBlur stdDeviation="6" />
+      <feComposite in2="hardAlpha" k2="-1" k3="1" operator="arithmetic" />
+      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+      <feBlend in2="shape" result="effect1_innerShadow_827_1558" />
+      <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
+      <feOffset dx="-4" dy="-4" />
+      <feGaussianBlur stdDeviation="2" />
+      <feComposite in2="hardAlpha" k2="-1" k3="1" operator="arithmetic" />
+      <feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0" />
+      <feBlend in2="effect1_innerShadow_827_1558" result="effect2_innerShadow_827_1558" />
+    </filter>
+
+    <!-- SPRITE-01-FILTER     -->
+    <filter id="filter-1" width="88" height="96" x="500" y="532" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
+      <feOffset dx="4" dy="4" />
+      <feGaussianBlur stdDeviation="2" />
+      <feComposite in2="hardAlpha" operator="out" />
+      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+      <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_827_1558" />
+      <feBlend in="SourceGraphic" in2="effect1_dropShadow_827_1558" result="shape" />
+    </filter>
+
+    <!-- SPRITE-02-FILTER     -->
+    <filter id="filter-2" width="160" height="128" x="468" y="500" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
+      <feOffset dx="4" dy="4" />
+      <feGaussianBlur stdDeviation="2" />
+      <feComposite in2="hardAlpha" operator="out" />
+      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+      <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_827_1558" />
+      <feBlend in="SourceGraphic" in2="effect1_dropShadow_827_1558" result="shape" />
+    </filter>
+
+    <!-- SPRITE-03-FILTER     -->
+    <filter id="filter-3" width="176" height="160" x="452" y="468" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
+      <feOffset dx="4" dy="4" />
+      <feGaussianBlur stdDeviation="2" />
+      <feComposite in2="hardAlpha" operator="out" />
+      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+      <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_827_1558" />
+      <feBlend in="SourceGraphic" in2="effect1_dropShadow_827_1558" result="shape" />
+    </filter>
+
+    <!--     SPRITE-04-FILTER -->
+    <filter id="filter-4" width="168" height="176" x="460" y="456" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
+      <feOffset dx="4" dy="4" />
+      <feGaussianBlur stdDeviation="2" />
+      <feComposite in2="hardAlpha" operator="out" />
+      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+      <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_827_1558" />
+      <feBlend in="SourceGraphic" in2="effect1_dropShadow_827_1558" result="shape" />
+    </filter>
+
+    <!--     SPRITE-05-FILTER -->
+    <filter id="filter-5" width="192" height="192" x="448" y="448" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
+      <feOffset dx="4" dy="4" />
+      <feGaussianBlur stdDeviation="2" />
+      <feComposite in2="hardAlpha" operator="out" />
+      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+      <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_827_1558" />
+      <feBlend in="SourceGraphic" in2="effect1_dropShadow_827_1558" result="shape" />
+    </filter>
+
+    <!--     SPRITE-06-FILTER -->
+    <filter id="filter-6" width="200" height="200" x="444" y="444" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"> -->
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
+      <feOffset dx="4" dy="4" />
+      <feGaussianBlur stdDeviation="2" />
+      <feComposite in2="hardAlpha" operator="out" />
+      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+      <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_827_1558" />
+      <feBlend in="SourceGraphic" in2="effect1_dropShadow_827_1558" result="shape" />
+    </filter>
+
+    <!--     SPRITE-07-FILTER -->
+    <filter id="filter-7" width="200" height="184" x="444" y="452" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
+      <feOffset dx="4" dy="4" />
+      <feGaussianBlur stdDeviation="2" />
+      <feComposite in2="hardAlpha" operator="out" />
+      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+      <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_827_1558" />
+      <feBlend in="SourceGraphic" in2="effect1_dropShadow_827_1558" result="shape" />
+    </filter>
+    <filter id="filter-8" width="152" height="192" x="468" y="452" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
+      <feOffset dx="4" dy="4" />
+      <feGaussianBlur stdDeviation="2" />
+      <feComposite in2="hardAlpha" operator="out" />
+      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+      <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_827_1558" />
+      <feBlend in="SourceGraphic" in2="effect1_dropShadow_827_1558" result="shape" />
+    </filter>
+    <clipPath id="c">
+      <rect width="375.619" height="265.619" x="351.9" y="406.9" fill="#fff" rx="12" />
+    </clipPath>
+    <radialGradient id="grad-1" cx="50%" cy="50%" r="100%" fx="50%" fy="50%">
+      <stop offset="0%" style="stop-color:#2EB4FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2EB4FF;stop-opacity:1" />
+    </radialGradient>
+    <radialGradient id="grad-2" cx="50%" cy="50%" r="100%" fx="50%" fy="50%">
+      <stop offset="0%" style="stop-color:#40F4FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2EB4FF;stop-opacity:1" />
+    </radialGradient>
+    <radialGradient id="grad-3" cx="50%" cy="50%" r="100%" fx="50%" fy="50%">
+      <stop offset="0%" style="stop-color:#AAFFFA;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#B8B7FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2EB4FF;stop-opacity:1" />
+    </radialGradient>
+    <radialGradient id="grad-4" cx="50%" cy="50%" r="100%" fx="50%" fy="50%">
+      <stop offset="0%" style="stop-color:#AAFFFA;stop-opacity:1" />
+      <stop offset="25%" style="stop-color:#DEFFA9;stop-opacity:1" />
+      <stop offset="75%" style="stop-color:#E9BAFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2EB4FF;stop-opacity:1" />
+    </radialGradient>
+    <radialGradient id="grad-5" cx="50%" cy="50%" r="100%" fx="50%" fy="50%">
+      <stop offset="0%" style="stop-color:#AAFFFA;stop-opacity:1" />
+      <stop offset="20%" style="stop-color:#DEFFA9;stop-opacity:1" />
+      <stop offset="40%" style="stop-color:#E9BAFF;stop-opacity:1" />
+           <stop offset="60%" style="stop-color:#CEFFF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2EB4FF;stop-opacity:1" />
+    </radialGradient>
+    <radialGradient id="grad-6" cx="50%" cy="50%" r="100%" fx="50%" fy="50%">
+      <stop offset="0%" style="stop-color:#B4BBFF;stop-opacity:1" />
+      <stop offset="25%" style="stop-color:#FFF5EC;stop-opacity:1" />
+      <stop offset="75%" style="stop-color:#69FFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#B4BBFF;stop-opacity:1" />
+    </radialGradient>
+    <radialGradient id="grad-7" cx="50%" cy="50%" r="100%" fx="50%" fy="50%">
+      <stop offset="0%" style="stop-color:#CC358F;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FF566A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FC7AFF;stop-opacity:1" />
+    </radialGradient>
+    <radialGradient id="grad-8" cx="50%" cy="50%" r="100%" fx="50%" fy="50%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#BCD1D9;stop-opacity:1" />
+    </radialGradient>
+  </defs>

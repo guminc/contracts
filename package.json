@@ -27,7 +27,7 @@
     "concurrently": "6.4.0",
     "ethereumjs-util": "7.1.4",
     "ipfsh": "0.0.6",
-    "solady": "^0.0.19"
+    "solady": "^0.0.55"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "2.0.5",
