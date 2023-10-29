@@ -573,12 +573,12 @@ contract ArchetypeNonon is
       internal
       override
   {
-      INononFriendCard friendshipCard = INononFriendCard(config.friendCardAddress);
+      INononFriendCard friendCard = INononFriendCard(config.friendCardAddress);
 
-      if (to != address(0) && !friendshipCard.hasToken(to)) {
-          friendshipCard.mintTo(to);
+      if (to != address(0) && !friendCard.hasToken(to)) {
+          friendCard.mintTo(to);
       }
 
-      friendshipCard.registerTokenMovement(from, to, startTokenId, quantity);
+      friendCard.registerTokenMovement(from, to, startTokenId, quantity);
   }
 }

@@ -7,6 +7,7 @@
     "preTest": "node test/preTest.js",
     "postTest": "node test/postTest.js",
     "test": "npm run preTest && npx hardhat test test/archetype.test.ts && npm run postTest",
+    "test:nonon": "npx hardhat test test/nonon.test.ts",
     "test:specific": "npm run preTest && hardhat test test/archetype.test --grep && npm run postTest",
     "start": "concurrently \"cd api && npm start\" \"cd app && npm run dev\"",
     "deploy": "npx hardhat run scripts/deployArchetype.ts --network localhost",

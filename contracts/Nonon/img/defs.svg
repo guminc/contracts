@@ -1,3 +1,31 @@
+  <g stroke="#fff">
+    <path stroke-linecap="round" stroke-width="2" d="M555.9 269a16.1 16.1 0 1 1-32.3 0" />
+    <path stroke-width="4" d="M442.7 273.8a47.8 47.8 0 0 1-15.5 25c-6.9 5.4-14.8 7.7-22.1 5.7-7.3-2-13-7.8-16.3-16a47.8 47.8 0 0 1-1-29.4 47.8 47.8 0 0 1 15.6-25 25.3 25.3 0 0 1 22.1-5.8c7.4 2 13 7.9 16.3 16.1a47.9 47.9 0 0 1 1 29.4Z" />
+    <path stroke-width="2" d="M443.4 274.3a37.8 37.8 0 0 1-12.2 19.7 20 20 0 0 1-17.7 4.6 20 20 0 0 1-13-12.9c-2.6-6.5-3-14.7-.8-23.1a37.8 37.8 0 0 1 12.3-19.7 20 20 0 0 1 17.7-4.6 20 20 0 0 1 13 12.8c2.5 6.5 3 14.8.7 23.2Z" />
+    <path d="M444 274.4a35 35 0 0 1-11.4 18.2c-5 4.1-11 5.8-16.6 4.3a18.9 18.9 0 0 1-12.2-12 35 35 0 0 1-.7-21.4 35 35 0 0 1 11.4-18.2c5-4.1 11-5.8 16.5-4.3 5.6 1.5 9.9 5.9 12.2 12a35 35 0 0 1 .7 21.4Z" />
+    <path d="M444 274.4a33 33 0 0 1-10.8 17.3 17.7 17.7 0 0 1-15.6 4 17.7 17.7 0 0 1-11.6-11.3 33 33 0 0 1-.6-20.3 33 33 0 0 1 10.7-17.3 17.7 17.7 0 0 1 15.6-4c5.3 1.4 9.3 5.6 11.6 11.3a33 33 0 0 1 .6 20.3Z" opacity="0.5" />
+    <path d="M444 274.4c-2 7-5.7 12.6-10.2 16.3a16.6 16.6 0 0 1-14.7 3.8c-5-1.4-8.7-5.3-10.8-10.7a31.1 31.1 0 0 1-.7-19.1c1.9-7 5.6-12.6 10.1-16.3 4.5-3.6 9.8-5.1 14.8-3.8 5 1.4 8.7 5.3 10.8 10.7 2.1 5.4 2.5 12.2.6 19.1Z" opacity="0.25" />
+    <path stroke-width="4" d="M637.4 273.8a47.8 47.8 0 0 0 15.5 25c6.9 5.4 14.8 7.7 22.1 5.7a25 25 0 0 0 16.3-16 47.9 47.9 0 0 0 1-29.4 47.8 47.8 0 0 0-15.6-25 25 25 0 0 0-22-5.8c-7.4 2-13.1 7.9-16.3 16.1a47.8 47.8 0 0 0-1 29.4Z" />
+    <path stroke-width="2" d="M636.7 274.3a37.8 37.8 0 0 0 12.2 19.7 20 20 0 0 0 17.7 4.6 20 20 0 0 0 13-12.9c2.6-6.5 3-14.7.8-23.1a37.8 37.8 0 0 0-12.2-19.7 20 20 0 0 0-17.7-4.6 20 20 0 0 0-13 12.8c-2.6 6.5-3 14.8-.8 23.2Z" />
+    <path d="M636.2 274.4a35 35 0 0 0 11.4 18.2c5 4.1 11 5.8 16.5 4.3 5.6-1.5 9.8-5.9 12.2-12a35 35 0 0 0 .7-21.4 35 35 0 0 0-11.3-18.2c-5.1-4.1-11-5.8-16.6-4.3-5.6 1.5-9.8 5.9-12.2 12a35 35 0 0 0-.7 21.4Z" />
+    <path d="M636.2 274.4a33 33 0 0 0 10.7 17.3 17.7 17.7 0 0 0 15.7 4c5.2-1.4 9.3-5.6 11.5-11.3a33 33 0 0 0 .7-20.3 33 33 0 0 0-10.8-17.3 17.7 17.7 0 0 0-15.6-4 17.7 17.7 0 0 0-11.5 11.3 33 33 0 0 0-.7 20.3Z" opacity="0.5" />
+    <path d="M636.2 274.4c1.9 7 5.6 12.6 10.1 16.3 4.5 3.6 9.8 5.1 14.7 3.8 5-1.4 8.8-5.3 10.9-10.7 2-5.4 2.5-12.2.6-19.1-1.9-7-5.6-12.6-10.1-16.3a16.6 16.6 0 0 0-14.7-3.8c-5 1.4-8.8 5.3-10.9 10.7a31.1 31.1 0 0 0-.6 19.1Z" opacity="0.25" />
+    <g fill="#2EB4FF">
+      <path stroke-width="4" d="M650 204.5c25 14.4 53.7 9.8 64.5-8.9 10.8-18.7.4-45.8-24.5-60.2-25-14.4-53.6-9.8-64.4 8.9-10.9 18.7-.5 45.8 24.5 60.2Z" />
+      <path stroke-width="2" d="M652.9 199.6A54 54 0 0 0 686 207a30.5 30.5 0 0 0 23.6-14.2c4.6-8.1 4.6-18 .5-27.5a54 54 0 0 0-23-25 54 54 0 0 0-33-7.4 30.5 30.5 0 0 0-23.6 14.2c-4.7 8.1-4.6 18-.6 27.5a54 54 0 0 0 23 25Z" />
+      <path d="M655 196a49.2 49.2 0 0 0 29.5 6.8c9.2-1 16.8-5.3 21-12.4a27 27 0 0 0 .2-24.3A49.2 49.2 0 0 0 685 144a49.2 49.2 0 0 0-29.5-6.9c-9.2 1-16.8 5.3-21 12.4a27 27 0 0 0-.2 24.3 49.2 49.2 0 0 0 20.7 22.1Z" opacity="0.5" />
+      <path stroke-width="4" d="M430 204.5c-25 14.4-53.7 9.8-64.5-8.9-10.8-18.7-.4-45.8 24.5-60.2 25-14.4 53.6-9.8 64.5 8.9 10.8 18.7.4 45.8-24.6 60.2Z" />
+      <path stroke-width="2" d="M427.1 199.6A54 54 0 0 1 394 207a30.5 30.5 0 0 1-23.6-14.2c-4.6-8.1-4.5-18-.5-27.5a54 54 0 0 1 23-25 54 54 0 0 1 33-7.4 30.5 30.5 0 0 1 23.6 14.2c4.7 8.1 4.6 18 .6 27.5a54 54 0 0 1-23 25Z" />
+      <path d="M425 196a49.2 49.2 0 0 1-29.5 6.8c-9.2-1-16.8-5.3-21-12.4a27 27 0 0 1-.2-24.3A49.2 49.2 0 0 1 395 144a49.2 49.2 0 0 1 29.6-6.9c9 1 16.8 5.3 20.9 12.4a27 27 0 0 1 .2 24.3 49.2 49.2 0 0 1-20.7 22.1Z" opacity="0.5" />
+    </g>
+  </g>
+  <g fill="#424242">
+    <path d="M178 1004.3h2.7v-1.9h-2v-6.1h2v-1.6h-2V992h-2v2.7h-1.4v1.6h1.4v6.6h1.3v1.4Zm-54 0h-3.3v-7.8h-2v1.4h-1.4v4.8h1.4v1.6H114v-1.6h1.3v-6.4H114v-1.6h3.3v1.3h.7v-1.3h3.3v1.3h1.4v6.7h1.3v1.6Z" />
+    <path fill-rule="evenodd" d="M132 1004.3h-4.7v-1.4H126V996h1.3v-1.3h4.7v1.3h1.3v7H132v1.3Zm-.7-1.9v-5.9H128v5.9h3.3Z" clip-rule="evenodd" />
+    <path d="M142 1004.3h3.3v-1.6H144V996h-1.3v-1.3h-3.4v1.3h-.6v-1.3h-3.4v1.6h1.4v6.4h-1.4v1.6h4.7v-1.6h-1.3v-4.8h1.3v-1.4h2v7.8Z" />
+    <path fill-rule="evenodd" d="M153.3 1004.3h-4.6v-1.4h-1.4V996h1.4v-1.3h4.6v1.3h1.4v7h-1.4v1.3Zm-.6-1.9v-5.9h-3.4v5.9h3.4Z" clip-rule="evenodd" />
+    <path d="M163.3 1004.3h3.4v-1.6h-1.4V996H164v-1.3h-3.3v1.3h-.7v-1.3h-3.3v1.6h1.3v6.4h-1.3v1.6h4.6v-1.6H160v-4.8h1.3v-1.4h2v7.8Zm8.7 0h-2v-1.9h2v1.9Zm19.7 0h-4.4v-1.6h1v-.8H187v-1.4h-.7v1.4H185v.8h1v1.6h-4.3v-1.6h1.3v-1.4h1.3v-1.3h1.4v-.8h-1.4v-1.3H183v-1.6h-1.3v-1.6h4.4v1.6h-1v1h1.2v1.4h.7v-1.4h1.3v-1h-1v-1.6h4.4v1.6h-1.4v1.6H189v1.3h-1.3v.8h1.3v1.3h1.3v1.4h1.4v1.6Zm3.6 0h2.7v-1.9h-2v-6.1h2v-1.6h-2V992h-2v2.7h-1.3v1.6h1.3v6.6h1.3v1.4Z" />
+  </g>
   <defs>
     <filter id="b" width="383.619" height="273.619" x="347.9" y="402.9" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
       <feFlood flood-opacity="0" result="BackgroundImageFix" />
@@ -15,8 +43,6 @@
       <feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0" />
       <feBlend in2="effect1_innerShadow_827_1558" result="effect2_innerShadow_827_1558" />
     </filter>
-
-    <!-- SPRITE-01-FILTER     -->
     <filter id="filter-1" width="88" height="96" x="500" y="532" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
       <feFlood flood-opacity="0" result="BackgroundImageFix" />
       <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
@@ -27,8 +53,6 @@
       <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_827_1558" />
       <feBlend in="SourceGraphic" in2="effect1_dropShadow_827_1558" result="shape" />
     </filter>
-
-    <!-- SPRITE-02-FILTER     -->
     <filter id="filter-2" width="160" height="128" x="468" y="500" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
       <feFlood flood-opacity="0" result="BackgroundImageFix" />
       <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
@@ -39,8 +63,6 @@
       <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_827_1558" />
       <feBlend in="SourceGraphic" in2="effect1_dropShadow_827_1558" result="shape" />
     </filter>
-
-    <!-- SPRITE-03-FILTER     -->
     <filter id="filter-3" width="176" height="160" x="452" y="468" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
       <feFlood flood-opacity="0" result="BackgroundImageFix" />
       <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
@@ -51,8 +73,6 @@
       <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_827_1558" />
       <feBlend in="SourceGraphic" in2="effect1_dropShadow_827_1558" result="shape" />
     </filter>
-
-    <!--     SPRITE-04-FILTER -->
     <filter id="filter-4" width="168" height="176" x="460" y="456" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
       <feFlood flood-opacity="0" result="BackgroundImageFix" />
       <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
@@ -63,8 +83,6 @@
       <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_827_1558" />
       <feBlend in="SourceGraphic" in2="effect1_dropShadow_827_1558" result="shape" />
     </filter>
-
-    <!--     SPRITE-05-FILTER -->
     <filter id="filter-5" width="192" height="192" x="448" y="448" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
       <feFlood flood-opacity="0" result="BackgroundImageFix" />
       <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
@@ -75,8 +93,6 @@
       <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_827_1558" />
       <feBlend in="SourceGraphic" in2="effect1_dropShadow_827_1558" result="shape" />
     </filter>
-
-    <!--     SPRITE-06-FILTER -->
     <filter id="filter-6" width="200" height="200" x="444" y="444" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"> -->
       <feFlood flood-opacity="0" result="BackgroundImageFix" />
       <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
@@ -87,8 +103,6 @@
       <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_827_1558" />
       <feBlend in="SourceGraphic" in2="effect1_dropShadow_827_1558" result="shape" />
     </filter>
-
-    <!--     SPRITE-07-FILTER -->
     <filter id="filter-7" width="200" height="184" x="444" y="452" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
       <feFlood flood-opacity="0" result="BackgroundImageFix" />
       <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />

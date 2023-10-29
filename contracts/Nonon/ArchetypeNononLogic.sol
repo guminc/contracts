@@ -37,7 +37,6 @@ error InvalidSignature();
 error BalanceEmpty();
 error TransferFailed();
 error MaxBatchSizeExceeded();
-error BurnToMintDisabled();
 error NotTokenOwner();
 error NotPlatform();
 error NotOwner();

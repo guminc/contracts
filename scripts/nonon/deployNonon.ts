@@ -1,29 +1,22 @@
 import fs from "fs";
-import { ethers, run, upgrades } from "hardhat";
-import { ArchetypeNononLogic } from "../typechain";
+import { ethers } from "hardhat";
+import type { ArchetypeNonon, ArchetypeNononLogic, NononFriendCard } from "../../typechain";
+import type { IArchetypeNononConfig } from "../../lib/types";
 
-async function main() {
-  // set to empty for new deploy
-  const LIBRARY_ADDRESS: string = ""; // localhost
-  // const LIBRARY_ADDRESS: string = "0xE11FcB03d07CDbf3D2870105b6d6BbF78d44acf5" // SEPOLIA 0.6.0
-  // const LIBRARY_ADDRESS: string = "0x73cA112A50C4eAb928AaE07aAF96944d431720EF" // MAINNET 0.6.0
+export interface NononContracts {
+  archetypeNonon: ArchetypeNonon;
+  nononFriendCard: NononFriendCard;
+}
 
+export async function deployNonon(
+  config: IArchetypeNononConfig,
+  libraryAddress?: string
+): Promise<NononContracts> {
   const NAME: string = "nonon";
   const SYMBOL: string = "NONON";
 
-  const CONFIG = {
-    baseUri: "ipfs://CID/",
-    affiliateSigner: "0x1f285dD528cf4cDE3081C6d48D9df7A4F8FA9383",
-    ownerAltPayout: ethers.constants.AddressZero,
-    superAffiliatePayout: ethers.constants.AddressZero,
-    friendCardAddress: ethers.constants.AddressZero,
-    maxSupply: 5000,
-    maxBatchSize: 5000,
-    affiliateFee: 500,
-    platformFee: 500,
-    defaultRoyalty: 500,
-    discounts: { affiliateDiscount: 0, mintTiers: [] },
-  };
+  const CONFIG = config;
+  const LIBRARY_ADDRESS = libraryAddress || "";
 
   console.log({ LIBRARY_ADDRESS, NAME, SYMBOL, CONFIG });
 
@@ -78,12 +71,13 @@ async function main() {
 
   // set friend card addr in nonon token config
   await archetypeNonon.setFriendCardAddress(nononFriendCard.address);
+  console.log('set archetype nonon config: friend card address to: ', nononFriendCard.address);
 
   // set friend card svgs, by passing the bytes to be saved
   const baseSvgBytes: Buffer = fs.readFileSync("contracts/Nonon/img/base.svg");
   const defsSvgBytes: Buffer = fs.readFileSync("contracts/Nonon/img/defs.svg");
   const spritesSvgBytes: Buffer = fs.readFileSync("contracts/Nonon/img/sprites.svg");
-
+// 
   await Promise.all([
     nononFriendCard.setBaseSvgPointer(baseSvgBytes),
     nononFriendCard.setDefsSvgPointer(defsSvgBytes),
@@ -91,14 +85,19 @@ async function main() {
   ]).then(() => console.log("Set friend card SVG bytes"));
 
   console.log("nonon deployment complete!");
+
+  return {
+    archetypeNonon,
+    nononFriendCard,
+  };
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch(error => {
-    console.error(error);
-    process.exit(1);
-  });
+// main()
+//   .then(() => process.exit(0))
+//   .catch(error => {
+//     console.error(error);
+//     process.exit(1);
+//   });
 
 /*
   Uses a sliding window approach, chunkBytecode produces overlapping chunks.
