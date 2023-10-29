@@ -18,8 +18,6 @@ export async function deployNonon(
   const CONFIG = config;
   const LIBRARY_ADDRESS = libraryAddress || "";
 
-  console.log({ LIBRARY_ADDRESS, NAME, SYMBOL, CONFIG });
-
   const [deployer] = await ethers.getSigners();
   const deployerAddress = await deployer.getAddress();
 
@@ -71,13 +69,13 @@ export async function deployNonon(
 
   // set friend card addr in nonon token config
   await archetypeNonon.setFriendCardAddress(nononFriendCard.address);
-  console.log('set archetype nonon config: friend card address to: ', nononFriendCard.address);
+  console.log("set archetype nonon config: friend card address to: ", nononFriendCard.address);
 
   // set friend card svgs, by passing the bytes to be saved
   const baseSvgBytes: Buffer = fs.readFileSync("contracts/Nonon/img/base.svg");
   const defsSvgBytes: Buffer = fs.readFileSync("contracts/Nonon/img/defs.svg");
   const spritesSvgBytes: Buffer = fs.readFileSync("contracts/Nonon/img/sprites.svg");
-// 
+
   await Promise.all([
     nononFriendCard.setBaseSvgPointer(baseSvgBytes),
     nononFriendCard.setDefsSvgPointer(defsSvgBytes),
@@ -91,13 +89,6 @@ export async function deployNonon(
     nononFriendCard,
   };
 }
-
-// main()
-//   .then(() => process.exit(0))
-//   .catch(error => {
-//     console.error(error);
-//     process.exit(1);
-//   });
 
 /*
   Uses a sliding window approach, chunkBytecode produces overlapping chunks.

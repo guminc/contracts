@@ -149,16 +149,6 @@ describe("nonon", () => {
 
     const minterFriendCardId = await contracts.nononFriendCard.tokenOf(originalMinterAddress);
 
-    console.log(contracts.nononFriendCard.interface.errors["OnlyForYou()"].name);
-    console.log(contracts.nononFriendCard.interface.errors);
-    console.log(await contracts.nononFriendCard.TOKEN_NAME());
-
-    console.log(originalMinterAddress);
-    console.log(minterFriendCardId);
-    console.log(randomAddress);
-
-    console.log(contracts.nononFriendCard.address);
-
     expect(await contracts.nononFriendCard.name()).to.equal("NononFriendCard");
 
     await expect(
