@@ -24,7 +24,9 @@ export async function deployNonon(
   let archetypeNononLogic: ArchetypeNononLogic;
   const ArchetypeLogic = await ethers.getContractFactory("ArchetypeNononLogic");
   if (LIBRARY_ADDRESS === "") {
+    console.log("deploying archetype nonon logic");
     archetypeNononLogic = await ArchetypeLogic.deploy();
+    await archetypeNononLogic.deployed();
   } else {
     archetypeNononLogic = ArchetypeLogic.attach(LIBRARY_ADDRESS);
   }
@@ -51,13 +53,11 @@ export async function deployNonon(
   });
 
   const archetypeNonon = await ArchetypeNonon.deploy();
-
   await archetypeNonon.deployed();
 
   console.log("Archetype (nonon ver.) deployed to:", archetypeNonon.address);
 
   await archetypeNonon.initialize(NAME, SYMBOL, CONFIG, deployerAddress);
-
   console.log("Archetype (nonon ver.) initialized!");
 
   /// *** additional nonon setup transactions *** ///
@@ -65,10 +65,14 @@ export async function deployNonon(
   // deploy friend card
   const NononFriendCard = await ethers.getContractFactory("NononFriendCard");
   const nononFriendCard = await NononFriendCard.deploy(archetypeNonon.address);
+  await nononFriendCard.deployed();
+
   console.log("nonon friend card deployed to:", nononFriendCard.address);
 
   // set friend card addr in nonon token config
-  await archetypeNonon.setFriendCardAddress(nononFriendCard.address);
+  const setFriendCardTx = await archetypeNonon.setFriendCardAddress(nononFriendCard.address);
+  await setFriendCardTx.wait();
+
   console.log("set archetype nonon config: friend card address to: ", nononFriendCard.address);
 
   // set friend card svgs, by passing the bytes to be saved
@@ -76,11 +80,26 @@ export async function deployNonon(
   const defsSvgBytes: Buffer = fs.readFileSync("contracts/Nonon/img/defs.svg");
   const spritesSvgBytes: Buffer = fs.readFileSync("contracts/Nonon/img/sprites.svg");
 
-  await Promise.all([
-    nononFriendCard.setBaseSvgPointer(baseSvgBytes),
-    nononFriendCard.setDefsSvgPointer(defsSvgBytes),
-    nononFriendCard.setSpritesSvgPointer(spritesSvgBytes),
-  ]).then(() => console.log("Set friend card SVG bytes"));
+  const setBaseSvgTx = await nononFriendCard.setBaseSvgPointer(baseSvgBytes);
+  await setBaseSvgTx.wait();
+  console.log('set base svg bytes');
+
+  const setDefsSvgTx = await nononFriendCard.setDefsSvgPointer(defsSvgBytes);
+  await setDefsSvgTx.wait();
+  console.log('set defs svg bytes');
+
+  const setSpritesSvgTx = await nononFriendCard.setSpritesSvgPointer(spritesSvgBytes);
+  await setSpritesSvgTx.wait();
+  console.log('set sprites svg bytes');
+
+
+  console.log('set friend card SVG bytes');
+
+  // await Promise.all([
+  //   nononFriendCard.setBaseSvgPointer(baseSvgBytes),
+  //   nononFriendCard.setDefsSvgPointer(defsSvgBytes),
+  //   nononFriendCard.setSpritesSvgPointer(spritesSvgBytes),
+  // ]).then(() => console.log("Set friend card SVG bytes"));
 
   console.log("nonon deployment complete!");
 
