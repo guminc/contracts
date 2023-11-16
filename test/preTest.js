@@ -16,7 +16,7 @@ async function replaceConstants(filePath) {
 
   // Replace chainlink imports with mocks
   data = data.replace(
-    "0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625",
+    "0x271682DEB8C4E0901D1a1550aD2e64D568E69909",
     "0x0165878A594ca255338adfa4d48449f69242Eb8F"
   );
 

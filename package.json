@@ -15,7 +15,7 @@
     "deploy": "npx hardhat run scripts/deployArchetype.ts --network sepolia",
     "deploy:random": "npx hardhat run scripts/deployArchetypeRandomProxy.ts --network sepolia",
     "network": "npx hardhat node",
-    "verify": "npx hardhat verify 0xE1ab75C9a140d2dc521D45F2CdbD9D39903d3297 --network sepolia"
+    "verify": "npx hardhat verify 0x30e718C873c8b3649AEFf5D917C967D0bD85b729 --network sepolia"
   },
   "repository": {
     "type": "git",
@@ -68,7 +68,7 @@
     "eslint-plugin-promise": "5.2.0",
     "ethereum-waffle": "4.0.0-alpha.0",
     "ethers": "5.6.0",
-    "hardhat": "^2.18.0",
+    "hardhat": "2.12.4",
     "hardhat-contract-sizer": "^2.6.1",
     "hardhat-gas-reporter": "^1.0.8",
     "hardhat-log-remover": "^2.0.2",

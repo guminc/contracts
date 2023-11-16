@@ -13,6 +13,30 @@ import * as Contracts from ".";
 declare module "hardhat/types/runtime" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
     getContractFactory(
+      name: "ConfirmedOwner",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ConfirmedOwner__factory>;
+    getContractFactory(
+      name: "ConfirmedOwnerWithProposal",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ConfirmedOwnerWithProposal__factory>;
+    getContractFactory(
+      name: "LinkTokenInterface",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.LinkTokenInterface__factory>;
+    getContractFactory(
+      name: "OwnableInterface",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.OwnableInterface__factory>;
+    getContractFactory(
+      name: "VRFCoordinatorV2Interface",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.VRFCoordinatorV2Interface__factory>;
+    getContractFactory(
+      name: "VRFConsumerBaseV2",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.VRFConsumerBaseV2__factory>;
+    getContractFactory(
       name: "OwnableUpgradeable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.OwnableUpgradeable__factory>;
@@ -173,6 +197,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Remilia__factory>;
     getContractFactory(
+      name: "VRFCoordinatorV2Mock",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.VRFCoordinatorV2Mock__factory>;
+    getContractFactory(
       name: "TestErc20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TestErc20__factory>;
@@ -201,6 +229,36 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.LibString__factory>;
 
+    getContractAt(
+      name: "ConfirmedOwner",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ConfirmedOwner>;
+    getContractAt(
+      name: "ConfirmedOwnerWithProposal",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ConfirmedOwnerWithProposal>;
+    getContractAt(
+      name: "LinkTokenInterface",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.LinkTokenInterface>;
+    getContractAt(
+      name: "OwnableInterface",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.OwnableInterface>;
+    getContractAt(
+      name: "VRFCoordinatorV2Interface",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.VRFCoordinatorV2Interface>;
+    getContractAt(
+      name: "VRFConsumerBaseV2",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.VRFConsumerBaseV2>;
     getContractAt(
       name: "OwnableUpgradeable",
       address: string,
@@ -401,6 +459,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Remilia>;
+    getContractAt(
+      name: "VRFCoordinatorV2Mock",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.VRFCoordinatorV2Mock>;
     getContractAt(
       name: "TestErc20",
       address: string,

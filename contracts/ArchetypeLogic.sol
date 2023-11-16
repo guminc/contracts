@@ -147,16 +147,12 @@ struct VrfMintInfo {
   uint256 quantity;
 }
 
-address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
-address constant BATCH = 0x6Bc558A6DC48dEfa0e7022713c23D65Ab26e4Fa7;
+address constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
+address constant BATCH = 0x5FbDB2315678afecb367f032d93F642f64180aa3;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
-// vrf sepolia
-address constant VRF_CORDINATOR = 0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625;
-bytes32 constant VRF_KEYHASH = 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c;
 
-// vrf mainnet
-// address constant VRF_CORDINATOR = 0x271682DEB8C4E0901D1a1550aD2e64D568E69909;
-// bytes32 constant VRF_KEYHASH = 0x8af398995b04c28e9951adb9721ef74c74f93e6a478f39e7e0777be13527e7ef;
+address constant VRF_CORDINATOR = 0x271682DEB8C4E0901D1a1550aD2e64D568E69909;
+bytes32 constant VRF_KEYHASH = 0x8af398995b04c28e9951adb9721ef74c74f93e6a478f39e7e0777be13527e7ef;
 
 library ArchetypeLogic {
   //

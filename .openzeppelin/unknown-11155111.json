@@ -1,0 +1,2000 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0xC14B63771A1559BC7b842387B83a3edC493E0eb1",
+    "txHash": "0xfb51c91bcd504148a4aee752ce37e74c200d880bb8f7f74e0c9c33d508679a12"
+  },
+  "proxies": [
+    {
+      "address": "0x860BB2795606B19754538586629d74cA7D778B3E",
+      "txHash": "0xe6fa97ae21a56caf2d112769a3753595767fc29e5c9997afe032f984d9a1da29",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "2174c1fcfbedc21927ef99a13f87baa50780e91a782f7db1f69db705d469bed3": {
+      "address": "0x80992732312741fb39356fa11c9661988131D0d2",
+      "txHash": "0x42fac806b4b55d4c814c91c55f5edb70b54a6df021db5d671415f598196f3896",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_uint8",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "contract": "ERC165Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol:41"
+          },
+          {
+            "contract": "ERC1155Upgradeable",
+            "label": "_balances",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_uint256))",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol:25"
+          },
+          {
+            "contract": "ERC1155Upgradeable",
+            "label": "_operatorApprovals",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol:28"
+          },
+          {
+            "contract": "ERC1155Upgradeable",
+            "label": "_uri",
+            "type": "t_string_storage",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol:31"
+          },
+          {
+            "contract": "ERC1155Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)47_storage",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol:528"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "contract": "ERC2981Upgradeable",
+            "label": "_defaultRoyaltyInfo",
+            "type": "t_struct(RoyaltyInfo)2376_storage",
+            "src": "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol:36"
+          },
+          {
+            "contract": "ERC2981Upgradeable",
+            "label": "_tokenRoyaltyInfo",
+            "type": "t_mapping(t_uint256,t_struct(RoyaltyInfo)2376_storage)",
+            "src": "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol:37"
+          },
+          {
+            "contract": "ERC2981Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)48_storage",
+            "src": "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol:123"
+          },
+          {
+            "contract": "Archetype",
+            "label": "invites",
+            "type": "t_mapping(t_bytes32,t_struct(DutchInvite)4911_storage)",
+            "src": "contracts/Archetype.sol:44"
+          },
+          {
+            "contract": "Archetype",
+            "label": "_minted",
+            "type": "t_mapping(t_address,t_mapping(t_bytes32,t_uint256))",
+            "src": "contracts/Archetype.sol:45"
+          },
+          {
+            "contract": "Archetype",
+            "label": "_listSupply",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "src": "contracts/Archetype.sol:46"
+          },
+          {
+            "contract": "Archetype",
+            "label": "_ownerBalance",
+            "type": "t_mapping(t_address,t_struct(OwnerBalance)4934_storage)",
+            "src": "contracts/Archetype.sol:47"
+          },
+          {
+            "contract": "Archetype",
+            "label": "_affiliateBalance",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint128))",
+            "src": "contracts/Archetype.sol:48"
+          },
+          {
+            "contract": "Archetype",
+            "label": "totalSupply",
+            "type": "t_uint256",
+            "src": "contracts/Archetype.sol:50"
+          },
+          {
+            "contract": "Archetype",
+            "label": "config",
+            "type": "t_struct(Config)4868_storage",
+            "src": "contracts/Archetype.sol:52"
+          },
+          {
+            "contract": "Archetype",
+            "label": "burnConfig",
+            "type": "t_struct(BurnConfig)4948_storage",
+            "src": "contracts/Archetype.sol:53"
+          },
+          {
+            "contract": "Archetype",
+            "label": "options",
+            "type": "t_struct(Options)4887_storage",
+            "src": "contracts/Archetype.sol:54"
+          },
+          {
+            "contract": "Archetype",
+            "label": "name",
+            "type": "t_string_storage",
+            "src": "contracts/Archetype.sol:56"
+          },
+          {
+            "contract": "Archetype",
+            "label": "symbol",
+            "type": "t_string_storage",
+            "src": "contracts/Archetype.sol:57"
+          },
+          {
+            "contract": "Archetype",
+            "label": "vrfConfig",
+            "type": "t_struct(VrfConfig)4953_storage",
+            "src": "contracts/Archetype.sol:60"
+          },
+          {
+            "contract": "Archetype",
+            "label": "requestIdMintInfo",
+            "type": "t_mapping(t_uint256,t_struct(VrfMintInfo)4960_storage)",
+            "src": "contracts/Archetype.sol:61"
+          },
+          {
+            "contract": "Archetype",
+            "label": "vrfCoordinator",
+            "type": "t_contract(VRFCoordinatorV2Interface)446",
+            "src": "contracts/Archetype.sol:62"
+          }
+        ],
+        "types": {
+          "t_mapping(t_bytes32,t_struct(DutchInvite)4911_storage)": {
+            "label": "mapping(bytes32 => struct DutchInvite)"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_struct(DutchInvite)4911_storage": {
+            "label": "struct DutchInvite",
+            "members": [
+              {
+                "label": "price",
+                "type": "t_uint128"
+              },
+              {
+                "label": "reservePrice",
+                "type": "t_uint128"
+              },
+              {
+                "label": "delta",
+                "type": "t_uint128"
+              },
+              {
+                "label": "start",
+                "type": "t_uint32"
+              },
+              {
+                "label": "end",
+                "type": "t_uint32"
+              },
+              {
+                "label": "limit",
+                "type": "t_uint32"
+              },
+              {
+                "label": "maxSupply",
+                "type": "t_uint32"
+              },
+              {
+                "label": "interval",
+                "type": "t_uint32"
+              },
+              {
+                "label": "unitSize",
+                "type": "t_uint32"
+              },
+              {
+                "label": "tokenAddress",
+                "type": "t_address"
+              },
+              {
+                "label": "tokenIdsExcluded",
+                "type": "t_array(t_uint16)dyn_storage"
+              }
+            ]
+          },
+          "t_uint128": {
+            "label": "uint128"
+          },
+          "t_uint32": {
+            "label": "uint32"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint16)dyn_storage": {
+            "label": "uint16[]"
+          },
+          "t_uint16": {
+            "label": "uint16"
+          },
+          "t_mapping(t_address,t_mapping(t_bytes32,t_uint256))": {
+            "label": "mapping(address => mapping(bytes32 => uint256))"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(OwnerBalance)4934_storage)": {
+            "label": "mapping(address => struct OwnerBalance)"
+          },
+          "t_struct(OwnerBalance)4934_storage": {
+            "label": "struct OwnerBalance",
+            "members": [
+              {
+                "label": "owner",
+                "type": "t_uint128"
+              },
+              {
+                "label": "platform",
+                "type": "t_uint128"
+              }
+            ]
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint128))": {
+            "label": "mapping(address => mapping(address => uint128))"
+          },
+          "t_mapping(t_address,t_uint128)": {
+            "label": "mapping(address => uint128)"
+          },
+          "t_struct(Config)4868_storage": {
+            "label": "struct Config",
+            "members": [
+              {
+                "label": "baseUri",
+                "type": "t_string_storage"
+              },
+              {
+                "label": "affiliateSigner",
+                "type": "t_address"
+              },
+              {
+                "label": "ownerAltPayout",
+                "type": "t_address"
+              },
+              {
+                "label": "superAffiliatePayout",
+                "type": "t_address"
+              },
+              {
+                "label": "maxSupply",
+                "type": "t_uint32"
+              },
+              {
+                "label": "maxBatchSize",
+                "type": "t_uint16"
+              },
+              {
+                "label": "affiliateFee",
+                "type": "t_uint16"
+              },
+              {
+                "label": "platformFee",
+                "type": "t_uint16"
+              },
+              {
+                "label": "defaultRoyalty",
+                "type": "t_uint16"
+              },
+              {
+                "label": "discounts",
+                "type": "t_struct(Discount)4843_storage"
+              },
+              {
+                "label": "tokenPool",
+                "type": "t_array(t_uint16)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_struct(Discount)4843_storage": {
+            "label": "struct Discount",
+            "members": [
+              {
+                "label": "affiliateDiscount",
+                "type": "t_uint16"
+              },
+              {
+                "label": "mintTiers",
+                "type": "t_array(t_struct(MintTier)4836_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(MintTier)4836_storage)dyn_storage": {
+            "label": "struct MintTier[]"
+          },
+          "t_struct(MintTier)4836_storage": {
+            "label": "struct MintTier",
+            "members": [
+              {
+                "label": "numMints",
+                "type": "t_uint16"
+              },
+              {
+                "label": "mintDiscount",
+                "type": "t_uint16"
+              }
+            ]
+          },
+          "t_struct(BurnConfig)4948_storage": {
+            "label": "struct BurnConfig",
+            "members": [
+              {
+                "label": "tokenAddress",
+                "type": "t_address"
+              },
+              {
+                "label": "burnAddress",
+                "type": "t_address"
+              }
+            ]
+          },
+          "t_struct(Options)4887_storage": {
+            "label": "struct Options",
+            "members": [
+              {
+                "label": "uriLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "maxSupplyLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "tokenPoolLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "affiliateFeeLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "discountsLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "ownerAltPayoutLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "provenanceHashLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "airdropLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "useChainlinkVRF",
+                "type": "t_bool"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_struct(VrfConfig)4953_storage": {
+            "label": "struct VrfConfig",
+            "members": [
+              {
+                "label": "enabled",
+                "type": "t_bool"
+              },
+              {
+                "label": "subId",
+                "type": "t_uint64"
+              }
+            ]
+          },
+          "t_uint64": {
+            "label": "uint64"
+          },
+          "t_mapping(t_uint256,t_struct(VrfMintInfo)4960_storage)": {
+            "label": "mapping(uint256 => struct VrfMintInfo)"
+          },
+          "t_struct(VrfMintInfo)4960_storage": {
+            "label": "struct VrfMintInfo",
+            "members": [
+              {
+                "label": "key",
+                "type": "t_bytes32"
+              },
+              {
+                "label": "to",
+                "type": "t_address"
+              },
+              {
+                "label": "quantity",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_contract(VRFCoordinatorV2Interface)446": {
+            "label": "contract VRFCoordinatorV2Interface"
+          },
+          "t_struct(RoyaltyInfo)2376_storage": {
+            "label": "struct ERC2981Upgradeable.RoyaltyInfo",
+            "members": [
+              {
+                "label": "receiver",
+                "type": "t_address"
+              },
+              {
+                "label": "royaltyFraction",
+                "type": "t_uint96"
+              }
+            ]
+          },
+          "t_uint96": {
+            "label": "uint96"
+          },
+          "t_mapping(t_uint256,t_struct(RoyaltyInfo)2376_storage)": {
+            "label": "mapping(uint256 => struct ERC2981Upgradeable.RoyaltyInfo)"
+          },
+          "t_array(t_uint256)48_storage": {
+            "label": "uint256[48]"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(uint256 => mapping(address => uint256))"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_bool))": {
+            "label": "mapping(address => mapping(address => bool))"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_array(t_uint256)47_storage": {
+            "label": "uint256[47]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          }
+        }
+      }
+    },
+    "03e9f070e32f2c45c0325c8ee7a56fa8ac42dc0169c81b84d1691893da2c4862": {
+      "address": "0x3f0799445E2223b7E1de9Adf97EeDf34B8a7A320",
+      "txHash": "0x5bbd4c1f047a0cfe45ceb6ef4ad1832a43d14d8f1de9f6d602e46cb97ae14fb3",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_uint8",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "contract": "ERC165Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol:41"
+          },
+          {
+            "contract": "ERC1155Upgradeable",
+            "label": "_balances",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_uint256))",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol:25"
+          },
+          {
+            "contract": "ERC1155Upgradeable",
+            "label": "_operatorApprovals",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol:28"
+          },
+          {
+            "contract": "ERC1155Upgradeable",
+            "label": "_uri",
+            "type": "t_string_storage",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol:31"
+          },
+          {
+            "contract": "ERC1155Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)47_storage",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol:528"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "contract": "ERC2981Upgradeable",
+            "label": "_defaultRoyaltyInfo",
+            "type": "t_struct(RoyaltyInfo)1945_storage",
+            "src": "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol:36"
+          },
+          {
+            "contract": "ERC2981Upgradeable",
+            "label": "_tokenRoyaltyInfo",
+            "type": "t_mapping(t_uint256,t_struct(RoyaltyInfo)1945_storage)",
+            "src": "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol:37"
+          },
+          {
+            "contract": "ERC2981Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)48_storage",
+            "src": "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol:123"
+          },
+          {
+            "contract": "Archetype",
+            "label": "invites",
+            "type": "t_mapping(t_bytes32,t_struct(DutchInvite)4480_storage)",
+            "src": "contracts/Archetype.sol:44"
+          },
+          {
+            "contract": "Archetype",
+            "label": "_minted",
+            "type": "t_mapping(t_address,t_mapping(t_bytes32,t_uint256))",
+            "src": "contracts/Archetype.sol:45"
+          },
+          {
+            "contract": "Archetype",
+            "label": "_listSupply",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "src": "contracts/Archetype.sol:46"
+          },
+          {
+            "contract": "Archetype",
+            "label": "_ownerBalance",
+            "type": "t_mapping(t_address,t_struct(OwnerBalance)4503_storage)",
+            "src": "contracts/Archetype.sol:47"
+          },
+          {
+            "contract": "Archetype",
+            "label": "_affiliateBalance",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint128))",
+            "src": "contracts/Archetype.sol:48"
+          },
+          {
+            "contract": "Archetype",
+            "label": "totalSupply",
+            "type": "t_uint256",
+            "src": "contracts/Archetype.sol:50"
+          },
+          {
+            "contract": "Archetype",
+            "label": "config",
+            "type": "t_struct(Config)4437_storage",
+            "src": "contracts/Archetype.sol:52"
+          },
+          {
+            "contract": "Archetype",
+            "label": "burnConfig",
+            "type": "t_struct(BurnConfig)4517_storage",
+            "src": "contracts/Archetype.sol:53"
+          },
+          {
+            "contract": "Archetype",
+            "label": "options",
+            "type": "t_struct(Options)4456_storage",
+            "src": "contracts/Archetype.sol:54"
+          },
+          {
+            "contract": "Archetype",
+            "label": "name",
+            "type": "t_string_storage",
+            "src": "contracts/Archetype.sol:56"
+          },
+          {
+            "contract": "Archetype",
+            "label": "symbol",
+            "type": "t_string_storage",
+            "src": "contracts/Archetype.sol:57"
+          },
+          {
+            "contract": "Archetype",
+            "label": "vrfConfig",
+            "type": "t_struct(VrfConfig)4522_storage",
+            "src": "contracts/Archetype.sol:60"
+          },
+          {
+            "contract": "Archetype",
+            "label": "requestIdMintInfo",
+            "type": "t_mapping(t_uint256,t_struct(VrfMintInfo)4529_storage)",
+            "src": "contracts/Archetype.sol:61"
+          },
+          {
+            "contract": "Archetype",
+            "label": "vrfCoordinator",
+            "type": "t_contract(VRFCoordinatorV2Interface)95",
+            "src": "contracts/Archetype.sol:62"
+          }
+        ],
+        "types": {
+          "t_mapping(t_bytes32,t_struct(DutchInvite)4480_storage)": {
+            "label": "mapping(bytes32 => struct DutchInvite)"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_struct(DutchInvite)4480_storage": {
+            "label": "struct DutchInvite",
+            "members": [
+              {
+                "label": "price",
+                "type": "t_uint128"
+              },
+              {
+                "label": "reservePrice",
+                "type": "t_uint128"
+              },
+              {
+                "label": "delta",
+                "type": "t_uint128"
+              },
+              {
+                "label": "start",
+                "type": "t_uint32"
+              },
+              {
+                "label": "end",
+                "type": "t_uint32"
+              },
+              {
+                "label": "limit",
+                "type": "t_uint32"
+              },
+              {
+                "label": "maxSupply",
+                "type": "t_uint32"
+              },
+              {
+                "label": "interval",
+                "type": "t_uint32"
+              },
+              {
+                "label": "unitSize",
+                "type": "t_uint32"
+              },
+              {
+                "label": "tokenAddress",
+                "type": "t_address"
+              },
+              {
+                "label": "tokenIdsExcluded",
+                "type": "t_array(t_uint16)dyn_storage"
+              }
+            ]
+          },
+          "t_uint128": {
+            "label": "uint128"
+          },
+          "t_uint32": {
+            "label": "uint32"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint16)dyn_storage": {
+            "label": "uint16[]"
+          },
+          "t_uint16": {
+            "label": "uint16"
+          },
+          "t_mapping(t_address,t_mapping(t_bytes32,t_uint256))": {
+            "label": "mapping(address => mapping(bytes32 => uint256))"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(OwnerBalance)4503_storage)": {
+            "label": "mapping(address => struct OwnerBalance)"
+          },
+          "t_struct(OwnerBalance)4503_storage": {
+            "label": "struct OwnerBalance",
+            "members": [
+              {
+                "label": "owner",
+                "type": "t_uint128"
+              },
+              {
+                "label": "platform",
+                "type": "t_uint128"
+              }
+            ]
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint128))": {
+            "label": "mapping(address => mapping(address => uint128))"
+          },
+          "t_mapping(t_address,t_uint128)": {
+            "label": "mapping(address => uint128)"
+          },
+          "t_struct(Config)4437_storage": {
+            "label": "struct Config",
+            "members": [
+              {
+                "label": "baseUri",
+                "type": "t_string_storage"
+              },
+              {
+                "label": "affiliateSigner",
+                "type": "t_address"
+              },
+              {
+                "label": "ownerAltPayout",
+                "type": "t_address"
+              },
+              {
+                "label": "superAffiliatePayout",
+                "type": "t_address"
+              },
+              {
+                "label": "maxSupply",
+                "type": "t_uint32"
+              },
+              {
+                "label": "maxBatchSize",
+                "type": "t_uint16"
+              },
+              {
+                "label": "affiliateFee",
+                "type": "t_uint16"
+              },
+              {
+                "label": "platformFee",
+                "type": "t_uint16"
+              },
+              {
+                "label": "defaultRoyalty",
+                "type": "t_uint16"
+              },
+              {
+                "label": "discounts",
+                "type": "t_struct(Discount)4412_storage"
+              },
+              {
+                "label": "tokenPool",
+                "type": "t_array(t_uint16)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_struct(Discount)4412_storage": {
+            "label": "struct Discount",
+            "members": [
+              {
+                "label": "affiliateDiscount",
+                "type": "t_uint16"
+              },
+              {
+                "label": "mintTiers",
+                "type": "t_array(t_struct(MintTier)4405_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(MintTier)4405_storage)dyn_storage": {
+            "label": "struct MintTier[]"
+          },
+          "t_struct(MintTier)4405_storage": {
+            "label": "struct MintTier",
+            "members": [
+              {
+                "label": "numMints",
+                "type": "t_uint16"
+              },
+              {
+                "label": "mintDiscount",
+                "type": "t_uint16"
+              }
+            ]
+          },
+          "t_struct(BurnConfig)4517_storage": {
+            "label": "struct BurnConfig",
+            "members": [
+              {
+                "label": "tokenAddress",
+                "type": "t_address"
+              },
+              {
+                "label": "burnAddress",
+                "type": "t_address"
+              }
+            ]
+          },
+          "t_struct(Options)4456_storage": {
+            "label": "struct Options",
+            "members": [
+              {
+                "label": "uriLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "maxSupplyLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "tokenPoolLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "affiliateFeeLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "discountsLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "ownerAltPayoutLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "provenanceHashLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "airdropLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "useChainlinkVRF",
+                "type": "t_bool"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_struct(VrfConfig)4522_storage": {
+            "label": "struct VrfConfig",
+            "members": [
+              {
+                "label": "enabled",
+                "type": "t_bool"
+              },
+              {
+                "label": "subId",
+                "type": "t_uint64"
+              }
+            ]
+          },
+          "t_uint64": {
+            "label": "uint64"
+          },
+          "t_mapping(t_uint256,t_struct(VrfMintInfo)4529_storage)": {
+            "label": "mapping(uint256 => struct VrfMintInfo)"
+          },
+          "t_struct(VrfMintInfo)4529_storage": {
+            "label": "struct VrfMintInfo",
+            "members": [
+              {
+                "label": "key",
+                "type": "t_bytes32"
+              },
+              {
+                "label": "to",
+                "type": "t_address"
+              },
+              {
+                "label": "quantity",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_contract(VRFCoordinatorV2Interface)95": {
+            "label": "contract VRFCoordinatorV2Interface"
+          },
+          "t_struct(RoyaltyInfo)1945_storage": {
+            "label": "struct ERC2981Upgradeable.RoyaltyInfo",
+            "members": [
+              {
+                "label": "receiver",
+                "type": "t_address"
+              },
+              {
+                "label": "royaltyFraction",
+                "type": "t_uint96"
+              }
+            ]
+          },
+          "t_uint96": {
+            "label": "uint96"
+          },
+          "t_mapping(t_uint256,t_struct(RoyaltyInfo)1945_storage)": {
+            "label": "mapping(uint256 => struct ERC2981Upgradeable.RoyaltyInfo)"
+          },
+          "t_array(t_uint256)48_storage": {
+            "label": "uint256[48]"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(uint256 => mapping(address => uint256))"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_bool))": {
+            "label": "mapping(address => mapping(address => bool))"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_array(t_uint256)47_storage": {
+            "label": "uint256[47]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          }
+        }
+      }
+    },
+    "88ca7561fdbfe582c5f3479e18eaeaf28d939a3b6b8d01a842ee91fd2589eaec": {
+      "address": "0x904d57dB51Bec057f3035986bE9457bc836c6e69",
+      "txHash": "0x5e182819e616c297d196259605f67fefe3d0780e71aec6e61594689e0cf1ca40",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_uint8",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "contract": "ERC165Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol:41"
+          },
+          {
+            "contract": "ERC1155Upgradeable",
+            "label": "_balances",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_uint256))",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol:25"
+          },
+          {
+            "contract": "ERC1155Upgradeable",
+            "label": "_operatorApprovals",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol:28"
+          },
+          {
+            "contract": "ERC1155Upgradeable",
+            "label": "_uri",
+            "type": "t_string_storage",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol:31"
+          },
+          {
+            "contract": "ERC1155Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)47_storage",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol:528"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "contract": "ERC2981Upgradeable",
+            "label": "_defaultRoyaltyInfo",
+            "type": "t_struct(RoyaltyInfo)1945_storage",
+            "src": "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol:36"
+          },
+          {
+            "contract": "ERC2981Upgradeable",
+            "label": "_tokenRoyaltyInfo",
+            "type": "t_mapping(t_uint256,t_struct(RoyaltyInfo)1945_storage)",
+            "src": "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol:37"
+          },
+          {
+            "contract": "ERC2981Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)48_storage",
+            "src": "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol:123"
+          },
+          {
+            "contract": "Archetype",
+            "label": "invites",
+            "type": "t_mapping(t_bytes32,t_struct(DutchInvite)4480_storage)",
+            "src": "contracts/Archetype.sol:44"
+          },
+          {
+            "contract": "Archetype",
+            "label": "_minted",
+            "type": "t_mapping(t_address,t_mapping(t_bytes32,t_uint256))",
+            "src": "contracts/Archetype.sol:45"
+          },
+          {
+            "contract": "Archetype",
+            "label": "_listSupply",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "src": "contracts/Archetype.sol:46"
+          },
+          {
+            "contract": "Archetype",
+            "label": "_ownerBalance",
+            "type": "t_mapping(t_address,t_struct(OwnerBalance)4503_storage)",
+            "src": "contracts/Archetype.sol:47"
+          },
+          {
+            "contract": "Archetype",
+            "label": "_affiliateBalance",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint128))",
+            "src": "contracts/Archetype.sol:48"
+          },
+          {
+            "contract": "Archetype",
+            "label": "totalSupply",
+            "type": "t_uint256",
+            "src": "contracts/Archetype.sol:50"
+          },
+          {
+            "contract": "Archetype",
+            "label": "config",
+            "type": "t_struct(Config)4437_storage",
+            "src": "contracts/Archetype.sol:52"
+          },
+          {
+            "contract": "Archetype",
+            "label": "burnConfig",
+            "type": "t_struct(BurnConfig)4517_storage",
+            "src": "contracts/Archetype.sol:53"
+          },
+          {
+            "contract": "Archetype",
+            "label": "options",
+            "type": "t_struct(Options)4456_storage",
+            "src": "contracts/Archetype.sol:54"
+          },
+          {
+            "contract": "Archetype",
+            "label": "name",
+            "type": "t_string_storage",
+            "src": "contracts/Archetype.sol:56"
+          },
+          {
+            "contract": "Archetype",
+            "label": "symbol",
+            "type": "t_string_storage",
+            "src": "contracts/Archetype.sol:57"
+          },
+          {
+            "contract": "Archetype",
+            "label": "vrfConfig",
+            "type": "t_struct(VrfConfig)4522_storage",
+            "src": "contracts/Archetype.sol:60"
+          },
+          {
+            "contract": "Archetype",
+            "label": "requestIdMintInfo",
+            "type": "t_mapping(t_uint256,t_struct(VrfMintInfo)4529_storage)",
+            "src": "contracts/Archetype.sol:61"
+          },
+          {
+            "contract": "Archetype",
+            "label": "vrfCoordinator",
+            "type": "t_contract(VRFCoordinatorV2Interface)95",
+            "src": "contracts/Archetype.sol:62"
+          }
+        ],
+        "types": {
+          "t_mapping(t_bytes32,t_struct(DutchInvite)4480_storage)": {
+            "label": "mapping(bytes32 => struct DutchInvite)"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_struct(DutchInvite)4480_storage": {
+            "label": "struct DutchInvite",
+            "members": [
+              {
+                "label": "price",
+                "type": "t_uint128"
+              },
+              {
+                "label": "reservePrice",
+                "type": "t_uint128"
+              },
+              {
+                "label": "delta",
+                "type": "t_uint128"
+              },
+              {
+                "label": "start",
+                "type": "t_uint32"
+              },
+              {
+                "label": "end",
+                "type": "t_uint32"
+              },
+              {
+                "label": "limit",
+                "type": "t_uint32"
+              },
+              {
+                "label": "maxSupply",
+                "type": "t_uint32"
+              },
+              {
+                "label": "interval",
+                "type": "t_uint32"
+              },
+              {
+                "label": "unitSize",
+                "type": "t_uint32"
+              },
+              {
+                "label": "tokenAddress",
+                "type": "t_address"
+              },
+              {
+                "label": "tokenIdsExcluded",
+                "type": "t_array(t_uint16)dyn_storage"
+              }
+            ]
+          },
+          "t_uint128": {
+            "label": "uint128"
+          },
+          "t_uint32": {
+            "label": "uint32"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint16)dyn_storage": {
+            "label": "uint16[]"
+          },
+          "t_uint16": {
+            "label": "uint16"
+          },
+          "t_mapping(t_address,t_mapping(t_bytes32,t_uint256))": {
+            "label": "mapping(address => mapping(bytes32 => uint256))"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(OwnerBalance)4503_storage)": {
+            "label": "mapping(address => struct OwnerBalance)"
+          },
+          "t_struct(OwnerBalance)4503_storage": {
+            "label": "struct OwnerBalance",
+            "members": [
+              {
+                "label": "owner",
+                "type": "t_uint128"
+              },
+              {
+                "label": "platform",
+                "type": "t_uint128"
+              }
+            ]
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint128))": {
+            "label": "mapping(address => mapping(address => uint128))"
+          },
+          "t_mapping(t_address,t_uint128)": {
+            "label": "mapping(address => uint128)"
+          },
+          "t_struct(Config)4437_storage": {
+            "label": "struct Config",
+            "members": [
+              {
+                "label": "baseUri",
+                "type": "t_string_storage"
+              },
+              {
+                "label": "affiliateSigner",
+                "type": "t_address"
+              },
+              {
+                "label": "ownerAltPayout",
+                "type": "t_address"
+              },
+              {
+                "label": "superAffiliatePayout",
+                "type": "t_address"
+              },
+              {
+                "label": "maxSupply",
+                "type": "t_uint32"
+              },
+              {
+                "label": "maxBatchSize",
+                "type": "t_uint16"
+              },
+              {
+                "label": "affiliateFee",
+                "type": "t_uint16"
+              },
+              {
+                "label": "platformFee",
+                "type": "t_uint16"
+              },
+              {
+                "label": "defaultRoyalty",
+                "type": "t_uint16"
+              },
+              {
+                "label": "discounts",
+                "type": "t_struct(Discount)4412_storage"
+              },
+              {
+                "label": "tokenPool",
+                "type": "t_array(t_uint16)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_struct(Discount)4412_storage": {
+            "label": "struct Discount",
+            "members": [
+              {
+                "label": "affiliateDiscount",
+                "type": "t_uint16"
+              },
+              {
+                "label": "mintTiers",
+                "type": "t_array(t_struct(MintTier)4405_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(MintTier)4405_storage)dyn_storage": {
+            "label": "struct MintTier[]"
+          },
+          "t_struct(MintTier)4405_storage": {
+            "label": "struct MintTier",
+            "members": [
+              {
+                "label": "numMints",
+                "type": "t_uint16"
+              },
+              {
+                "label": "mintDiscount",
+                "type": "t_uint16"
+              }
+            ]
+          },
+          "t_struct(BurnConfig)4517_storage": {
+            "label": "struct BurnConfig",
+            "members": [
+              {
+                "label": "tokenAddress",
+                "type": "t_address"
+              },
+              {
+                "label": "burnAddress",
+                "type": "t_address"
+              }
+            ]
+          },
+          "t_struct(Options)4456_storage": {
+            "label": "struct Options",
+            "members": [
+              {
+                "label": "uriLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "maxSupplyLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "tokenPoolLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "affiliateFeeLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "discountsLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "ownerAltPayoutLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "provenanceHashLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "airdropLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "useChainlinkVRF",
+                "type": "t_bool"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_struct(VrfConfig)4522_storage": {
+            "label": "struct VrfConfig",
+            "members": [
+              {
+                "label": "enabled",
+                "type": "t_bool"
+              },
+              {
+                "label": "subId",
+                "type": "t_uint64"
+              }
+            ]
+          },
+          "t_uint64": {
+            "label": "uint64"
+          },
+          "t_mapping(t_uint256,t_struct(VrfMintInfo)4529_storage)": {
+            "label": "mapping(uint256 => struct VrfMintInfo)"
+          },
+          "t_struct(VrfMintInfo)4529_storage": {
+            "label": "struct VrfMintInfo",
+            "members": [
+              {
+                "label": "key",
+                "type": "t_bytes32"
+              },
+              {
+                "label": "to",
+                "type": "t_address"
+              },
+              {
+                "label": "quantity",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_contract(VRFCoordinatorV2Interface)95": {
+            "label": "contract VRFCoordinatorV2Interface"
+          },
+          "t_struct(RoyaltyInfo)1945_storage": {
+            "label": "struct ERC2981Upgradeable.RoyaltyInfo",
+            "members": [
+              {
+                "label": "receiver",
+                "type": "t_address"
+              },
+              {
+                "label": "royaltyFraction",
+                "type": "t_uint96"
+              }
+            ]
+          },
+          "t_uint96": {
+            "label": "uint96"
+          },
+          "t_mapping(t_uint256,t_struct(RoyaltyInfo)1945_storage)": {
+            "label": "mapping(uint256 => struct ERC2981Upgradeable.RoyaltyInfo)"
+          },
+          "t_array(t_uint256)48_storage": {
+            "label": "uint256[48]"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(uint256 => mapping(address => uint256))"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_bool))": {
+            "label": "mapping(address => mapping(address => bool))"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_array(t_uint256)47_storage": {
+            "label": "uint256[47]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          }
+        }
+      }
+    },
+    "0b249a40b1abec7d90aa3182e5f0bbec5c5607eb30d98ee8d2a9eda290142b3b": {
+      "address": "0x30e718C873c8b3649AEFf5D917C967D0bD85b729",
+      "txHash": "0x714a2126585463be08427cf63df8a1461a471f4cbbd48be6559b95be948aa03c",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_uint8",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "contract": "ERC165Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol:41"
+          },
+          {
+            "contract": "ERC1155Upgradeable",
+            "label": "_balances",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_uint256))",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol:25"
+          },
+          {
+            "contract": "ERC1155Upgradeable",
+            "label": "_operatorApprovals",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol:28"
+          },
+          {
+            "contract": "ERC1155Upgradeable",
+            "label": "_uri",
+            "type": "t_string_storage",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol:31"
+          },
+          {
+            "contract": "ERC1155Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)47_storage",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol:528"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "contract": "ERC2981Upgradeable",
+            "label": "_defaultRoyaltyInfo",
+            "type": "t_struct(RoyaltyInfo)1945_storage",
+            "src": "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol:36"
+          },
+          {
+            "contract": "ERC2981Upgradeable",
+            "label": "_tokenRoyaltyInfo",
+            "type": "t_mapping(t_uint256,t_struct(RoyaltyInfo)1945_storage)",
+            "src": "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol:37"
+          },
+          {
+            "contract": "ERC2981Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)48_storage",
+            "src": "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol:123"
+          },
+          {
+            "contract": "Archetype",
+            "label": "invites",
+            "type": "t_mapping(t_bytes32,t_struct(DutchInvite)4480_storage)",
+            "src": "contracts/Archetype.sol:44"
+          },
+          {
+            "contract": "Archetype",
+            "label": "_minted",
+            "type": "t_mapping(t_address,t_mapping(t_bytes32,t_uint256))",
+            "src": "contracts/Archetype.sol:45"
+          },
+          {
+            "contract": "Archetype",
+            "label": "_listSupply",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "src": "contracts/Archetype.sol:46"
+          },
+          {
+            "contract": "Archetype",
+            "label": "_ownerBalance",
+            "type": "t_mapping(t_address,t_struct(OwnerBalance)4503_storage)",
+            "src": "contracts/Archetype.sol:47"
+          },
+          {
+            "contract": "Archetype",
+            "label": "_affiliateBalance",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint128))",
+            "src": "contracts/Archetype.sol:48"
+          },
+          {
+            "contract": "Archetype",
+            "label": "totalSupply",
+            "type": "t_uint256",
+            "src": "contracts/Archetype.sol:50"
+          },
+          {
+            "contract": "Archetype",
+            "label": "config",
+            "type": "t_struct(Config)4437_storage",
+            "src": "contracts/Archetype.sol:52"
+          },
+          {
+            "contract": "Archetype",
+            "label": "burnConfig",
+            "type": "t_struct(BurnConfig)4517_storage",
+            "src": "contracts/Archetype.sol:53"
+          },
+          {
+            "contract": "Archetype",
+            "label": "options",
+            "type": "t_struct(Options)4456_storage",
+            "src": "contracts/Archetype.sol:54"
+          },
+          {
+            "contract": "Archetype",
+            "label": "name",
+            "type": "t_string_storage",
+            "src": "contracts/Archetype.sol:56"
+          },
+          {
+            "contract": "Archetype",
+            "label": "symbol",
+            "type": "t_string_storage",
+            "src": "contracts/Archetype.sol:57"
+          },
+          {
+            "contract": "Archetype",
+            "label": "vrfConfig",
+            "type": "t_struct(VrfConfig)4522_storage",
+            "src": "contracts/Archetype.sol:60"
+          },
+          {
+            "contract": "Archetype",
+            "label": "requestIdMintInfo",
+            "type": "t_mapping(t_uint256,t_struct(VrfMintInfo)4529_storage)",
+            "src": "contracts/Archetype.sol:61"
+          },
+          {
+            "contract": "Archetype",
+            "label": "vrfCoordinator",
+            "type": "t_contract(VRFCoordinatorV2Interface)95",
+            "src": "contracts/Archetype.sol:62"
+          }
+        ],
+        "types": {
+          "t_mapping(t_bytes32,t_struct(DutchInvite)4480_storage)": {
+            "label": "mapping(bytes32 => struct DutchInvite)"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_struct(DutchInvite)4480_storage": {
+            "label": "struct DutchInvite",
+            "members": [
+              {
+                "label": "price",
+                "type": "t_uint128"
+              },
+              {
+                "label": "reservePrice",
+                "type": "t_uint128"
+              },
+              {
+                "label": "delta",
+                "type": "t_uint128"
+              },
+              {
+                "label": "start",
+                "type": "t_uint32"
+              },
+              {
+                "label": "end",
+                "type": "t_uint32"
+              },
+              {
+                "label": "limit",
+                "type": "t_uint32"
+              },
+              {
+                "label": "maxSupply",
+                "type": "t_uint32"
+              },
+              {
+                "label": "interval",
+                "type": "t_uint32"
+              },
+              {
+                "label": "unitSize",
+                "type": "t_uint32"
+              },
+              {
+                "label": "tokenAddress",
+                "type": "t_address"
+              },
+              {
+                "label": "tokenIdsExcluded",
+                "type": "t_array(t_uint16)dyn_storage"
+              }
+            ]
+          },
+          "t_uint128": {
+            "label": "uint128"
+          },
+          "t_uint32": {
+            "label": "uint32"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_array(t_uint16)dyn_storage": {
+            "label": "uint16[]"
+          },
+          "t_uint16": {
+            "label": "uint16"
+          },
+          "t_mapping(t_address,t_mapping(t_bytes32,t_uint256))": {
+            "label": "mapping(address => mapping(bytes32 => uint256))"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_struct(OwnerBalance)4503_storage)": {
+            "label": "mapping(address => struct OwnerBalance)"
+          },
+          "t_struct(OwnerBalance)4503_storage": {
+            "label": "struct OwnerBalance",
+            "members": [
+              {
+                "label": "owner",
+                "type": "t_uint128"
+              },
+              {
+                "label": "platform",
+                "type": "t_uint128"
+              }
+            ]
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint128))": {
+            "label": "mapping(address => mapping(address => uint128))"
+          },
+          "t_mapping(t_address,t_uint128)": {
+            "label": "mapping(address => uint128)"
+          },
+          "t_struct(Config)4437_storage": {
+            "label": "struct Config",
+            "members": [
+              {
+                "label": "baseUri",
+                "type": "t_string_storage"
+              },
+              {
+                "label": "affiliateSigner",
+                "type": "t_address"
+              },
+              {
+                "label": "ownerAltPayout",
+                "type": "t_address"
+              },
+              {
+                "label": "superAffiliatePayout",
+                "type": "t_address"
+              },
+              {
+                "label": "maxSupply",
+                "type": "t_uint32"
+              },
+              {
+                "label": "maxBatchSize",
+                "type": "t_uint16"
+              },
+              {
+                "label": "affiliateFee",
+                "type": "t_uint16"
+              },
+              {
+                "label": "platformFee",
+                "type": "t_uint16"
+              },
+              {
+                "label": "defaultRoyalty",
+                "type": "t_uint16"
+              },
+              {
+                "label": "discounts",
+                "type": "t_struct(Discount)4412_storage"
+              },
+              {
+                "label": "tokenPool",
+                "type": "t_array(t_uint16)dyn_storage"
+              }
+            ]
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_struct(Discount)4412_storage": {
+            "label": "struct Discount",
+            "members": [
+              {
+                "label": "affiliateDiscount",
+                "type": "t_uint16"
+              },
+              {
+                "label": "mintTiers",
+                "type": "t_array(t_struct(MintTier)4405_storage)dyn_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(MintTier)4405_storage)dyn_storage": {
+            "label": "struct MintTier[]"
+          },
+          "t_struct(MintTier)4405_storage": {
+            "label": "struct MintTier",
+            "members": [
+              {
+                "label": "numMints",
+                "type": "t_uint16"
+              },
+              {
+                "label": "mintDiscount",
+                "type": "t_uint16"
+              }
+            ]
+          },
+          "t_struct(BurnConfig)4517_storage": {
+            "label": "struct BurnConfig",
+            "members": [
+              {
+                "label": "tokenAddress",
+                "type": "t_address"
+              },
+              {
+                "label": "burnAddress",
+                "type": "t_address"
+              }
+            ]
+          },
+          "t_struct(Options)4456_storage": {
+            "label": "struct Options",
+            "members": [
+              {
+                "label": "uriLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "maxSupplyLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "tokenPoolLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "affiliateFeeLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "discountsLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "ownerAltPayoutLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "provenanceHashLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "airdropLocked",
+                "type": "t_bool"
+              },
+              {
+                "label": "useChainlinkVRF",
+                "type": "t_bool"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_struct(VrfConfig)4522_storage": {
+            "label": "struct VrfConfig",
+            "members": [
+              {
+                "label": "enabled",
+                "type": "t_bool"
+              },
+              {
+                "label": "subId",
+                "type": "t_uint64"
+              }
+            ]
+          },
+          "t_uint64": {
+            "label": "uint64"
+          },
+          "t_mapping(t_uint256,t_struct(VrfMintInfo)4529_storage)": {
+            "label": "mapping(uint256 => struct VrfMintInfo)"
+          },
+          "t_struct(VrfMintInfo)4529_storage": {
+            "label": "struct VrfMintInfo",
+            "members": [
+              {
+                "label": "key",
+                "type": "t_bytes32"
+              },
+              {
+                "label": "to",
+                "type": "t_address"
+              },
+              {
+                "label": "quantity",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_contract(VRFCoordinatorV2Interface)95": {
+            "label": "contract VRFCoordinatorV2Interface"
+          },
+          "t_struct(RoyaltyInfo)1945_storage": {
+            "label": "struct ERC2981Upgradeable.RoyaltyInfo",
+            "members": [
+              {
+                "label": "receiver",
+                "type": "t_address"
+              },
+              {
+                "label": "royaltyFraction",
+                "type": "t_uint96"
+              }
+            ]
+          },
+          "t_uint96": {
+            "label": "uint96"
+          },
+          "t_mapping(t_uint256,t_struct(RoyaltyInfo)1945_storage)": {
+            "label": "mapping(uint256 => struct ERC2981Upgradeable.RoyaltyInfo)"
+          },
+          "t_array(t_uint256)48_storage": {
+            "label": "uint256[48]"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(uint256 => mapping(address => uint256))"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_bool))": {
+            "label": "mapping(address => mapping(address => bool))"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_array(t_uint256)47_storage": {
+            "label": "uint256[47]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          }
+        }
+      }
+    }
+  }
+}
