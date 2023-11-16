@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ArchetypeLogic v0.6.0 - ERC1155
+// ArchetypeLogic v0.6.0 - ERC1155-random
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -28,6 +28,7 @@ error ExcessiveEthSent();
 error Erc20BalanceTooLow();
 error MaxSupplyExceeded();
 error ListMaxSupplyExceeded();
+error TokenPoolEmpty();
 error NumberOfMintsExceeded();
 error MintingPaused();
 error InvalidReferral();
@@ -39,13 +40,15 @@ error BurnToMintDisabled();
 error NotTokenOwner();
 error NotPlatform();
 error NotOwner();
+error NotVRF();
 error NotApprovedToTransfer();
 error InvalidAmountOfTokens();
 error WrongPassword();
 error LockedForever();
 error URIQueryForNonexistentToken();
 error InvalidTokenId();
-error NotSupported();
+error MaxRetriesExceeded();
+error InvalidRequestId();
 
 //
 // STRUCTS
@@ -70,21 +73,25 @@ struct Config {
   address affiliateSigner;
   address ownerAltPayout; // optional alternative address for owner withdrawals.
   address superAffiliatePayout; // optional super affiliate address, will receive half of platform fee if set.
-  uint32[] maxSupply; // max supply for each mintable tokenId
-  uint32 maxBatchSize;
+  uint32 maxSupply;
+  uint16 maxBatchSize;
   uint16 affiliateFee; //BPS
   uint16 platformFee; //BPS
   uint16 defaultRoyalty; //BPS
   Discount discounts;
+  uint16[] tokenPool; // flattened list of all mintable tokens
 }
 
 struct Options {
   bool uriLocked;
   bool maxSupplyLocked;
+  bool tokenPoolLocked;
   bool affiliateFeeLocked;
   bool discountsLocked;
   bool ownerAltPayoutLocked;
   bool provenanceHashLocked;
+  bool airdropLocked;
+  bool useChainlinkVRF;
 }
 
 struct DutchInvite {
@@ -97,9 +104,8 @@ struct DutchInvite {
   uint32 maxSupply;
   uint32 interval;
   uint32 unitSize; // mint 1 get x
-  bool randomize; // true for random tokenId, false for user selected
-  uint32[] tokenIds; // token id mintable from this list
   address tokenAddress;
+  uint16[] tokenIdsExcluded; // token ids excluded from this list
 }
 
 struct Invite {
@@ -109,9 +115,8 @@ struct Invite {
   uint32 limit;
   uint32 maxSupply;
   uint32 unitSize; // mint 1 get x
-  bool randomize; // true for random tokenId, false for user selected
-  uint32[] tokenIds; // token ids mintable from this list
   address tokenAddress;
+  uint16[] tokenIdsExcluded; // token ids excluded from this list
 }
 
 struct OwnerBalance {
@@ -122,14 +127,32 @@ struct OwnerBalance {
 struct ValidationArgs {
   address owner;
   address affiliate;
-  uint256[] quantities;
-  uint256[] tokenIds;
+  uint256 quantity;
+  uint256 curSupply;
 }
 
-address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
-// TODO: set batch to mainnet address and update preTest script
+struct BurnConfig {
+  address tokenAddress;
+  address burnAddress;
+}
+
+struct VrfConfig {
+  bool enabled;
+  uint64 subId;
+}
+
+struct VrfMintInfo {
+  bytes32 key;
+  address to;
+  uint256 quantity;
+}
+
+address constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
 address constant BATCH = 0x5FbDB2315678afecb367f032d93F642f64180aa3;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
+
+address constant VRF_CORDINATOR = 0x271682DEB8C4E0901D1a1550aD2e64D568E69909;
+bytes32 constant VRF_KEYHASH = 0x8af398995b04c28e9951adb9721ef74c74f93e6a478f39e7e0777be13527e7ef;
 
 library ArchetypeLogic {
   //
@@ -184,7 +207,6 @@ library ArchetypeLogic {
     Auth calldata auth,
     mapping(address => mapping(bytes32 => uint256)) storage minted,
     mapping(bytes32 => uint256) storage listSupply,
-    uint256[] storage tokenSupply,
     bytes calldata signature,
     ValidationArgs memory args
   ) public view {
@@ -214,61 +236,37 @@ library ArchetypeLogic {
       revert MintEnded();
     }
 
-    uint256 totalQuantity = 0;
-    for (uint256 j = 0; j < args.quantities.length; j++) {
-      totalQuantity += args.quantities[j];
-    }
-
     {
       uint256 totalAfterMint;
       if (i.limit < i.maxSupply) {
-        totalAfterMint = minted[msgSender][auth.key] + totalQuantity;
+        totalAfterMint = minted[msgSender][auth.key] + args.quantity;
 
         if (totalAfterMint > i.limit) {
           revert NumberOfMintsExceeded();
         }
       }
 
-      if (i.maxSupply < 2**32 - 1) {
-        totalAfterMint = listSupply[auth.key] + totalQuantity;
+      if (i.maxSupply < config.maxSupply) {
+        totalAfterMint = listSupply[auth.key] + args.quantity;
         if (totalAfterMint > i.maxSupply) {
           revert ListMaxSupplyExceeded();
         }
       }
     }
 
-    uint256[] memory checked = new uint256[](tokenSupply.length);
-    for (uint256 j = 0; j < args.tokenIds.length; j++) {
-      uint256 tokenId = args.tokenIds[j];
-      if (!i.randomize) {
-        if (i.tokenIds.length != 0) {
-          bool isValid = false;
-          for (uint256 k = 0; k < i.tokenIds.length; k++) {
-            if (tokenId == i.tokenIds[k]) {
-              isValid = true;
-              break;
-            }
-          }
-          if (!isValid) {
-            revert InvalidTokenId();
-          }
-        }
-      }
-
-      if (
-        (tokenSupply[tokenId - 1] + checked[tokenId - 1] + args.quantities[j]) >
-        config.maxSupply[tokenId - 1]
-      ) {
-        revert MaxSupplyExceeded();
-      }
-      checked[tokenId - 1] += args.quantities[j];
-    }
-
-    if (totalQuantity > config.maxBatchSize) {
+    if (args.quantity > config.maxBatchSize) {
       revert MaxBatchSizeExceeded();
     }
 
-    uint256 cost = computePrice(i, config.discounts, totalQuantity, args.affiliate != address(0));
+    if ((args.curSupply + args.quantity) > config.maxSupply) {
+      revert MaxSupplyExceeded();
+    }
+
+    if (args.quantity > config.tokenPool.length) {
+      revert TokenPoolEmpty();
+    }
+
+    uint256 cost = computePrice(i, config.discounts, args.quantity, args.affiliate != address(0));
 
     if (i.tokenAddress != address(0)) {
       IERC20Upgradeable erc20Token = IERC20Upgradeable(i.tokenAddress);
@@ -418,55 +416,57 @@ library ArchetypeLogic {
   }
 
   function getRandomTokenIds(
-    uint256[] memory tokenSupply,
-    uint32[] memory maxSupply,
-    uint32[] memory validIds,
+    uint16[] storage tokenPool,
+    uint16[] memory tokenIdsExcluded,
     uint256 quantity,
     uint256 seed
-  ) public pure returns (uint256[] memory) {
-    uint256 tokenIdsAvailable = 0;
-    if (validIds.length > 0) {
-      for (uint256 i = 0; i < validIds.length; i++) {
-        tokenIdsAvailable += maxSupply[validIds[i] - 1] - tokenSupply[validIds[i] - 1];
-      }
-    } else {
-      for (uint256 i = 0; i < maxSupply.length; i++) {
-        tokenIdsAvailable += maxSupply[i] - tokenSupply[i];
-      }
-    }
+  ) public returns (uint16[] memory) {
+    uint16[] memory tokenIds = new uint16[](quantity);
 
-    uint256[] memory tokenIds = new uint256[](quantity);
-    for (uint256 i = 0; i < quantity; i++) {
-      if (tokenIdsAvailable == 0) {
+    uint256 retries = 0;
+    uint256 MAX_RETRIES = 5;
+
+    uint256 i = 0;
+    while (i < quantity) {
+      if (tokenPool.length == 0) {
         revert MaxSupplyExceeded();
       }
+
       uint256 rand = uint256(keccak256(abi.encode(seed, i)));
-      uint256 num = (rand % tokenIdsAvailable) + 1;
-      if (validIds.length > 0) {
-        for (uint256 j = 0; j < validIds.length; j++) {
-          uint256 available = maxSupply[validIds[j] - 1] - tokenSupply[validIds[j] - 1];
-          if (num <= available) {
-            tokenIds[i] = validIds[j];
-            tokenSupply[validIds[j] - 1] += 1;
-            tokenIdsAvailable -= 1;
-            break;
-          }
-          num -= available;
+      uint256 randIdx = rand % tokenPool.length;
+      uint16 selectedToken = tokenPool[randIdx];
+
+      if (tokenIdsExcluded.length > 0 && isExcluded(selectedToken, tokenIdsExcluded)) {
+        // If the token is excluded, retry for this position in tokenIds array
+        seed = rand; // Update the seed for the next iteration
+
+        retries++;
+        if (retries >= MAX_RETRIES) {
+          revert MaxRetriesExceeded();
         }
-      } else {
-        for (uint256 j = 0; j < maxSupply.length; j++) {
-          uint256 available = maxSupply[j] - tokenSupply[j];
-          if (num <= available) {
-            tokenIds[i] = j + 1;
-            tokenSupply[j] += 1;
-            tokenIdsAvailable -= 1;
-            break;
-          }
-          num -= available;
-        }
+        continue;
+      }
+
+      tokenIds[i] = selectedToken;
+
+      // remove token from pool
+      tokenPool[randIdx] = tokenPool[tokenPool.length - 1];
+      tokenPool.pop();
+
+      retries = 0;
+      i++;
+    }
+
+    return tokenIds;
+  }
+
+  function isExcluded(uint16 tokenId, uint16[] memory excludedList) internal pure returns (bool) {
+    for (uint256 i = 0; i < excludedList.length; i++) {
+      if (tokenId == excludedList[i]) {
+        return true;
       }
     }
-    return tokenIds;
+    return false;
   }
 
   function random() public view returns (uint256) {
@@ -475,6 +475,6 @@ library ArchetypeLogic {
   }
 
   function _msgSender() internal view returns (address) {
-    return msg.sender == BATCH? tx.origin: msg.sender;
+    return msg.sender == BATCH ? tx.origin : msg.sender;
   }
 }

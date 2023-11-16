@@ -13,8 +13,9 @@
     "test:specific": "npm run preTest && hardhat test test/archetype.test --grep && npm run postTest",
     "start": "concurrently \"cd api && npm start\" \"cd app && npm run dev\"",
     "deploy": "npx hardhat run scripts/deployArchetype.ts --network sepolia",
+    "deploy:random": "npx hardhat run scripts/deployArchetypeRandomProxy.ts --network sepolia",
     "network": "npx hardhat node",
-    "verify": "npx hardhat verify 0xE1ab75C9a140d2dc521D45F2CdbD9D39903d3297 --network sepolia"
+    "verify": "npx hardhat verify 0x30e718C873c8b3649AEFf5D917C967D0bD85b729 --network sepolia"
   },
   "repository": {
     "type": "git",
@@ -27,9 +28,13 @@
   },
   "homepage": "https://github.com/scatter-art/contracts#readme",
   "dependencies": {
+    "@chainlink/contracts": "^0.6.1",
+    "@chainlink/hardhat-chainlink": "^0.0.2",
     "concurrently": "6.4.0",
+    "csv-parse": "^5.5.1",
     "ethereumjs-util": "7.1.4",
     "ipfsh": "0.0.6",
+    "readline-sync": "^1.4.10",
     "solady": "^0.0.19"
   },
   "devDependencies": {
