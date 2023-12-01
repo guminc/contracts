@@ -2,6 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { Ownable } from "./Ownable";
+export type { ERC20 } from "./ERC20";
+export type { IERC20Metadata } from "./IERC20Metadata";
+export type { IERC20 } from "./IERC20";
 export type { ERC721 } from "./ERC721";
 export type { IERC721Metadata } from "./IERC721Metadata";
 export type { IERC721 } from "./IERC721";
@@ -11,8 +14,12 @@ export type { IERC165 } from "./IERC165";
 export type { FUMOMintable } from "./FUMOMintable";
 export type { IFUMOToken } from "./IFUMOToken";
 export type { Redeemer } from "./Redeemer";
+export type { AlienMiladyFumo } from "./AlienMiladyFumo";
 
 export { Ownable__factory } from "./factories/Ownable__factory";
+export { ERC20__factory } from "./factories/ERC20__factory";
+export { IERC20Metadata__factory } from "./factories/IERC20Metadata__factory";
+export { IERC20__factory } from "./factories/IERC20__factory";
 export { ERC721__factory } from "./factories/ERC721__factory";
 export { IERC721Metadata__factory } from "./factories/IERC721Metadata__factory";
 export { IERC721__factory } from "./factories/IERC721__factory";
@@ -22,3 +29,4 @@ export { IERC165__factory } from "./factories/IERC165__factory";
 export { FUMOMintable__factory } from "./factories/FUMOMintable__factory";
 export { IFUMOToken__factory } from "./factories/IFUMOToken__factory";
 export { Redeemer__factory } from "./factories/Redeemer__factory";
+export { AlienMiladyFumo__factory } from "./factories/AlienMiladyFumo__factory";

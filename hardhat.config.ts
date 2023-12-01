@@ -36,7 +36,7 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  defaultNetwork: "hardhat",
+  defaultNetwork: "localhost",
   networks: {
     sepolia: {
       accounts: [privateKey],
@@ -48,7 +48,14 @@ const config: HardhatUserConfig = {
       url: "https://mainnet.infura.io/v3/569cee6284754b9e86ff2e5e55a0dc22",
       chainId: 1,
     },
-    hardhat: {},
+    localhost: {
+      url: "http://127.0.0.1:8545",
+      gas: 6000000,
+      chainId: 31337,
+      // gasPrice: 200000,
+      // gasPrice: "2000000000000000000",
+      minGasPrice: 0,
+    },
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY || "",
