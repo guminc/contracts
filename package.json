@@ -4,10 +4,6 @@
   "description": "Get client ready:",
   "main": "index.js",
   "scripts": {
-    "preTest": "node test/preTest.js",
-    "postTest": "node test/postTest.js",
-    "test": "npm run preTest && npx hardhat test test/archetype.test.ts && npm run postTest",
-    "test:specific": "npm run preTest && hardhat test test/archetype.test --grep && npm run postTest",
     "start": "concurrently \"cd api && npm start\" \"cd app && npm run dev\"",
     "deploy": "npx hardhat run scripts/deploy.ts --network sepolia",
     "network": "npx hardhat node",
@@ -15,19 +11,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/scatter-art/contracts.git"
+    "url": "git+https://github.com/guminc/contracts.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/scatter-art/contracts/issues"
+    "url": "https://github.com/guminc/contracts/issues"
   },
-  "homepage": "https://github.com/scatter-art/contracts#readme",
+  "homepage": "https://github.com/guminc/contracts#readme",
   "dependencies": {
-    "concurrently": "6.4.0",
-    "ethereumjs-util": "7.1.4",
-    "ipfsh": "0.0.6",
-    "solady": "^0.0.19"
+    "concurrently": "6.4.0"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "2.0.5",
@@ -75,8 +68,7 @@
     "solidity-coverage": "0.7.17",
     "ts-node": "^10.4.0",
     "typechain": "7.0.1",
-    "typescript": "4.5.4",
-    "web3": "1.7.1"
+    "typescript": "4.5.4"
   },
   "files": []
 }
