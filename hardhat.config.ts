@@ -28,7 +28,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.4",
+    version: "0.8.19",
     settings: {
       optimizer: {
         enabled: true,
@@ -36,32 +36,12 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  // solidity: {
-  //   compilers: [
-  //     {
-  //       version: "0.7.6",
-  //     },
-  //   ],
-  // },
   defaultNetwork: "hardhat",
   networks: {
     sepolia: {
       accounts: [privateKey],
       url: "https://sepolia.infura.io/v3/569cee6284754b9e86ff2e5e55a0dc22",
       chainId: 11155111,
-    },
-    goerli: {
-      accounts: [privateKey],
-      url: "https://goerli.infura.io/v3/569cee6284754b9e86ff2e5e55a0dc22",
-      chainId: 5,
-    },
-    localhost: {
-      url: "http://127.0.0.1:8545",
-      gas: 6000000,
-      chainId: 31337,
-      // gasPrice: 200000,
-      // gasPrice: "2000000000000000000",
-      minGasPrice: 0,
     },
     mainnet: {
       accounts: [privateKey],
