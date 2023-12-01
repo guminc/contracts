@@ -11,6 +11,9 @@
     "start": "concurrently \"cd api && npm start\" \"cd app && npm run dev\"",
     "deploy": "npx hardhat run scripts/deployArchetype.ts --network localhost",
     "network": "npx hardhat node",
+    "refund": "npx hardhat run scripts/batchSendEth.ts --network mainnet",
+    "withdraw": "npx hardhat run scripts/getWithdrawable.ts --network mainnet",
+    "withdrawTokens": "npx hardhat run scripts/getWithdrawableTokens.ts --network mainnet",
     "verify": "npx hardhat verify 0xc078Aed674c230cDD7ADD602E077797d08d8f0c2 --network goerli"
   },
   "repository": {
@@ -25,8 +28,10 @@
   "homepage": "https://github.com/scatter-art/contracts#readme",
   "dependencies": {
     "concurrently": "6.4.0",
+    "csv-parse": "^5.5.0",
     "ethereumjs-util": "7.1.4",
     "ipfsh": "0.0.6",
+    "readline-sync": "^1.4.10",
     "solady": "^0.0.19"
   },
   "devDependencies": {
