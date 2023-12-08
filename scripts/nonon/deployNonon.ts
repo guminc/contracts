@@ -82,25 +82,17 @@ export async function deployNonon(
 
   const setBaseSvgTx = await nononFriendCard.setBaseSvgPointer(baseSvgBytes);
   await setBaseSvgTx.wait();
-  console.log('set base svg bytes');
+  console.log("set base svg bytes");
 
   const setDefsSvgTx = await nononFriendCard.setDefsSvgPointer(defsSvgBytes);
   await setDefsSvgTx.wait();
-  console.log('set defs svg bytes');
+  console.log("set defs svg bytes");
 
   const setSpritesSvgTx = await nononFriendCard.setSpritesSvgPointer(spritesSvgBytes);
   await setSpritesSvgTx.wait();
-  console.log('set sprites svg bytes');
+  console.log("set sprites svg bytes");
 
-
-  console.log('set friend card SVG bytes');
-
-  // await Promise.all([
-  //   nononFriendCard.setBaseSvgPointer(baseSvgBytes),
-  //   nononFriendCard.setDefsSvgPointer(defsSvgBytes),
-  //   nononFriendCard.setSpritesSvgPointer(spritesSvgBytes),
-  // ]).then(() => console.log("Set friend card SVG bytes"));
-
+  console.log("set friend card SVG bytes");
   console.log("nonon deployment complete!");
 
   return {

@@ -44,7 +44,7 @@ contract NononFriendCard is INononFriendCard, ERC721A, OwnableRoles {
     }
 
     struct LevelImageData {
-        string suffix;
+        string name;
         string colorGradient;
         uint16 spriteIndex;
         uint16 spriteLength;
@@ -70,14 +70,14 @@ contract NononFriendCard is INononFriendCard, ERC721A, OwnableRoles {
         _setOwner(msg.sender);
         collectionAddress = tokenCollectionAddress;
 
-        levels.push(Level(0, "LEVEL 1", "grad-1", 0, 288));
-        levels.push(Level(10, "LEVEL 2", "grad-2", 288, 652));
-        levels.push(Level(50, "LEVEL 3", "grad-3", 940, 758));
-        levels.push(Level(150, "LEVEL 4", "grad-4", 1698, 646));
-        levels.push(Level(500, "LEVEL 5", "grad-5", 2344, 984));
-        levels.push(Level(1500, "LEVEL 6", "grad-6", 3328, 817));
-        levels.push(Level(3500, "LEVEL 7", "grad-7", 4145, 758));
-        levels.push(Level(7500, "LEVEL 8", "grad-8", 4903, 709));
+        levels.push(Level(0, "BABY", "grad-1", 0, 288));
+        levels.push(Level(10, "INITIATE", "grad-2", 288, 652));
+        levels.push(Level(50, "DISCIPLE", "grad-3", 940, 758));
+        levels.push(Level(150, "AMBASSADOR", "grad-4", 1698, 646));
+        levels.push(Level(500, "ELDER", "grad-5", 2344, 984));
+        levels.push(Level(1500, "SAGE", "grad-6", 3328, 817));
+        levels.push(Level(3500, "MASTER", "grad-7", 4145, 758));
+        levels.push(Level(7500, "ANGEL", "grad-8", 4903, 709));
     }
 
     function setBaseSvgPointer(bytes memory baseImage) public onlyOwner {
@@ -138,16 +138,18 @@ contract NononFriendCard is INononFriendCard, ERC721A, OwnableRoles {
                     bytes(
                         abi.encodePacked(
                             '{"name":"',
-                            bytes.concat(bytes(TOKEN_NAME), bytes(level.suffix)),
+                            TOKEN_NAME,
                             '",',
                             '"description":"',
                             message,
                             '",',
-                            '"attributes":[{"trait_type":"points","max_value":',
+                            '"attributes":[{"trait_type":"Points","max_value":',
                             _toString(level.cap),
                             ',"value":',
                             _toString(tokenPoints),
-                            "}],",
+                            '}, {"trait_type":"Level","value":"',
+                            level.name,
+                            '"}],',
                             '"image":"',
                             buildSvg(level.colorGradient, level.spriteIndex, level.spriteLength, message),
                             '"}'
