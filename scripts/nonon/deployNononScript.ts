@@ -18,7 +18,7 @@ async function main() {
     friendCardAddress: ethers.constants.AddressZero,
     maxSupply: 5000,
     maxBatchSize: 5000,
-    affiliateFee: 500,
+    affiliateFee: 1500,
     platformFee: 500,
     defaultRoyalty: 500,
     discounts: { affiliateDiscount: 0, mintTiers: [] },
@@ -29,6 +29,11 @@ async function main() {
   await run("verify:verify", {
     address: contracts.archetypeNonon.address,
     contract: "contracts/Nonon/ArchetypeNonon.sol:ArchetypeNonon",
+  });
+
+  await run("verify:verify", {
+    address: contracts.archetypeNononLogic.address,
+    contract: "contracts/Nonon/ArchetypeNononLogic.sol:ArchetypeNononLogic",
   });
 
   await run("verify:verify", {

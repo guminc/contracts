@@ -5,6 +5,7 @@ import type { IArchetypeNononConfig } from "../../lib/types";
 
 export interface NononContracts {
   archetypeNonon: ArchetypeNonon;
+  archetypeNononLogic: ArchetypeNononLogic;
   nononFriendCard: NononFriendCard;
 }
 
@@ -81,22 +82,26 @@ export async function deployNonon(
   const spritesSvgBytes: Buffer = fs.readFileSync("contracts/Nonon/img/sprites.svg");
 
   const setBaseSvgTx = await nononFriendCard.setBaseSvgPointer(baseSvgBytes);
+  console.log(`sent base svg bytes transaction. waiting for tx: ${setBaseSvgTx.hash}`);
   await setBaseSvgTx.wait();
-  console.log("set base svg bytes");
+  console.log("done");
 
   const setDefsSvgTx = await nononFriendCard.setDefsSvgPointer(defsSvgBytes);
+  console.log(`sent defs svg bytes transaction. waiting for tx: ${setDefsSvgTx.hash}`);
   await setDefsSvgTx.wait();
-  console.log("set defs svg bytes");
+  console.log("done");
 
   const setSpritesSvgTx = await nononFriendCard.setSpritesSvgPointer(spritesSvgBytes);
+  console.log(`sent sprites svg bytes transaction. waiting for tx: ${setSpritesSvgTx.hash}`);
   await setSpritesSvgTx.wait();
-  console.log("set sprites svg bytes");
+  console.log("done");
 
-  console.log("set friend card SVG bytes");
+  console.log("finished setting friend card SVG bytes");
   console.log("nonon deployment complete!");
 
   return {
     archetypeNonon,
+    archetypeNononLogic,
     nononFriendCard,
   };
 }

@@ -20,7 +20,7 @@ contract NononFriendCard is INononFriendCard, ERC721A, OwnableRoles {
     mapping(address => LibBitmap.Bitmap) private receivedBitmap;
     mapping(address => LibBitmap.Bitmap) private sentBitmap;
 
-    string public constant TOKEN_NAME = "NONON FRIEND CARD ";
+    string public constant TOKEN_NAME = "NONON FRIEND CARD: ";
     string public constant DEFAULT_DESC = "share your message at nonon.house";
 
     address public immutable collectionAddress;

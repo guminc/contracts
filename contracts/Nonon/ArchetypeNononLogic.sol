@@ -13,7 +13,6 @@
 //                                                       Y8b d88P 888
 //                                                        "Y88P"  888          (Nonon ver.)
 
-
 pragma solidity ^0.8.4;
 
 import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
