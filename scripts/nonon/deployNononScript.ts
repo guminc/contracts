@@ -1,5 +1,6 @@
 import { ethers, run } from "hardhat";
 import ipfsh from "ipfsh";
+import Invitelist from "../../lib/invitelist";
 import type { IArchetypeNononConfig } from "../../lib/types";
 import { deployNonon } from "./deployNonon";
 
@@ -11,7 +12,7 @@ async function main() {
   // const sepoliaFriendCard = "0x0Cb32D3A7D35a7D28c5DD81261D87Fa72c82C725";
 
   const config: IArchetypeNononConfig = {
-    baseUri: "ipfs://bafybeibgqd2sulnrfsunmzfx36tnjabljt6g6mvtfy5eqx4rg6tcvb26ca/",
+    baseUri: "",
     affiliateSigner: "0x1f285dD528cf4cDE3081C6d48D9df7A4F8FA9383",
     ownerAltPayout: ethers.constants.AddressZero,
     superAffiliatePayout: ethers.constants.AddressZero,
@@ -40,18 +41,6 @@ async function main() {
     address: contracts.nononFriendCard.address,
     contract: "contracts/Nonon/NononFriendCard.sol:NononFriendCard",
     constructorArguments: [contracts.archetypeNonon.address],
-  });
-
-  // public mint
-  await contracts.archetypeNonon.setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
-    price: ethers.utils.parseEther("0.05"),
-    start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-    end: 0,
-    limit: 5000,
-    maxSupply: 5000,
-    unitSize: 0,
-    tokenAddress: ethers.constants.AddressZero,
-    isBlacklist: false,
   });
 }
 

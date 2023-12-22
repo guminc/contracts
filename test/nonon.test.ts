@@ -204,9 +204,13 @@ describe("nonon", () => {
     // expect that metadata attributes contain user points, current level maximum
     expect(parsedMetadata.attributes).to.deep.equal([
       {
-        trait_type: "points",
+        trait_type: "Points",
         max_value: 1500,
         value: 1000,
+      },
+      {
+        trait_type: "Level",
+        value: "ELDER",
       },
     ]);
 

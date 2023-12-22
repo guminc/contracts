@@ -53,17 +53,19 @@ export async function deployNonon(
     },
   });
 
+  console.log("deploying Archetype (nonon ver.)");
   const archetypeNonon = await ArchetypeNonon.deploy();
   await archetypeNonon.deployed();
-
   console.log("Archetype (nonon ver.) deployed to:", archetypeNonon.address);
 
+  console.log("initializing...");
   await archetypeNonon.initialize(NAME, SYMBOL, CONFIG, deployerAddress);
   console.log("Archetype (nonon ver.) initialized!");
 
   /// *** additional nonon setup transactions *** ///
 
   // deploy friend card
+  console.log("deploying nonon friend card...");
   const NononFriendCard = await ethers.getContractFactory("NononFriendCard");
   const nononFriendCard = await NononFriendCard.deploy(archetypeNonon.address);
   await nononFriendCard.deployed();
@@ -71,6 +73,7 @@ export async function deployNonon(
   console.log("nonon friend card deployed to:", nononFriendCard.address);
 
   // set friend card addr in nonon token config
+  console.log("setting nonon friend card address in archetype token contract...");
   const setFriendCardTx = await archetypeNonon.setFriendCardAddress(nononFriendCard.address);
   await setFriendCardTx.wait();
 

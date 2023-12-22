@@ -138,7 +138,7 @@ contract NononFriendCard is INononFriendCard, ERC721A, OwnableRoles {
                     bytes(
                         abi.encodePacked(
                             '{"name":"',
-                            TOKEN_NAME,
+                            bytes.concat(bytes(TOKEN_NAME), bytes(level.name)),
                             '",',
                             '"description":"',
                             message,
