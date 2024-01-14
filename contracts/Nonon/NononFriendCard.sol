@@ -70,14 +70,14 @@ contract NononFriendCard is INononFriendCard, ERC721A, OwnableRoles {
         _setOwner(msg.sender);
         collectionAddress = tokenCollectionAddress;
 
-        levels.push(Level(0, "BABY", "grad-1", 0, 288));
-        levels.push(Level(10, "INITIATE", "grad-2", 288, 652));
-        levels.push(Level(50, "DISCIPLE", "grad-3", 940, 758));
-        levels.push(Level(150, "AMBASSADOR", "grad-4", 1698, 646));
-        levels.push(Level(500, "ELDER", "grad-5", 2344, 984));
-        levels.push(Level(1500, "SAGE", "grad-6", 3328, 817));
-        levels.push(Level(3500, "MASTER", "grad-7", 4145, 758));
-        levels.push(Level(7500, "ANGEL", "grad-8", 4903, 709));
+        levels.push(Level(0, "ANGELS", "grad-1", 0, 288));
+        levels.push(Level(10, "ARCHANGELS", "grad-2", 288, 652));
+        levels.push(Level(50, "PRINCIPALITIES", "grad-3", 940, 758));
+        levels.push(Level(150, "VIRTUES", "grad-4", 1698, 646));
+        levels.push(Level(500, "DOMINIONS", "grad-5", 2344, 984));
+        levels.push(Level(1500, "THRONES", "grad-6", 3328, 817));
+        levels.push(Level(3500, "CHERUBIM", "grad-7", 4145, 758));
+        levels.push(Level(7500, "SERAPHIM", "grad-8", 4903, 709));
     }
 
     function setBaseSvgPointer(bytes memory baseImage) public onlyOwner {
