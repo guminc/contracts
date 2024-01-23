@@ -43,7 +43,7 @@ describe("nonon", () => {
       });
 
     await contracts.archetypeNonon.invites(ethers.constants.HashZero);
-    await sleep(1000);
+    await sleep(2000);
 
     const [_, minter] = await ethers.getSigners();
     const minterAddress = await minter.getAddress();
@@ -81,6 +81,9 @@ describe("nonon", () => {
 
     const mintQuantity = 2;
     const testTokenId = 1;
+
+    await contracts.archetypeNonon.invites(ethers.constants.HashZero);
+    await sleep(2000);
 
     await contracts.archetypeNonon
       .connect(minter)
@@ -210,7 +213,7 @@ describe("nonon", () => {
       },
       {
         trait_type: "Level",
-        value: "ELDER",
+        value: "DOMINIONS",
       },
     ]);
 

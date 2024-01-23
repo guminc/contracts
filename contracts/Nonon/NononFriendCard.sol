@@ -22,8 +22,10 @@ contract NononFriendCard is INononFriendCard, ERC721A, OwnableRoles {
 
     string public constant TOKEN_NAME = "NONON FRIEND CARD: ";
     string public constant DEFAULT_DESC = "share your message at nonon.house";
+    uint256 public constant NONON_MAX_SUPPLY = 5000;
 
     address public immutable collectionAddress;
+
 
     // address where bytes for base SVG are stored
     address private baseSvgPointer;
@@ -277,7 +279,7 @@ contract NononFriendCard is INononFriendCard, ERC721A, OwnableRoles {
 
     // convenience function to get point information in a token range
     // note that this is expensive and most likely will require multiple calls to cover large ranges.
-    function tokenPointsInRange(uint256 startId, uint256 endId) public view returns (TokenPoints[] memory) {
+    function tokenPointsInRange(uint256 startId, uint256 endId) external view returns (TokenPoints[] memory) {
         if (endId < startId) revert InvalidParams();
 
         TokenPoints[] memory tokenPoints = new TokenPoints[]((endId - startId) + 1);
@@ -314,8 +316,7 @@ contract NononFriendCard is INononFriendCard, ERC721A, OwnableRoles {
     }
 
     function tokenStatusMap(address owner, bool sent) external view returns (uint256[] memory received) {
-        // TODO: reference max supply instead of hardcoding
-        uint256 maxWordIndex = 5000 >> 8;
+        uint256 maxWordIndex = NONON_MAX_SUPPLY >> 8;
         uint256[] memory words = new uint256[](maxWordIndex + 1);
         for (uint256 i = 0; i <= maxWordIndex; i++) {
             words[i] = (sent ? sentBitmap[owner].map[i] : receivedBitmap[owner].map[i]);
