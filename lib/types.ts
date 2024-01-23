@@ -16,3 +16,5 @@ export type IArchetypeConfig = {
     }[];
   };
 };
+
+export type IArchetypeNononConfig = IArchetypeConfig & { friendCardAddress: string };
