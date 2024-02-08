@@ -22,11 +22,13 @@ error InvalidLength();
 error InvalidSplitShares();
 error TransferFailed();
 error BalanceEmpty();
+error NotApprovedToWithdraw();
 
 contract ArchetypeSplits is Ownable {
   event Withdrawal(address indexed src, address token, uint256 wad);
 
-  mapping(address => mapping(address => uint256)) public balances;
+  mapping(address => mapping(address => uint256)) private _balance;
+  mapping(address => mapping(address => bool)) private _approvals;
 
   function updateBalances(
     uint256 totalAmount,
@@ -51,7 +53,7 @@ contract ArchetypeSplits is Ownable {
       uint256 totalReceived = msg.value;
       for (uint256 i = 0; i < recipients.length; i++) {
         uint256 amountToAdd = (totalReceived * splits[i]) / 10000;
-        balances[recipients[i]][token] += amountToAdd;
+        _balance[recipients[i]][token] += amountToAdd;
       }
     } else {
       // ERC20 payments
@@ -60,42 +62,82 @@ contract ArchetypeSplits is Ownable {
 
       for (uint256 i = 0; i < recipients.length; i++) {
         uint256 amountToAdd = (totalAmount * splits[i]) / 10000;
-        balances[recipients[i]][token] += amountToAdd;
+        _balance[recipients[i]][token] += amountToAdd;
       }
     }
   }
 
-  function withdraw() external onlyOwner {
-    address[] memory tokens = new address[](1);
-    tokens[0] = address(0);
-    withdrawTokens(tokens);
+  function withdraw() external {
+    address msgSender = msg.sender;
+    _withdraw(msgSender, msgSender, address(0));
   }
 
-  function withdrawTokens(address[] memory tokens) public onlyOwner {
+  function withdrawTokens(address[] memory tokens) external {
     address msgSender = msg.sender;
 
     for (uint256 i = 0; i < tokens.length; i++) {
-      address tokenAddress = tokens[i];
-      uint256 wad;
-
-      wad = balances[msgSender][tokenAddress];
-      balances[msgSender][tokenAddress] = 0;
-
-      if (wad == 0) {
-        revert BalanceEmpty();
-      }
-
-      if (tokenAddress == address(0)) {
-        bool success = false;
-        (success, ) = msgSender.call{ value: wad }("");
-        if (!success) {
-          revert TransferFailed();
-        }
-      } else {
-        IERC20 erc20Token = IERC20(tokenAddress);
-        erc20Token.transfer(msgSender, wad);
-      }
-      emit Withdrawal(msgSender, tokenAddress, wad);
+      _withdraw(msgSender, msgSender, tokens[i]);
     }
+  }
+
+  function withdrawFor(address from) public {
+    address msgSender = msg.sender;
+    if (!_approvals[from][msgSender]) {
+      revert NotApprovedToWithdraw();
+    }
+    _withdraw(from, msgSender, address(0));
+  }
+
+  function withdrawTokensFor(address from, address[] memory tokens) public {
+    address msgSender = msg.sender;
+    if (!_approvals[from][msgSender]) {
+      revert NotApprovedToWithdraw();
+    }
+    for (uint256 i = 0; i < tokens.length; i++) {
+      _withdraw(from, msgSender, tokens[i]);
+    }
+  }
+
+  function _withdraw(
+    address from,
+    address to,
+    address token
+  ) internal {
+    uint256 wad;
+
+    wad = _balance[from][token];
+    _balance[from][token] = 0;
+
+    if (wad == 0) {
+      revert BalanceEmpty();
+    }
+
+    if (token == address(0)) {
+      bool success = false;
+      (success, ) = to.call{ value: wad }("");
+      if (!success) {
+        revert TransferFailed();
+      }
+    } else {
+      IERC20 erc20Token = IERC20(token);
+      erc20Token.transfer(to, wad);
+    }
+    emit Withdrawal(from, token, wad);
+  }
+
+  function approveWithdrawal(address delegate, bool approved) external {
+    _approvals[msg.sender][delegate] = approved;
+  }
+
+  function isApproved(address from, address delegate) external view returns (bool) {
+    return _approvals[from][delegate];
+  }
+
+  function balance(address recipient) external view returns (uint256) {
+    return _balance[recipient][address(0)];
+  }
+
+  function balanceToken(address recipient, address token) external view returns (uint256) {
+    return _balance[recipient][token];
   }
 }

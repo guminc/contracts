@@ -535,8 +535,7 @@ describe("Factory", function () {
         value: ethers.utils.parseEther("0.08"),
       });
 
-    await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.064")); // 80%
-    await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.004")); // 5%
+    await expect(await nft.ownerBalance()).to.equal(ethers.utils.parseEther("0.068")); // 85%
     await expect(await nft.affiliateBalance(affiliate.address)).to.equal(
       ethers.utils.parseEther("0.012")
     ); // 15%
@@ -548,12 +547,20 @@ describe("Factory", function () {
     // expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0")));
 
     // withdraw owner balance
-    let balance = await ethers.provider.getBalance(owner.address);
     await nft.connect(owner).withdraw();
+    await expect(await archetypeSplits.balance(owner.address)).to.equal(
+      ethers.utils.parseEther("0.0646")
+    );
+    await expect(await archetypeSplits.balance(platform.address)).to.equal(
+      ethers.utils.parseEther("0.0034")
+    );
+
+    // withdraw owner from split contract
+    let balance = await ethers.provider.getBalance(owner.address);
+    await archetypeSplits.connect(owner).withdraw();
     let diff = (await ethers.provider.getBalance(owner.address)).toBigInt() - balance.toBigInt();
-    // withdrawal won't be exact due to gas payment, just check range.
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.062")));
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.064")));
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.064"))); // leave room for gas
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.0648")));
 
     // mint again
     await nft
@@ -562,25 +569,32 @@ describe("Factory", function () {
         value: ethers.utils.parseEther("0.08"),
       });
 
-    await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.064"));
-    await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.008")); // 5% x 2 mints
+    await expect(await nft.ownerBalance()).to.equal(ethers.utils.parseEther("0.068"));
     await expect(await nft.affiliateBalance(affiliate.address)).to.equal(
       ethers.utils.parseEther("0.024")
     ); // 15% x 2 mints
 
+    await nft.connect(platform).withdraw();
+    await expect(await archetypeSplits.balance(owner.address)).to.equal(
+      ethers.utils.parseEther("0.0646")
+    );
+    await expect(await archetypeSplits.balance(platform.address)).to.equal(
+      ethers.utils.parseEther("0.0068") // accumulated from last withdraw to split
+    );
+
     // withdraw owner balance again
     balance = await ethers.provider.getBalance(owner.address);
-    await nft.connect(owner).withdraw();
+    await archetypeSplits.connect(owner).withdraw();
     diff = (await ethers.provider.getBalance(owner.address)).toBigInt() - balance.toBigInt();
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.062"))); // leave room for gas
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.064")));
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.064"))); // leave room for gas
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.0648")));
 
     // withdraw platform balance
     balance = await ethers.provider.getBalance(platform.address);
-    await nft.connect(platform).withdraw(); // partial withdraw
+    await archetypeSplits.connect(platform).withdraw();
     diff = (await ethers.provider.getBalance(platform.address)).toBigInt() - balance.toBigInt();
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.007")));
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.008")));
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.006")));
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.0068")));
 
     // withdraw affiliate balance
     balance = await ethers.provider.getBalance(affiliate.address);
@@ -591,6 +605,9 @@ describe("Factory", function () {
 
     // withdraw empty owner balance
     await expect(nft.connect(owner).withdraw()).to.be.revertedWith("BalanceEmpty");
+
+    // withdraw empty owner balance
+    await expect(archetypeSplits.connect(owner).withdraw()).to.be.revertedWith("BalanceEmpty");
 
     // withdraw empty affiliate balance
     await expect(nft.connect(affiliate).withdraw()).to.be.revertedWith("BalanceEmpty");

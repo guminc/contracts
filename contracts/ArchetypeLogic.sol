@@ -404,7 +404,7 @@ library ArchetypeLogic {
         msgSender == payoutConfig.partner ||
         msgSender == payoutConfig.superAffiliate
       ) {
-        wad = _ownerBalance[tokenAddress] = 0;
+        wad = _ownerBalance[tokenAddress];
         _ownerBalance[tokenAddress] = 0;
         isOwner = true;
       } else {
@@ -417,7 +417,6 @@ library ArchetypeLogic {
       }
 
       if (tokenAddress == address(0)) {
-        bool success = false;
         if (isOwner) {
           address[] memory recipients = new address[](4);
           recipients[0] = owner;
@@ -438,10 +437,11 @@ library ArchetypeLogic {
             splits
           );
         } else {
+          bool success = false;
           (success, ) = msgSender.call{ value: wad }("");
-        }
-        if (!success) {
-          revert TransferFailed();
+          if (!success) {
+            revert TransferFailed();
+          }
         }
       } else {
         IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
