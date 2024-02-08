@@ -6,6 +6,7 @@ import {
   Archetype as IArchetype,
   ArchetypeLogic__factory,
   ArchetypeBatch__factory,
+  ArchetypeSplits__factory,
   Factory__factory,
 } from "../typechain";
 import Invitelist from "../lib/invitelist";
@@ -39,6 +40,8 @@ describe("Factory", function () {
   let archetypeLogic: Contract;
   let ArchetypeBatch: ArchetypeBatch__factory;
   let archetypeBatch: Contract;
+  let ArchetypeSplits: ArchetypeSplits__factory;
+  let archetypeSplits: Contract;
   let Factory: Factory__factory;
   let factory: Contract;
 
@@ -74,6 +77,10 @@ describe("Factory", function () {
         ArchetypeLogic: archetypeLogic.address,
       },
     });
+
+    ArchetypeSplits = await ethers.getContractFactory("ArchetypeSplits");
+    archetypeSplits = await ArchetypeSplits.deploy();
+    console.log(archetypeSplits.address);
 
     archetype = await Archetype.deploy();
     await archetype.deployed();

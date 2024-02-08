@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.6.1
+// Archetype v0.7.0
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -45,10 +45,11 @@ contract Archetype is
   mapping(bytes32 => DutchInvite) public invites;
   mapping(address => mapping(bytes32 => uint256)) private _minted;
   mapping(bytes32 => uint256) private _listSupply;
-  mapping(address => OwnerBalance) private _ownerBalance;
+  mapping(address => uint128) private _ownerBalance;
   mapping(address => mapping(address => uint128)) private _affiliateBalance;
 
   Config public config;
+  PayoutConfig public payoutConfig;
   BurnConfig public burnConfig;
   Options public options;
 
@@ -59,6 +60,7 @@ contract Archetype is
     string memory name,
     string memory symbol,
     Config calldata config_,
+    PayoutConfig calldata payoutConfig_,
     address _receiver
   ) external initializerERC721A {
     __ERC721A_init(name, symbol);
@@ -87,6 +89,16 @@ contract Archetype is
     }
     config = config_;
     __Ownable_init();
+
+    uint256 totalShares = payoutConfig_.ownerBps +
+      payoutConfig_.platformBps +
+      payoutConfig_.partnerBps +
+      payoutConfig_.superAffiliateBps;
+
+    if (payoutConfig_.platformBps < 500 || totalShares != 10000) {
+      revert InvalidSplitShares();
+    }
+    payoutConfig = payoutConfig_;
 
     if (config.ownerAltPayout != address(0)) {
       setDefaultRoyalty(config.ownerAltPayout, config.defaultRoyalty);
@@ -252,14 +264,21 @@ contract Archetype is
   }
 
   function withdrawTokens(address[] memory tokens) public {
-    ArchetypeLogic.withdrawTokens(config, _ownerBalance, _affiliateBalance, owner(), tokens);
+    ArchetypeLogic.withdrawTokens(
+      config,
+      _ownerBalance,
+      _affiliateBalance,
+      payoutConfig,
+      owner(),
+      tokens
+    );
   }
 
-  function ownerBalance() external view returns (OwnerBalance memory) {
+  function ownerBalance() external view returns (uint128) {
     return _ownerBalance[address(0)];
   }
 
-  function ownerBalanceToken(address token) external view returns (OwnerBalance memory) {
+  function ownerBalanceToken(address token) external view returns (uint128) {
     return _ownerBalance[token];
   }
 
@@ -289,8 +308,8 @@ contract Archetype is
     bool affiliateUsed
   ) external view returns (uint256) {
     DutchInvite storage i = invites[key];
-    uint256 listSupply = _listSupply[key];
-    return ArchetypeLogic.computePrice(i, config.discounts, quantity, listSupply, affiliateUsed);
+    uint256 listSupply_ = _listSupply[key];
+    return ArchetypeLogic.computePrice(i, config.discounts, quantity, listSupply_, affiliateUsed);
   }
 
   //

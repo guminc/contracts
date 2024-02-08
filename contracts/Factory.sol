@@ -34,11 +34,12 @@ contract Factory is OwnableUpgradeable {
     address _receiver,
     string memory name,
     string memory symbol,
-    Config calldata config
+    Config calldata config,
+    PayoutConfig calldata payoutConfig
   ) external payable returns (address) {
     address clone = ClonesUpgradeable.clone(archetype);
     Archetype token = Archetype(clone);
-    token.initialize(name, symbol, config, _receiver);
+    token.initialize(name, symbol, config, payoutConfig, _receiver);
 
     token.transferOwnership(_receiver);
     if (msg.value > 0) {
