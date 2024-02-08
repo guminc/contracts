@@ -21,13 +21,11 @@ import "erc721a-upgradeable/contracts/ERC721A__Initializable.sol";
 import "erc721a-upgradeable/contracts/extensions/ERC721AQueryableUpgradeable.sol";
 import "./ERC721A__OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
-import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
 
 contract Archetype is
   ERC721A__Initializable,
   ERC721AUpgradeable,
-  OperatorFilterer,
   ERC721A__OwnableUpgradeable,
   ERC2981Upgradeable,
   ERC721AQueryableUpgradeable
@@ -67,8 +65,6 @@ contract Archetype is
     // check max bps not reached and min platform fee.
     if (
       config_.affiliateFee > MAXBPS ||
-      config_.platformFee > MAXBPS ||
-      config_.platformFee < 500 ||
       config_.discounts.affiliateDiscount > MAXBPS ||
       config_.affiliateSigner == address(0) ||
       config_.maxBatchSize == 0
@@ -99,12 +95,7 @@ contract Archetype is
       revert InvalidSplitShares();
     }
     payoutConfig = payoutConfig_;
-
-    if (config.ownerAltPayout != address(0)) {
-      setDefaultRoyalty(config.ownerAltPayout, config.defaultRoyalty);
-    } else {
-      setDefaultRoyalty(_receiver, config.defaultRoyalty);
-    }
+    setDefaultRoyalty(_receiver, config.defaultRoyalty);
   }
 
   //
@@ -264,14 +255,7 @@ contract Archetype is
   }
 
   function withdrawTokens(address[] memory tokens) public {
-    ArchetypeLogic.withdrawTokens(
-      config,
-      _ownerBalance,
-      _affiliateBalance,
-      payoutConfig,
-      owner(),
-      tokens
-    );
+    ArchetypeLogic.withdrawTokens(payoutConfig, _ownerBalance, _affiliateBalance, owner(), tokens);
   }
 
   function ownerBalance() external view returns (uint128) {
@@ -414,23 +398,6 @@ contract Archetype is
     options.discountsLocked = true;
   }
 
-  function setOwnerAltPayout(address ownerAltPayout) external _onlyOwner {
-    if (options.ownerAltPayoutLocked) {
-      revert LockedForever();
-    }
-
-    config.ownerAltPayout = ownerAltPayout;
-  }
-
-  /// @notice the password is "forever"
-  function lockOwnerAltPayout(string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
-    options.ownerAltPayoutLocked = true;
-  }
-
   function setMaxBatchSize(uint32 maxBatchSize) external _onlyOwner {
     config.maxBatchSize = maxBatchSize;
   }
@@ -502,9 +469,11 @@ contract Archetype is
   //
   // PLATFORM ONLY
   //
-  function setSuperAffiliatePayout(address superAffiliatePayout) external _onlyPlatform {
-    config.superAffiliatePayout = superAffiliatePayout;
-  }
+
+  // TODO: REVIST BPS SETTING FUNCTIONS
+  // function setSuperAffiliatePayout(address superAffiliatePayout) external _onlyPlatform {
+  //   config.superAffiliatePayout = superAffiliatePayout;
+  // }
 
   //
   // INTERNAL
@@ -529,77 +498,6 @@ contract Archetype is
       revert NotOwner();
     }
     _;
-  }
-
-  // OPTIONAL ROYALTY ENFORCEMENT WITH OPENSEA
-  function enableRoyaltyEnforcement() external _onlyOwner {
-    if (options.royaltyEnforcementLocked) {
-      revert LockedForever();
-    }
-    _registerForOperatorFiltering();
-    options.royaltyEnforcementEnabled = true;
-  }
-
-  function disableRoyaltyEnforcement() external _onlyOwner {
-    if (options.royaltyEnforcementLocked) {
-      revert LockedForever();
-    }
-    options.royaltyEnforcementEnabled = false;
-  }
-
-  /// @notice the password is "forever"
-  function lockRoyaltyEnforcement(string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
-    options.royaltyEnforcementLocked = true;
-  }
-
-  function setApprovalForAll(address operator, bool approved)
-    public
-    override
-    onlyAllowedOperatorApproval(operator)
-  {
-    super.setApprovalForAll(operator, approved);
-  }
-
-  function approve(address operator, uint256 tokenId)
-    public
-    payable
-    override
-    onlyAllowedOperatorApproval(operator)
-  {
-    super.approve(operator, tokenId);
-  }
-
-  function transferFrom(
-    address from,
-    address to,
-    uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
-    super.transferFrom(from, to, tokenId);
-  }
-
-  function safeTransferFrom(
-    address from,
-    address to,
-    uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
-    super.safeTransferFrom(from, to, tokenId);
-  }
-
-  function safeTransferFrom(
-    address from,
-    address to,
-    uint256 tokenId,
-    bytes memory data
-  ) public payable override onlyAllowedOperator(from) {
-    super.safeTransferFrom(from, to, tokenId, data);
-  }
-
-  function _operatorFilteringEnabled() internal view override returns (bool) {
-    return options.royaltyEnforcementEnabled;
   }
 
   //ERC2981 ROYALTY

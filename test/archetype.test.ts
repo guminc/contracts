@@ -10,7 +10,7 @@ import {
   Factory__factory,
 } from "../typechain";
 import Invitelist from "../lib/invitelist";
-import { IArchetypeConfig } from "../lib/types";
+import { IArchetypeConfig, IArchetypePayoutConfig } from "../lib/types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import ipfsh from "ipfsh";
 import { Contract } from "ethers";
@@ -21,6 +21,8 @@ const DEFAULT_NAME = "Pookie";
 const DEFAULT_SYMBOL = "POOKIE";
 let AFFILIATE_SIGNER: SignerWithAddress;
 let DEFAULT_CONFIG: IArchetypeConfig;
+let DEFAULT_PAYOUT_CONFIG: IArchetypePayoutConfig;
+
 // this is an IPFS content ID which stores a list of addresses ({address: string[]})
 // eg: https://ipfs.io/ipfs/bafkreih2kyxirba6a6dyzt4tsdqb5iim3soprumtewq6garaohkfknqlaq
 // utility for converting CID to bytes32: https://github.com/factoria-org/ipfsh
@@ -65,6 +67,14 @@ describe("Factory", function () {
         //   mintDiscount: number;
         // }];
       },
+    };
+    DEFAULT_PAYOUT_CONFIG = {
+      ownerBps: 9500,
+      platformBps: 500,
+      partnerBps: 0,
+      superAffiliateBps: 0,
+      partner: ZERO,
+      superAffiliate: ZERO,
     };
 
     ArchetypeBatch = await ethers.getContractFactory("ArchetypeBatch");
@@ -111,7 +121,8 @@ describe("Factory", function () {
       accountOne.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -134,6 +145,7 @@ describe("Factory", function () {
       "Flookie",
       DEFAULT_SYMBOL,
       DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG,
       accountOne.address
     );
     await res.wait();
@@ -141,14 +153,21 @@ describe("Factory", function () {
     expect(await archetype.name()).to.equal("Flookie");
 
     await expect(
-      archetype.initialize("Wookie", DEFAULT_SYMBOL, DEFAULT_CONFIG, accountOne.address)
+      archetype.initialize(
+        "Wookie",
+        DEFAULT_SYMBOL,
+        DEFAULT_CONFIG,
+        DEFAULT_PAYOUT_CONFIG,
+        accountOne.address
+      )
     ).to.be.revertedWith("Initializable: contract is already initialized");
 
     const newCollection = await factory.createCollection(
       accountOne.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -171,7 +190,8 @@ describe("Factory", function () {
       accountOne.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -210,7 +230,8 @@ describe("Factory", function () {
       accountOne.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result1 = await anotherCollection.wait();
@@ -233,7 +254,8 @@ describe("Factory", function () {
       accountOne.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -254,7 +276,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -298,7 +321,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -423,7 +447,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -459,7 +484,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -909,7 +935,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -976,7 +1003,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultBurn = await newCollectionBurn.wait();
     const newCollectionAddressBurn = resultBurn.events[0].address || "";
@@ -986,7 +1014,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1086,7 +1115,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
     const result = await newCollection.wait();
     const newCollectionAddress = result.events[0].address || "";
@@ -1114,7 +1144,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultBurn = await newCollectionBurn.wait();
     const newCollectionAddressBurn = resultBurn.events[0].address || "";
@@ -1124,7 +1155,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1218,7 +1250,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -1267,7 +1300,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -1337,7 +1371,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -1386,7 +1421,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -1418,7 +1454,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -1496,7 +1533,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -1560,7 +1598,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -1623,7 +1662,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -1683,7 +1723,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1730,7 +1771,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1796,7 +1838,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1854,7 +1897,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1973,7 +2017,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -2041,7 +2086,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -2085,7 +2131,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();

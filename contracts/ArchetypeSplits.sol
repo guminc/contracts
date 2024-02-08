@@ -13,10 +13,10 @@
 //                                                       Y8b d88P 888
 //
 
+pragma solidity ^0.8.4;
+
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 error InvalidLength();
 error InvalidSplitShares();
@@ -32,7 +32,7 @@ contract ArchetypeSplits is Ownable {
     uint256 totalAmount,
     address token,
     address[] calldata recipients,
-    uint32[] calldata splits
+    uint16[] calldata splits
   ) public payable {
     if (recipients.length != splits.length) {
       revert InvalidLength();

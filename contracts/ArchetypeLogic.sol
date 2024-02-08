@@ -66,14 +66,20 @@ struct Discount {
 struct Config {
   string baseUri;
   address affiliateSigner;
-  address ownerAltPayout; // optional alternative address for owner withdrawals.
-  address superAffiliatePayout; // optional super affiliate address, will receive half of platform fee if set.
   uint32 maxSupply;
   uint32 maxBatchSize;
   uint16 affiliateFee; //BPS
-  uint16 platformFee; //BPS
   uint16 defaultRoyalty; //BPS
   Discount discounts;
+}
+
+struct PayoutConfig {
+  uint16 ownerBps;
+  uint16 platformBps;
+  uint16 partnerBps;
+  uint16 superAffiliateBps;
+  address partner;
+  address superAffiliate;
 }
 
 struct Options {
@@ -82,8 +88,6 @@ struct Options {
   bool affiliateFeeLocked;
   bool discountsLocked;
   bool ownerAltPayoutLocked;
-  bool royaltyEnforcementEnabled;
-  bool royaltyEnforcementLocked;
 }
 
 struct DutchInvite {
@@ -109,15 +113,6 @@ struct Invite {
   uint32 unitSize; // mint 1 get x
   address tokenAddress;
   bool isBlacklist;
-}
-
-struct PayoutConfig {
-  uint32 ownerBps;
-  uint32 platformBps;
-  uint32 partnerBps;
-  uint32 superAffiliateBps;
-  address partner;
-  address superAffiliate;
 }
 
 struct BurnConfig {
@@ -391,10 +386,9 @@ library ArchetypeLogic {
   }
 
   function withdrawTokens(
-    Config storage config,
+    PayoutConfig storage payoutConfig,
     mapping(address => uint128) storage _ownerBalance,
     mapping(address => mapping(address => uint128)) storage _affiliateBalance,
-    PayoutConfig storage payoutConfig,
     address owner,
     address[] calldata tokens
   ) public {
@@ -406,7 +400,6 @@ library ArchetypeLogic {
 
       if (
         msgSender == owner ||
-        msgSender == config.ownerAltPayout ||
         msgSender == PLATFORM ||
         msgSender == payoutConfig.partner ||
         msgSender == payoutConfig.superAffiliate
@@ -432,7 +425,7 @@ library ArchetypeLogic {
           recipients[2] = payoutConfig.partner;
           recipients[3] = payoutConfig.superAffiliate;
 
-          uint32[] memory splits = new uint32[](4);
+          uint16[] memory splits = new uint16[](4);
           splits[0] = payoutConfig.ownerBps;
           splits[1] = payoutConfig.platformBps;
           splits[2] = payoutConfig.partnerBps;
@@ -453,8 +446,20 @@ library ArchetypeLogic {
       } else {
         IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
 
-        if (msgSender == owner && config.ownerAltPayout != address(0)) {
-          erc20Token.transfer(config.ownerAltPayout, wad);
+        if (isOwner) {
+          address[] memory recipients = new address[](4);
+          recipients[0] = owner;
+          recipients[1] = PLATFORM;
+          recipients[2] = payoutConfig.partner;
+          recipients[3] = payoutConfig.superAffiliate;
+
+          uint16[] memory splits = new uint16[](4);
+          splits[0] = payoutConfig.ownerBps;
+          splits[1] = payoutConfig.platformBps;
+          splits[2] = payoutConfig.partnerBps;
+          splits[3] = payoutConfig.superAffiliateBps;
+
+          ArchetypeSplits(SPLITS).updateBalances(wad, tokenAddress, recipients, splits);
         } else {
           erc20Token.transfer(msgSender, wad);
         }
