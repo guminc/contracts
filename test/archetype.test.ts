@@ -598,7 +598,8 @@ describe("Factory", function () {
 
     // withdraw affiliate balance
     balance = await ethers.provider.getBalance(affiliate.address);
-    await nft.connect(affiliate).withdraw();
+    await expect(nft.connect(affiliate).withdraw()).to.be.revertedWith("NotShareholder");
+    await nft.connect(affiliate).withdrawAffiliate();
     diff = (await ethers.provider.getBalance(affiliate.address)).toBigInt() - balance.toBigInt();
     expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.020")));
     expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.024")));
@@ -610,10 +611,10 @@ describe("Factory", function () {
     await expect(archetypeSplits.connect(owner).withdraw()).to.be.revertedWith("BalanceEmpty");
 
     // withdraw empty affiliate balance
-    await expect(nft.connect(affiliate).withdraw()).to.be.revertedWith("BalanceEmpty");
+    await expect(nft.connect(affiliate).withdrawAffiliate()).to.be.revertedWith("BalanceEmpty");
 
     // withdraw unused affiliate balance
-    await expect(nft.connect(accountThree).withdraw()).to.be.revertedWith("BalanceEmpty");
+    await expect(nft.connect(accountThree).withdrawAffiliate()).to.be.revertedWith("BalanceEmpty");
   });
 
   it("should set correct discounts - mint tiers and affiliate", async function () {

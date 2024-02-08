@@ -39,6 +39,7 @@ error BurnToMintDisabled();
 error NotTokenOwner();
 error NotPlatform();
 error NotOwner();
+error NotShareholder();
 error NotApprovedToTransfer();
 error InvalidAmountOfTokens();
 error WrongPassword();
@@ -385,16 +386,44 @@ library ArchetypeLogic {
     }
   }
 
+  function withdrawTokensAffiliate(
+    mapping(address => mapping(address => uint128)) storage _affiliateBalance,
+    address[] calldata tokens
+  ) public {
+    address msgSender = _msgSender();
+
+    for (uint256 i; i < tokens.length; i++) {
+      address tokenAddress = tokens[i];
+      uint128 wad = _affiliateBalance[msgSender][tokenAddress];
+      _affiliateBalance[msgSender][tokenAddress] = 0;
+
+      if (wad == 0) {
+        revert BalanceEmpty();
+      }
+
+      if (tokenAddress == address(0)) {
+        bool success = false;
+        (success, ) = msgSender.call{ value: wad }("");
+        if (!success) {
+          revert TransferFailed();
+        }
+      } else {
+        IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
+        erc20Token.transfer(msgSender, wad);
+      }
+
+      emit Withdrawal(msgSender, tokenAddress, wad);
+    }
+  }
+
   function withdrawTokens(
     PayoutConfig storage payoutConfig,
     mapping(address => uint128) storage _ownerBalance,
-    mapping(address => mapping(address => uint128)) storage _affiliateBalance,
     address owner,
     address[] calldata tokens
   ) public {
     address msgSender = _msgSender();
-    bool isOwner = false;
-    for (uint256 i; i < tokens.length; ) {
+    for (uint256 i; i < tokens.length; i++) {
       address tokenAddress = tokens[i];
       uint128 wad;
 
@@ -406,68 +435,32 @@ library ArchetypeLogic {
       ) {
         wad = _ownerBalance[tokenAddress];
         _ownerBalance[tokenAddress] = 0;
-        isOwner = true;
       } else {
-        wad = _affiliateBalance[msgSender][tokenAddress];
-        _affiliateBalance[msgSender][tokenAddress] = 0;
+        revert NotShareholder();
       }
 
       if (wad == 0) {
         revert BalanceEmpty();
       }
 
+      address[] memory recipients = new address[](4);
+      recipients[0] = owner;
+      recipients[1] = PLATFORM;
+      recipients[2] = payoutConfig.partner;
+      recipients[3] = payoutConfig.superAffiliate;
+
+      uint16[] memory splits = new uint16[](4);
+      splits[0] = payoutConfig.ownerBps;
+      splits[1] = payoutConfig.platformBps;
+      splits[2] = payoutConfig.partnerBps;
+      splits[3] = payoutConfig.superAffiliateBps;
+
       if (tokenAddress == address(0)) {
-        if (isOwner) {
-          address[] memory recipients = new address[](4);
-          recipients[0] = owner;
-          recipients[1] = PLATFORM;
-          recipients[2] = payoutConfig.partner;
-          recipients[3] = payoutConfig.superAffiliate;
-
-          uint16[] memory splits = new uint16[](4);
-          splits[0] = payoutConfig.ownerBps;
-          splits[1] = payoutConfig.platformBps;
-          splits[2] = payoutConfig.partnerBps;
-          splits[3] = payoutConfig.superAffiliateBps;
-
-          ArchetypeSplits(SPLITS).updateBalances{ value: wad }(
-            wad,
-            tokenAddress,
-            recipients,
-            splits
-          );
-        } else {
-          bool success = false;
-          (success, ) = msgSender.call{ value: wad }("");
-          if (!success) {
-            revert TransferFailed();
-          }
-        }
+        ArchetypeSplits(SPLITS).updateBalances{ value: wad }(wad, tokenAddress, recipients, splits);
       } else {
-        IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
-
-        if (isOwner) {
-          address[] memory recipients = new address[](4);
-          recipients[0] = owner;
-          recipients[1] = PLATFORM;
-          recipients[2] = payoutConfig.partner;
-          recipients[3] = payoutConfig.superAffiliate;
-
-          uint16[] memory splits = new uint16[](4);
-          splits[0] = payoutConfig.ownerBps;
-          splits[1] = payoutConfig.platformBps;
-          splits[2] = payoutConfig.partnerBps;
-          splits[3] = payoutConfig.superAffiliateBps;
-
-          ArchetypeSplits(SPLITS).updateBalances(wad, tokenAddress, recipients, splits);
-        } else {
-          erc20Token.transfer(msgSender, wad);
-        }
+        ArchetypeSplits(SPLITS).updateBalances(wad, tokenAddress, recipients, splits);
       }
       emit Withdrawal(msgSender, tokenAddress, wad);
-      unchecked {
-        ++i;
-      }
     }
   }
 

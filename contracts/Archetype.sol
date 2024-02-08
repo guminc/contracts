@@ -255,7 +255,17 @@ contract Archetype is
   }
 
   function withdrawTokens(address[] memory tokens) public {
-    ArchetypeLogic.withdrawTokens(payoutConfig, _ownerBalance, _affiliateBalance, owner(), tokens);
+    ArchetypeLogic.withdrawTokens(payoutConfig, _ownerBalance, owner(), tokens);
+  }
+
+  function withdrawAffiliate() external {
+    address[] memory tokens = new address[](1);
+    tokens[0] = address(0);
+    withdrawTokensAffiliate(tokens);
+  }
+
+  function withdrawTokensAffiliate(address[] memory tokens) public {
+    ArchetypeLogic.withdrawTokensAffiliate(_affiliateBalance, tokens);
   }
 
   function ownerBalance() external view returns (uint128) {
