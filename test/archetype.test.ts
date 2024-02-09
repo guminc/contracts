@@ -52,12 +52,9 @@ describe("Factory", function () {
     DEFAULT_CONFIG = {
       baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
       affiliateSigner: AFFILIATE_SIGNER.address,
-      ownerAltPayout: ZERO,
-      superAffiliatePayout: ZERO,
       maxSupply: 5000,
       maxBatchSize: 20,
       affiliateFee: 1500,
-      platformFee: 500,
       defaultRoyalty: 500,
       discounts: {
         affiliateDiscount: 0,
@@ -632,12 +629,9 @@ describe("Factory", function () {
       {
         baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
         affiliateSigner: AFFILIATE_SIGNER.address,
-        ownerAltPayout: ZERO,
-        superAffiliatePayout: ZERO,
         maxSupply: 5000,
         maxBatchSize: 20,
         affiliateFee: 1500,
-        platformFee: 500,
         defaultRoyalty: 500,
         discounts: {
           affiliateDiscount: 1000, // 10%
@@ -656,7 +650,8 @@ describe("Factory", function () {
             },
           ],
         },
-      }
+      },
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -732,17 +727,23 @@ describe("Factory", function () {
       {
         baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
         affiliateSigner: AFFILIATE_SIGNER.address,
-        ownerAltPayout: ZERO,
-        superAffiliatePayout: superAffiliate.address,
         maxSupply: 5000,
         maxBatchSize: 20,
         affiliateFee: 1500,
-        platformFee: 500,
         defaultRoyalty: 500,
         discounts: {
-          affiliateDiscount: 0, // 10%
+          affiliateDiscount: 0,
           mintTiers: [],
         },
+      },
+      // DEFAULT_PAYOUT_CONFIG
+      {
+        ownerBps: 9000,
+        platformBps: 500,
+        partnerBps: 0,
+        superAffiliateBps: 500,
+        partner: ZERO,
+        superAffiliate: superAffiliate.address,
       }
     );
 
@@ -774,40 +775,49 @@ describe("Factory", function () {
         value: ethers.utils.parseEther("0.1"),
       });
 
-    await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.08")); // 80%
-    await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.0025")); // 2.5%
-    await expect(await nft.affiliateBalance(superAffiliate.address)).to.equal(
-      ethers.utils.parseEther("0.0025")
-    ); // 2.5%
+    await expect(await nft.ownerBalance()).to.equal(ethers.utils.parseEther("0.085")); // 85%
     await expect(await nft.affiliateBalance(affiliate.address)).to.equal(
       ethers.utils.parseEther("0.015")
     ); // 15%
 
+    // withdraw to split
+    await nft.connect(owner).withdraw();
+
+    await expect(await archetypeSplits.balance(owner.address)).to.equal(
+      ethers.utils.parseEther("0.0765")
+    ); // 90%
+    await expect(await archetypeSplits.balance(superAffiliate.address)).to.equal(
+      ethers.utils.parseEther("0.00425")
+    ); // 5%
+    await expect(await archetypeSplits.balance(platform.address)).to.equal(
+      ethers.utils.parseEther("0.00425")
+    ); // 5%
+
     // withdraw owner balance
     let balance = await ethers.provider.getBalance(owner.address);
-    await nft.connect(owner).withdraw();
+    await archetypeSplits.connect(owner).withdraw();
     let diff = (await ethers.provider.getBalance(owner.address)).toBigInt() - balance.toBigInt();
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.078"))); // leave room for gas
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.08")));
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.076"))); // leave room for gas
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.078")));
 
     // withdraw platform balance
     balance = await ethers.provider.getBalance(platform.address);
-    await nft.connect(platform).withdraw(); // partial withdraw
+    await archetypeSplits.connect(platform).withdraw(); // partial withdraw
     diff = (await ethers.provider.getBalance(platform.address)).toBigInt() - balance.toBigInt();
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.0023")));
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.0025")));
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.004")));
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.00425")));
 
     // withdraw super affiliate balance
     balance = await ethers.provider.getBalance(superAffiliate.address);
-    await nft.connect(superAffiliate).withdraw(); // partial withdraw
+    await archetypeSplits.connect(superAffiliate).withdraw(); // partial withdraw
     diff =
       (await ethers.provider.getBalance(superAffiliate.address)).toBigInt() - balance.toBigInt();
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.0023")));
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.0025")));
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.004")));
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.00425")));
 
     // withdraw affiliate balance
     balance = await ethers.provider.getBalance(affiliate.address);
-    await nft.connect(affiliate).withdraw();
+    await nft.connect(affiliate).withdrawAffiliate();
     diff = (await ethers.provider.getBalance(affiliate.address)).toBigInt() - balance.toBigInt();
     expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.014")));
     expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.015")));
