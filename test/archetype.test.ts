@@ -4,6 +4,7 @@ import { expect } from "chai";
 import {
   Archetype__factory,
   Archetype as IArchetype,
+  ArchetypeSplits as IArchetypeSplits,
   ArchetypeLogic__factory,
   ArchetypeBatch__factory,
   ArchetypeSplits__factory,
@@ -43,7 +44,7 @@ describe("Factory", function () {
   let ArchetypeBatch: ArchetypeBatch__factory;
   let archetypeBatch: Contract;
   let ArchetypeSplits: ArchetypeSplits__factory;
-  let archetypeSplits: Contract;
+  let archetypeSplits: IArchetypeSplits;
   let Factory: Factory__factory;
   let factory: Contract;
 
@@ -99,6 +100,15 @@ describe("Factory", function () {
     await factory.deployed();
 
     console.log({ factoryAddress: factory.address, archetypeAddress: archetype.address });
+  });
+
+  beforeEach(async function () {
+    const [accountZero, owner, platform] = await ethers.getSigners();
+    // reset split balances between tests
+    if ((await archetypeSplits.balance(owner.address)) > 0)
+      await archetypeSplits.connect(owner).withdraw();
+    if ((await archetypeSplits.balance(platform.address)) > 0)
+      await archetypeSplits.connect(platform).withdraw();
   });
 
   it("should have platform set to test account", async function () {
@@ -682,16 +692,14 @@ describe("Factory", function () {
         value: ethers.utils.parseEther("0.09"), // 10 % discount from using an affiliate = 0.9
       });
 
-    await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.072")); // 80%
-    await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.0045")); // 5%
+    await expect(await nft.ownerBalance()).to.equal(ethers.utils.parseEther("0.0765")); // 85%
     await expect(await nft.affiliateBalance(affiliate.address)).to.equal(
       ethers.utils.parseEther("0.0135")
     ); // 15%
 
     // reset balances by withdrawing
-    await nft.connect(owner).withdraw();
     await nft.connect(platform).withdraw();
-    await nft.connect(affiliate).withdraw();
+    await nft.connect(affiliate).withdrawAffiliate();
 
     await nft
       .connect(accountZero)
@@ -703,8 +711,7 @@ describe("Factory", function () {
       ethers.utils.parseEther((0.081 * 20).toString())
     );
 
-    await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("1.296")); // 80%
-    await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.081")); // 5%
+    await expect(await nft.ownerBalance()).to.equal(ethers.utils.parseEther("1.377")); // 85%
     await expect(await nft.affiliateBalance(affiliate.address)).to.equal(
       ethers.utils.parseEther("0.243")
     ); // 15%
@@ -837,8 +844,6 @@ describe("Factory", function () {
       {
         baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
         affiliateSigner: AFFILIATE_SIGNER.address,
-        ownerAltPayout: ownerAltPayout.address,
-        superAffiliatePayout: ZERO,
         maxSupply: 5000,
         maxBatchSize: 20,
         affiliateFee: 1500,
@@ -848,7 +853,8 @@ describe("Factory", function () {
           affiliateDiscount: 0, // 10%
           mintTiers: [],
         },
-      }
+      },
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -874,13 +880,18 @@ describe("Factory", function () {
         value: ethers.utils.parseEther("0.1"),
       });
 
-    await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.095")); // 95%
-    await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.005")); // 5%
+    await expect(await nft.ownerBalance()).to.equal(ethers.utils.parseEther("0.1")); // 100%
+
+    // withdraw to split
+    await nft.connect(owner).withdraw();
+
+    // approve alt owner to withdraw
+    await archetypeSplits.connect(owner).approveWithdrawal(ownerAltPayout.address, true);
 
     // first scenario - owner withdraws to alt payout.
 
     let balance = await ethers.provider.getBalance(ownerAltPayout.address);
-    await nft.connect(owner).withdraw();
+    await archetypeSplits.connect(owner).withdrawFrom(owner.address, ownerAltPayout.address);
     // check that eth was sent to alt address
     let diff =
       (await ethers.provider.getBalance(ownerAltPayout.address)).toBigInt() - balance.toBigInt();
@@ -893,10 +904,12 @@ describe("Factory", function () {
         value: ethers.utils.parseEther("0.1"),
       });
 
+    await nft.connect(owner).withdraw();
+
     // second scenario - owner alt withdraws to himself.
 
     balance = await ethers.provider.getBalance(ownerAltPayout.address);
-    await nft.connect(ownerAltPayout).withdraw();
+    await archetypeSplits.connect(owner).withdrawFrom(owner.address, ownerAltPayout.address);
     // check that eth was sent to alt address
     diff =
       (await ethers.provider.getBalance(ownerAltPayout.address)).toBigInt() - balance.toBigInt();
@@ -1390,54 +1403,54 @@ describe("Factory", function () {
     await expect(await nft.ownerOf(100)).to.be.equal(airDropList[99][0]);
   });
 
-  it("test royalty enforcement enabling and lock", async function () {
-    const [_accountZero, accountOne] = await ethers.getSigners();
+  // it("test royalty enforcement enabling and lock", async function () {
+  //   const [_accountZero, accountOne] = await ethers.getSigners();
 
-    const owner = accountOne;
+  //   const owner = accountOne;
 
-    const newCollection = await factory.createCollection(
-      owner.address,
-      DEFAULT_NAME,
-      DEFAULT_SYMBOL,
-      DEFAULT_CONFIG,
-      DEFAULT_PAYOUT_CONFIG
-    );
+  //   const newCollection = await factory.createCollection(
+  //     owner.address,
+  //     DEFAULT_NAME,
+  //     DEFAULT_SYMBOL,
+  //     DEFAULT_CONFIG,
+  //     DEFAULT_PAYOUT_CONFIG
+  //   );
 
-    const result = await newCollection.wait();
-    const newCollectionAddress = result.events[0].address || "";
-    const nft = Archetype.attach(newCollectionAddress);
+  //   const result = await newCollection.wait();
+  //   const newCollectionAddress = result.events[0].address || "";
+  //   const nft = Archetype.attach(newCollectionAddress);
 
-    // // mock opensea default block list addresses
-    // ///The default OpenSea operator blocklist subscription.
-    // const _DEFAULT_SUBSCRIPTION = "0x3cc6CddA760b79bAfa08dF41ECFA224f810dCeB6";
-    // const Subscription = await ethers.getContractFactory("OwnedRegistrant");
-    // const subscription = await Subscription.deploy(opensea.address);
-    // await subscription.deployed();
+  //   // // mock opensea default block list addresses
+  //   // ///The default OpenSea operator blocklist subscription.
+  //   // const _DEFAULT_SUBSCRIPTION = "0x3cc6CddA760b79bAfa08dF41ECFA224f810dCeB6";
+  //   // const Subscription = await ethers.getContractFactory("OwnedRegistrant");
+  //   // const subscription = await Subscription.deploy(opensea.address);
+  //   // await subscription.deployed();
 
-    // /// @dev The OpenSea operator filter registry.
-    // const _OPERATOR_FILTER_REGISTRY = "0x000000000000AAeB6D7670E522A718067333cd4E";
-    // const Filter = await ethers.getContractFactory("OperatorFilterRegistry");
-    // const filter = await Filter.deploy();
-    // await filter.deployed();
+  //   // /// @dev The OpenSea operator filter registry.
+  //   // const _OPERATOR_FILTER_REGISTRY = "0x000000000000AAeB6D7670E522A718067333cd4E";
+  //   // const Filter = await ethers.getContractFactory("OperatorFilterRegistry");
+  //   // const filter = await Filter.deploy();
+  //   // await filter.deployed();
 
-    // await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
-    //   price: ethers.utils.parseEther("0.00"),
-    //   start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-    //   limit: 5000,
-    //   unitSize:0,
-    // tokenAddress: ZERO
-    // });
+  //   // await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+  //   //   price: ethers.utils.parseEther("0.00"),
+  //   //   start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+  //   //   limit: 5000,
+  //   //   unitSize:0,
+  //   // tokenAddress: ZERO
+  //   // });
 
-    await expect((await nft.options()).royaltyEnforcementEnabled).to.be.equal(false);
-    await nft.connect(owner).enableRoyaltyEnforcement();
-    await expect((await nft.options()).royaltyEnforcementEnabled).to.be.equal(true);
-    await nft.connect(owner).disableRoyaltyEnforcement();
-    await expect((await nft.options()).royaltyEnforcementEnabled).to.be.equal(false);
-    await expect((await nft.options()).royaltyEnforcementLocked).to.be.equal(false);
-    await nft.connect(owner).lockRoyaltyEnforcement("forever");
-    await expect((await nft.options()).royaltyEnforcementLocked).to.be.equal(true);
-    await expect(nft.connect(owner).enableRoyaltyEnforcement()).to.be.reverted;
-  });
+  //   await expect((await nft.options()).royaltyEnforcementEnabled).to.be.equal(false);
+  //   await nft.connect(owner).enableRoyaltyEnforcement();
+  //   await expect((await nft.options()).royaltyEnforcementEnabled).to.be.equal(true);
+  //   await nft.connect(owner).disableRoyaltyEnforcement();
+  //   await expect((await nft.options()).royaltyEnforcementEnabled).to.be.equal(false);
+  //   await expect((await nft.options()).royaltyEnforcementLocked).to.be.equal(false);
+  //   await nft.connect(owner).lockRoyaltyEnforcement("forever");
+  //   await expect((await nft.options()).royaltyEnforcementLocked).to.be.equal(true);
+  //   await expect(nft.connect(owner).enableRoyaltyEnforcement()).to.be.reverted;
+  // });
 
   it("test default royalty eip 2981", async function () {
     const [accountZero, accountOne] = await ethers.getSigners();

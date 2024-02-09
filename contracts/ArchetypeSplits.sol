@@ -80,21 +80,23 @@ contract ArchetypeSplits is Ownable {
     }
   }
 
-  function withdrawFor(address from) public {
-    address msgSender = msg.sender;
-    if (!_approvals[from][msgSender]) {
+  function withdrawFrom(address from, address to) public {
+    if (!_approvals[from][to]) {
       revert NotApprovedToWithdraw();
     }
-    _withdraw(from, msgSender, address(0));
+    _withdraw(from, to, address(0));
   }
 
-  function withdrawTokensFor(address from, address[] memory tokens) public {
-    address msgSender = msg.sender;
-    if (!_approvals[from][msgSender]) {
+  function withdrawTokensFrom(
+    address from,
+    address to,
+    address[] memory tokens
+  ) public {
+    if (!_approvals[from][to]) {
       revert NotApprovedToWithdraw();
     }
     for (uint256 i = 0; i < tokens.length; i++) {
-      _withdraw(from, msgSender, tokens[i]);
+      _withdraw(from, to, tokens[i]);
     }
   }
 
