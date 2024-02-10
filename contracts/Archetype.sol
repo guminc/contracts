@@ -268,6 +268,12 @@ contract Archetype is
     ArchetypeLogic.withdrawTokensAffiliate(_affiliateBalance, tokens);
   }
 
+  // Must call before withdrawing erc20 tokens
+  function approveErc20Withdraw(address erc20) public {
+    IERC20Upgradeable erc20Token = IERC20Upgradeable(erc20);
+    erc20Token.approve(SPLITS, 2**256 - 1);
+  }
+
   function ownerBalance() external view returns (uint128) {
     return _ownerBalance[address(0)];
   }
