@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ArchetypeLogic v0.6.1
+// ArchetypeLogic v0.6.1 - DN404
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -36,7 +36,6 @@ error InvalidSignature();
 error BalanceEmpty();
 error TransferFailed();
 error MaxBatchSizeExceeded();
-error BurnToMintDisabled();
 error NotTokenOwner();
 error NotPlatform();
 error NotOwner();
@@ -45,6 +44,7 @@ error InvalidAmountOfTokens();
 error WrongPassword();
 error LockedForever();
 error Blacklisted();
+error URIQueryForNonexistentToken();
 
 //
 // STRUCTS
@@ -83,8 +83,6 @@ struct Options {
   bool affiliateFeeLocked;
   bool discountsLocked;
   bool ownerAltPayoutLocked;
-  bool royaltyEnforcementEnabled;
-  bool royaltyEnforcementLocked;
 }
 
 struct DutchInvite {
@@ -115,16 +113,6 @@ struct Invite {
 struct OwnerBalance {
   uint128 owner;
   uint128 platform;
-}
-
-struct BurnConfig {
-  IERC721AUpgradeable archetype;
-  address burnAddress;
-  bool enabled;
-  bool reversed; // side of the ratio (false=burn {ratio} get 1, true=burn 1 get {ratio})
-  uint16 ratio;
-  uint64 start;
-  uint64 limit;
 }
 
 struct ValidationArgs {
@@ -291,63 +279,6 @@ library ArchetypeLogic {
       if (msg.value > cost) {
         revert ExcessiveEthSent();
       }
-    }
-  }
-
-  function validateBurnToMint(
-    Config storage config,
-    BurnConfig storage burnConfig,
-    uint256[] calldata tokenIds,
-    uint256 curSupply,
-    mapping(address => mapping(bytes32 => uint256)) storage minted
-  ) public view {
-    if (!burnConfig.enabled) {
-      revert BurnToMintDisabled();
-    }
-
-    if (block.timestamp < burnConfig.start) {
-      revert MintNotYetStarted();
-    }
-
-    // check if msgSender owns tokens and has correct approvals
-    address msgSender = _msgSender();
-    for (uint256 i; i < tokenIds.length; ) {
-      if (burnConfig.archetype.ownerOf(tokenIds[i]) != msgSender) {
-        revert NotTokenOwner();
-      }
-      unchecked {
-        ++i;
-      }
-    }
-
-    if (!burnConfig.archetype.isApprovedForAll(msgSender, address(this))) {
-      revert NotApprovedToTransfer();
-    }
-
-    uint256 quantity;
-    if (burnConfig.reversed) {
-      quantity = tokenIds.length * burnConfig.ratio;
-    } else {
-      if (tokenIds.length % burnConfig.ratio != 0) {
-        revert InvalidAmountOfTokens();
-      }
-      quantity = tokenIds.length / burnConfig.ratio;
-    }
-
-    if (quantity > config.maxBatchSize) {
-      revert MaxBatchSizeExceeded();
-    }
-
-    if (burnConfig.limit < config.maxSupply) {
-      uint256 totalAfterMint = minted[msgSender][bytes32("burn")] + quantity;
-
-      if (totalAfterMint > burnConfig.limit) {
-        revert NumberOfMintsExceeded();
-      }
-    }
-
-    if ((curSupply + quantity) > config.maxSupply) {
-      revert MaxSupplyExceeded();
     }
   }
 
