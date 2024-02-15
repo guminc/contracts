@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/scatter-art/contracts#readme",
   "dependencies": {
+    "@nomicfoundation/hardhat-verify": "^2.0.4",
     "concurrently": "6.4.0",
     "ethereumjs-util": "7.1.4",
     "ipfsh": "0.0.6",
@@ -31,7 +32,6 @@
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "2.0.5",
-    "@nomiclabs/hardhat-etherscan": "3.0.3",
     "@nomiclabs/hardhat-truffle5": "2.0.3",
     "@nomiclabs/hardhat-waffle": "2.0.1",
     "@nomiclabs/hardhat-web3": "2.0.0",
