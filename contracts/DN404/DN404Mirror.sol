@@ -143,6 +143,12 @@ contract DN404Mirror {
     return address(uint160(_readWord(0x6352211e, id, 0))); // `ownerOf(uint256)`.
   }
 
+  /// @dev Returns the owner of token `id` from the base DN404 contract.
+  /// Returns `address(0)` instead of reverting if the token does not exist.
+  function ownerAt(uint256 id) public view virtual returns (address result) {
+    return address(uint160(_readWord(0x24359879, id, 0))); // `ownerAt(uint256)`.
+  }
+
   /// @dev Sets `spender` as the approved account to manage token `id` in
   /// the base DN404 contract.
   ///
@@ -262,7 +268,7 @@ contract DN404Mirror {
     address from,
     address to,
     uint256 id
-  ) public virtual {
+  ) public payable virtual {
     transferFrom(from, to, id);
 
     if (_hasCode(to)) _checkOnERC721Received(from, to, id, "");
@@ -372,9 +378,9 @@ contract DN404Mirror {
             codesize(),
             0x00,
             _TRANSFER_EVENT_SIGNATURE,
-            mul(a, b),
-            mul(a, iszero(b)),
-            shr(168, shl(160, d))
+            mul(a, b), // `from`.
+            mul(a, iszero(b)), // `to`.
+            shr(168, shl(160, d)) // `id`.
           )
         }
         mstore(0x00, 0x01)
@@ -401,6 +407,8 @@ contract DN404Mirror {
 
   /// @dev Fallback function for calls from base DN404 contract.
   fallback() external virtual dn404NFTFallback {}
+
+  // receive() external payable virtual {}
 
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                      PRIVATE HELPERS                       */
