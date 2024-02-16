@@ -1,6 +1,8 @@
 import { ethers, run } from "hardhat";
 const ZERO = "0x0000000000000000000000000000000000000000";
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 async function main() {
   //   // Build air drop list from existing contract ownership
   //   const ERC721 = await ethers.getContractFactory("ERC721Upgradeable");
@@ -9,11 +11,12 @@ async function main() {
   //   let tokenId = 1;
   //   let currentOwner = "";
   //   let quantity = 0;
+  //   let attempt = 0;
 
   //   while (true) {
   //     try {
   //       const ownerAddress = await existing.ownerOf(tokenId);
-  //       console.log(ownerAddress);
+  //       console.log(tokenId, ownerAddress);
   //       if (ownerAddress === currentOwner) {
   //         // If the owner is the same as the previous, increase quantity
   //         quantity++;
@@ -26,16 +29,23 @@ async function main() {
   //         currentOwner = ownerAddress;
   //         quantity = 1;
   //       }
-  //       tokenId++;
   //     } catch (error) {
   //       // Assuming error means no more tokens exist, break the loop
   //       // Make sure to add the last streak if it exists
+  //       if (attempt < 10) {
+  //         console.log(`Checked up to token ${tokenId}, error.`);
+  //         attempt += 1;
+  //         await sleep(2000);
+  //         continue;
+  //       }
   //       if (currentOwner !== "") {
   //         airDropList.push([currentOwner, quantity]);
   //       }
-  //       console.log(`Checked up to token ${tokenId - 1}, no more tokens found.`);
+  //       console.log(`Checked up to token ${tokenId}, no more tokens found.`);
   //       break;
   //     }
+  //     attempt = 0;
+  //     tokenId++;
   //   }
   //   console.dir(airDropList, { depth: null });
   //   console.log(JSON.stringify(airDropList, null, 2));
@@ -329,10 +339,66 @@ async function main() {
     ["0xc88D4c252E3d796dD8280563F234b78afF4aD7dd", 1],
     ["0x4A09b2Ef6eeE4635555E5e32B61b2412e76644fB", 1],
     ["0x2f42D303b34c29E1F3FEB9CE5d5355f1e101f99D", 1],
+    ["0x73cccA7296DfEdB88Bfd68cEda833d8D79abB35f", 1],
+    ["0xEa388c0bF4CBEA270473a0e4218bED7Aa26aE4a7", 1],
+    ["0x551cE4488D0Ea7c9568E6D13C52Ee4c81D7Acb14", 1],
+    ["0xDD8a3114540Dd19806d7FcD7caee159dB3af41f4", 1],
+    ["0x2A3Bc5691389Dedd6D8FFcFb826B6b591Ed5E42c", 1],
+    ["0x131d8D438C8Da6D4Cf3AE6877ab9F1181E12f636", 1],
+    ["0xceDA4186f184d4816B99580bC36dD243C629affD", 1],
+    ["0x8eF8cB7E823DBa4b3c09F96Fe9caDb2a4Ea67Cc3", 1],
+    ["0xc5Bc0D7D0F281b056a7158feF99aD9A606b53511", 1],
+    ["0xB9814fd3585021213A140BA3fB48089aE5F46673", 2],
+    ["0xf889Faab204590702c5eFE0f4A72C642a59Ad28A", 1],
+    ["0xcB1CE445D01D0BcD07236a77C895e09C3Abe3B34", 1],
+    ["0x3bcA4137CaE91A7750c879332121897d6b273367", 1],
+    ["0x98B5a355284B42903A7a6d31Fc130E5F2e7D7301", 1],
+    ["0xd6CA84C87Fe90EBd16423162767FB0A05a4046ba", 1],
+    ["0xEE32F3f24c964330d4702212A096ae2377ed65ff", 1],
+    ["0x8e7DfC77CD457cd21160C77a076d7426213B89b6", 1],
+    ["0x9B5b2E4C41Cb91A4F0d024F7FC0023A966F4D740", 1],
+    ["0x39d26136bD9B2024D2ef03cbE8FB5F0DdE4d7292", 1],
+    ["0x16F6ce93135320fCd80F4B680a329BBf05Cb68fe", 1],
+    ["0xe136b6E0f5667715C480CeA522627050A5c68E4A", 1],
+    ["0xa5428D3d037BFE9fC5F27A1D1741d4404B78749c", 1],
+    ["0x2B0666DC49e70C4A23a9bdC4a54695CC2361f72c", 1],
+    ["0x5abA5750E3cA0a861022F5C42eFA36F929Ff86c0", 1],
+    ["0x2C62fEA2CbF9a501008bE9E9CC5bB978271fe58d", 1],
+    ["0x9395D3897Da19e921aA7F97048dE6E64bE3f8C0b", 1],
+    ["0xd95177d3899cAa6a4c98B51AaB4b9508D31dc06d", 1],
+    ["0x064245A7FDbdF571F77b052Eee4e76682cbB01ba", 1],
+    ["0x62F1b4dF30dc386802f512a84AD4d77538356170", 1],
+    ["0xf56cC6c3B4eec55B20478bEDE92eEEA5814cF504", 1],
+    ["0x39a357999CfED99dd23C3403EED9E785cbd68602", 10],
+    ["0x73622bF69Ac59afBb25386760485B4134Bec37F1", 20],
+    ["0x3341214aF49039A358EFBA89a9fAC1910dfD9f86", 1],
+    ["0x20D72443D9dD6C99a26C654f0ABD215deE5448eB", 1],
+    ["0xf46AD5D4a7c993284205e63e8DAe956bA6aEB03d", 7],
+    ["0x7bdA36e22524A44ff093Fd332BFE5f60717408B2", 1],
+    ["0x3bcA4137CaE91A7750c879332121897d6b273367", 1],
+    ["0x073c0BD7685eE79FC8FA045aC1AD2D0265A3766B", 1],
+    ["0x0f240079355bFb7bA5449895Ea4aD0134c8AD0da", 1],
+    ["0x8A88C42331f8c3f58072773c2E6A7368256Ed48a", 2],
+    ["0x2D4099c2F78091182C36B50cd4de37D7012886C3", 1],
+    ["0xa53a7E1e00b0bBfdD58A21449e2fE606F58B9FAE", 1],
+    ["0x73075CC91Ea38BFad691576A428A27e660d79D2d", 1],
+    ["0xe57045d728EFf6cB7F0e74BbA6db66A85cF3EF5F", 1],
+    ["0x3D8DA51ed8067094330aAC8555bef477306A248D", 1],
+    ["0x3265a87200542D7fc68408723e3296DFc577C7F3", 1],
+    ["0xA638281022EBc6E5f32D33Cf0c76ADd600fEbd4E", 1],
+    ["0xf46AD5D4a7c993284205e63e8DAe956bA6aEB03d", 7],
+    ["0xC4dBC7D5957dceF7eD2B0778C597c16Ce2769E7d", 1],
+    ["0x249fDd621085d3e6330fB5908e75b6a71Df33f47", 2],
+    ["0x73622bF69Ac59afBb25386760485B4134Bec37F1", 252],
+    ["0xf3027C60Ad95B2Ee3faB28A23843B8f5D2552858", 1],
+    ["0x338f816BB6425A56dd6c52C835813C1950C69E5d", 1],
+    ["0x7F65014Ac2c005C3DfFEFA3FAd407A58041FF5F2", 1],
+    ["0x62B90c5A44865B4147e97Dfc80d58641f44BbC33", 1],
+    ["0xd4f3E45065d71a060c5FAf8629ba9304Cca535Ac", 1],
   ];
 
   // mint in n txs (can handle about 500 owners per tx with 3mil gas limit)
-  const splits = 5;
+  const splits = 1;
   function splitToChunks(array, parts) {
     const copied = [...array];
     let result = [];
@@ -343,13 +409,13 @@ async function main() {
   }
 
   const ArchetypeLogic = await ethers.getContractFactory("ArchetypeLogic");
-  const archetypeLogic = await ArchetypeLogic.attach("0x95304f668591F68C98Ee269E150ce84972d9Fc10");
+  const archetypeLogic = await ArchetypeLogic.attach("0xd6ABB04bfC53265e8e51Ddd7E711c5A2E6b1524e");
   const Archetype = await ethers.getContractFactory("Archetype", {
     libraries: {
       ArchetypeLogic: archetypeLogic.address,
     },
   });
-  const archetype = Archetype.attach("0xD71cBa08f804f02786f24f656C3B09849b44499E");
+  const archetype = Archetype.attach("0xf56Af79C9e8446357b8e38CBEcB36976b9C9ed72");
 
   const airDropListSplit = splitToChunks(airDropList, splits);
   for (const split of airDropListSplit) {

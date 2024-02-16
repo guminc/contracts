@@ -97,6 +97,16 @@ abstract contract DN404 {
   /// @dev The flag to denote that the address should skip NFTs.
   uint8 internal constant _ADDRESS_DATA_SKIP_NFT_FLAG = 1 << 1;
 
+  /// @dev The flag to denote that the address has overridden the default Permit2 allowance.
+  uint8 internal constant _ADDRESS_DATA_OVERRIDE_PERMIT2_FLAG = 1 << 2;
+
+  /// @dev The canonical Permit2 address.
+  /// For signature-based allowance granting for single transaction ERC20 `transferFrom`.
+  /// To enable, override `_givePermit2DefaultInfiniteAllowance()`.
+  /// [Github](https://github.com/Uniswap/permit2)
+  /// [Etherscan](https://etherscan.io/address/0x000000000022D473030F116dDEE9F6B43aC78BA3)
+  address internal constant _PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
+
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
   /*                          STORAGE                           */
   /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
@@ -157,6 +167,8 @@ abstract contract DN404 {
     mapping(uint256 => address) nftApprovals;
     // Bitmap of whether an non-zero NFT approval may exist.
     Bitmap mayHaveNFTApproval;
+    // Bitmap of whether a token ID exists.
+    Bitmap exists;
     // Mapping of user allowances for token spenders.
     AddressPairToUint256RefMap allowance;
     // Mapping of NFT IDs owned by an address.
@@ -273,6 +285,10 @@ abstract contract DN404 {
 
   /// @dev Returns the amount of tokens that `spender` can spend on behalf of `owner`.
   function allowance(address owner, address spender) public view returns (uint256) {
+    if (_givePermit2DefaultInfiniteAllowance() && spender == _PERMIT2) {
+      uint8 flags = _getDN404Storage().addressData[owner].flags;
+      if (flags & _ADDRESS_DATA_OVERRIDE_PERMIT2_FLAG == 0) return type(uint256).max;
+    }
     return _ref(_getDN404Storage().allowance, owner, spender).value;
   }
 
@@ -324,7 +340,12 @@ abstract contract DN404 {
     uint256 amount
   ) public virtual returns (bool) {
     Uint256Ref storage a = _ref(_getDN404Storage().allowance, from, msg.sender);
-    uint256 allowed = a.value;
+
+    uint256 allowed = _givePermit2DefaultInfiniteAllowance() &&
+      msg.sender == _PERMIT2 &&
+      (_getDN404Storage().addressData[from].flags & _ADDRESS_DATA_OVERRIDE_PERMIT2_FLAG) == 0
+      ? type(uint256).max
+      : a.value;
 
     if (allowed != type(uint256).max) {
       if (amount > allowed) revert InsufficientAllowance();
@@ -334,6 +355,17 @@ abstract contract DN404 {
     }
     _transfer(from, to, amount);
     return true;
+  }
+
+  /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
+  /*                          PERMIT2                           */
+  /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
+
+  /// @dev Whether Permit2 has infinite allowances by default for all owners.
+  /// For signature-based allowance granting for single transaction ERC20 `transferFrom`.
+  /// To enable, override this function to return true.
+  function _givePermit2DefaultInfiniteAllowance() internal view virtual returns (bool) {
+    return false;
   }
 
   /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
@@ -355,13 +387,13 @@ abstract contract DN404 {
     AddressData storage toAddressData = _addressData(to);
 
     unchecked {
-      uint256 maxNFTId;
+      uint256 maxId;
       {
         uint256 totalSupply_ = uint256($.totalSupply) + amount;
         $.totalSupply = uint96(totalSupply_);
         uint256 overflows = _toUint(_totalSupplyOverflows(totalSupply_));
         if (overflows | _toUint(totalSupply_ < amount) != 0) revert TotalSupplyOverflow();
-        maxNFTId = totalSupply_ / _unit();
+        maxId = totalSupply_ / _unit();
       }
       uint256 toEnd;
       {
@@ -390,17 +422,19 @@ abstract contract DN404 {
             } else {
               id = nextTokenId;
               while (_get(oo, _ownershipIndex(id)) != 0) {
-                id = _wrapNFTId(id + 1, maxNFTId);
+                id = _useExistsLookup()
+                  ? _wrapNFTId(_findFirstUnset($.exists, id + 1, maxId + 1), maxId)
+                  : _wrapNFTId(id + 1, maxId);
               }
-              nextTokenId = _wrapNFTId(id + 1, maxNFTId);
+              nextTokenId = _wrapNFTId(id + 1, maxId);
             }
+            if (_useExistsLookup()) _set($.exists, id, true);
             _set(toOwned, toIndex, uint32(id));
             _setOwnerAliasAndOwnedIndex(oo, id, toAlias, uint32(toIndex++));
             _packedLogsAppend(packedLogs, id);
           } while (toIndex != toEnd);
 
-          // Leave some spacing between minted batches for better open addressing.
-          $.nextTokenId = uint32(_wrapNFTId(nextTokenId + 7, maxNFTId));
+          $.nextTokenId = uint32(nextTokenId);
           $.burnedPoolSize = uint32(burnedPoolSize);
           _packedLogsSend(packedLogs, $.mirrorERC721);
         }
@@ -457,9 +491,8 @@ abstract contract DN404 {
           uint256 id = _get(fromOwned, --fromIndex);
           _setOwnerAliasAndOwnedIndex(oo, id, 0, 0);
           _packedLogsAppend(packedLogs, id);
-          if (addToBurnedPool) {
-            _set($.burnedPool, burnedPoolSize++, uint32(id));
-          }
+          if (_useExistsLookup()) _set($.exists, id, false);
+          if (addToBurnedPool) _set($.burnedPool, burnedPoolSize++, uint32(id));
           if (_get($.mayHaveNFTApproval, id)) {
             _set($.mayHaveNFTApproval, id, false);
             delete $.nftApprovals[id];
@@ -541,9 +574,8 @@ abstract contract DN404 {
           uint256 id = _get(fromOwned, --fromIndex);
           _setOwnerAliasAndOwnedIndex(oo, id, 0, 0);
           _packedLogsAppend(packedLogs, id);
-          if (addToBurnedPool) {
-            _set($.burnedPool, burnedPoolSize++, uint32(id));
-          }
+          if (_useExistsLookup()) _set($.exists, id, false);
+          if (addToBurnedPool) _set($.burnedPool, burnedPoolSize++, uint32(id));
           if (_get($.mayHaveNFTApproval, id)) {
             _set($.mayHaveNFTApproval, id, false);
             delete $.nftApprovals[id];
@@ -558,7 +590,7 @@ abstract contract DN404 {
         uint256 toIndex = t.toOwnedLength;
         uint256 toEnd = toIndex + t.numNFTMints;
         uint32 toAlias = _registerAndResolveAlias(toAddressData, to);
-        uint256 maxNFTId = t.totalSupply / _unit();
+        uint256 maxId = t.totalSupply / _unit();
         toAddressData.ownedLength = uint32(toEnd);
         // Mint loop.
         do {
@@ -568,17 +600,19 @@ abstract contract DN404 {
           } else {
             id = nextTokenId;
             while (_get(oo, _ownershipIndex(id)) != 0) {
-              id = _wrapNFTId(id + 1, maxNFTId);
+              id = _useExistsLookup()
+                ? _wrapNFTId(_findFirstUnset($.exists, id + 1, maxId + 1), maxId)
+                : _wrapNFTId(id + 1, maxId);
             }
-            nextTokenId = _wrapNFTId(id + 1, maxNFTId);
+            nextTokenId = _wrapNFTId(id + 1, maxId);
           }
+          if (_useExistsLookup()) _set($.exists, id, true);
           _set(toOwned, toIndex, uint32(id));
           _setOwnerAliasAndOwnedIndex(oo, id, toAlias, uint32(toIndex++));
           _packedLogsAppend(packedLogs, id);
         } while (toIndex != toEnd);
 
-        // Leave some spacing between minted batches for better open addressing.
-        $.nextTokenId = uint32(_wrapNFTId(nextTokenId + 7, maxNFTId));
+        $.nextTokenId = uint32(nextTokenId);
       }
 
       if (packedLogs.logs.length != 0) {
@@ -605,6 +639,15 @@ abstract contract DN404 {
     // Add to burned pool if the load factor > 50%, and collection is not small.
     uint256 thres = (totalSupplyAfterBurn / _unit()) >> 1;
     return _toUint(totalNFTSupplyAfterBurn > thres) & _toUint(thres > 128) != 0;
+  }
+
+  /// @dev Returns whether to use the exists lookup for more efficient
+  /// scanning of an empty token ID slot. Highly recommended for collections
+  /// with near full load factor `totalNFTSupply * _unit() / totalSupply`.
+  /// The trade off is slightly higher initial storage write costs,
+  /// which will be quickly amortized away.
+  function _useExistsLookup() internal pure virtual returns (bool) {
+    return true;
   }
 
   /// @dev Transfers token `id` from `from` to `to`.
@@ -694,6 +737,9 @@ abstract contract DN404 {
     address spender,
     uint256 amount
   ) internal virtual {
+    if (_givePermit2DefaultInfiniteAllowance() && spender == _PERMIT2) {
+      _getDN404Storage().addressData[owner].flags |= _ADDRESS_DATA_OVERRIDE_PERMIT2_FLAG;
+    }
     _ref(_getDN404Storage().allowance, owner, spender).value = amount;
     /// @solidity memory-safe-assembly
     assembly {
@@ -1073,6 +1119,57 @@ abstract contract DN404 {
     }
   }
 
+  /// @dev Returns the index of the least significant unset bit in `[begin, end)`.
+  /// If no set bit is found, returns `type(uint256).max`.
+  function _findFirstUnset(
+    Bitmap storage bitmap,
+    uint256 begin,
+    uint256 end
+  ) internal view returns (uint256 unsetBitIndex) {
+    /// @solidity memory-safe-assembly
+    assembly {
+      unsetBitIndex := not(0) // Initialize to `type(uint256).max`.
+      let s := shl(96, bitmap.slot) // Storage offset of the bitmap.
+      let bucket := add(s, shr(8, begin))
+      let lastBucket := add(s, shr(8, end))
+      let negBits := shl(and(0xff, begin), shr(and(0xff, begin), not(sload(bucket))))
+      if iszero(negBits) {
+        for {
+
+        } 1 {
+
+        } {
+          bucket := add(bucket, 1)
+          negBits := not(sload(bucket))
+          if or(negBits, gt(bucket, lastBucket)) {
+            break
+          }
+        }
+        if gt(bucket, lastBucket) {
+          negBits := shr(and(0xff, not(end)), shl(and(0xff, not(end)), negBits))
+        }
+      }
+      if negBits {
+        // Find-first-set routine.
+        let b := and(negBits, add(not(negBits), 1)) // Isolate the least significant bit.
+        let r := shl(7, lt(0xffffffffffffffffffffffffffffffff, b))
+        r := or(r, shl(6, lt(0xffffffffffffffff, shr(r, b))))
+        r := or(r, shl(5, lt(0xffffffff, shr(r, b))))
+        // For the remaining 32 bits, use a De Bruijn lookup.
+        // forgefmt: disable-next-item
+        r := or(
+          r,
+          byte(
+            and(div(0xd76453e0, shr(r, b)), 0x1f),
+            0x001f0d1e100c1d070f090b19131c1706010e11080a1a141802121b1503160405
+          )
+        )
+        r := or(shl(8, sub(bucket, s)), r)
+        unsetBitIndex := or(r, sub(0, or(iszero(lt(r, end)), lt(r, begin))))
+      }
+    }
+  }
+
   /// @dev Returns a storage reference to the value at (`a0`, `a1`) in `map`.
   function _ref(
     AddressPairToUint256RefMap storage map,
@@ -1091,10 +1188,10 @@ abstract contract DN404 {
   }
 
   /// @dev Wraps the NFT ID.
-  function _wrapNFTId(uint256 id, uint256 maxNFTId) internal pure returns (uint256 result) {
+  function _wrapNFTId(uint256 id, uint256 maxId) internal pure returns (uint256 result) {
     /// @solidity memory-safe-assembly
     assembly {
-      result := or(mul(iszero(gt(id, maxNFTId)), id), gt(id, maxNFTId))
+      result := or(mul(iszero(gt(id, maxId)), id), gt(id, maxId))
     }
   }
 
