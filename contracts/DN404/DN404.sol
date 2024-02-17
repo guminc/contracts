@@ -64,6 +64,9 @@ abstract contract DN404 {
   /// @dev Thrown when the caller for a fallback NFT function is not the mirror contract.
   error SenderNotMirror();
 
+  /// @dev Thrown when the fn selector for a fallback NFT function is not recognized.
+  error FnSelectorNotRecognized();
+
   /// @dev Thrown when attempting to transfer tokens to the zero address.
   error TransferToZeroAddress();
 
@@ -1026,6 +1029,7 @@ abstract contract DN404 {
     if (fnSelector == 0xb7a94eb8) {
       _return(1);
     }
+    revert FnSelectorNotRecognized();
     _;
   }
 
