@@ -70,7 +70,7 @@ contract Archetype is
     if (
       config_.affiliateFee > MAXBPS ||
       config_.platformFee > MAXBPS ||
-      config_.platformFee < 500 ||
+      config_.platformFee < 1000 ||
       config_.discounts.affiliateDiscount > MAXBPS ||
       config_.affiliateSigner == address(0) ||
       config_.maxBatchSize == 0
@@ -436,13 +436,6 @@ contract Archetype is
     }
     invites[_key] = _dutchInvite;
     emit Invited(_key, _cid);
-  }
-
-  //
-  // PLATFORM ONLY
-  //
-  function setSuperAffiliatePayout(address superAffiliatePayout) external _onlyPlatform {
-    config.superAffiliatePayout = superAffiliatePayout;
   }
 
   //

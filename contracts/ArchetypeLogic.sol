@@ -68,7 +68,6 @@ struct Config {
   string baseUri;
   address affiliateSigner;
   address ownerAltPayout; // optional alternative address for owner withdrawals.
-  address superAffiliatePayout; // optional super affiliate address, will receive half of platform fee if set.
   uint32 maxSupply;
   uint32 maxBatchSize;
   uint16 affiliateFee; //BPS
@@ -124,6 +123,7 @@ struct ValidationArgs {
 }
 
 address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
+address constant DEVVAULT = 0xe9191E06EaA1b32997FFAFB9a2AbBab525518Fa8;
 address constant BATCH = 0x6Bc558A6DC48dEfa0e7022713c23D65Ab26e4Fa7;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 
@@ -306,11 +306,8 @@ library ArchetypeLogic {
       emit Referral(affiliate, tokenAddress, affiliateWad, quantity);
     }
 
-    uint128 superAffiliateWad;
-    if (config.superAffiliatePayout != address(0)) {
-      superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
-      _affiliateBalance[config.superAffiliatePayout][tokenAddress] += superAffiliateWad;
-    }
+    uint128 superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
+    _affiliateBalance[DEVVAULT][tokenAddress] += superAffiliateWad;
 
     OwnerBalance memory balance = _ownerBalance[tokenAddress];
     uint128 platformWad = ((value * config.platformFee) / 10000) - superAffiliateWad;

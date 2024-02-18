@@ -2,7 +2,6 @@ export type IArchetypeConfig = {
   baseUri: string;
   affiliateSigner: string;
   ownerAltPayout: string;
-  superAffiliatePayout: string;
   maxSupply: number;
   maxBatchSize: number;
   affiliateFee: number;
