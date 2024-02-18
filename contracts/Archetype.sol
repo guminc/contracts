@@ -156,7 +156,7 @@ contract Archetype is
     if (invite.limit < invite.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
     }
-    if (invite.maxSupply < config.maxSupply) {
+    if (invite.maxSupply < UINT32_MAX) {
       _listSupply[auth.key] += quantity;
     }
     ArchetypeLogic.updateBalances(
@@ -200,7 +200,7 @@ contract Archetype is
     if (i.limit < i.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
     }
-    if (i.maxSupply < config.maxSupply) {
+    if (i.maxSupply < UINT32_MAX) {
       _listSupply[auth.key] += quantity;
     }
     ArchetypeLogic.updateBalances(
