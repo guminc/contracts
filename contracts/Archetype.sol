@@ -16,7 +16,7 @@
 pragma solidity ^0.8.4;
 
 import "./ArchetypeLogic.sol";
-import "./DN404/DN404.sol";
+import "dn404/src/DN404.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
