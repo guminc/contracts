@@ -33,6 +33,7 @@ const HASHONE = "0x0000000000000000000000000000000000000000000000000000000000000
 const HASH256 = "0x00000000000000000000000000000000000000000000000000000000000000ff";
 
 const UNIT = 10 ** 18;
+const UINT32_MAX = 2 ** 32 - 1;
 
 describe("Factory", function () {
   let Archetype: Archetype__factory;
@@ -1224,7 +1225,7 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
       limit: 300,
-      maxSupply: DEFAULT_CONFIG.maxSupply,
+      maxSupply: UINT32_MAX,
       unitSize: 0,
       tokenAddress: ZERO,
       isBlacklist: false,
@@ -1644,7 +1645,7 @@ describe("Factory", function () {
       limit: 300,
       interval: 0, // 1000s,
       delta: ethers.utils.parseEther("0.01"),
-      maxSupply: DEFAULT_CONFIG.maxSupply - 1,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
       isBlacklist: false,
