@@ -272,6 +272,10 @@ contract Archetype is
     return PLATFORM;
   }
 
+  function devVault() external pure returns (address) {
+    return DEVVAULT;
+  }
+
   function computePrice(
     bytes32 key,
     uint256 quantity,
