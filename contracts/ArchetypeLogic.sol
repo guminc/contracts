@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ArchetypeLogic v0.6.1
+// ArchetypeLogic v0.6.2
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -138,6 +138,7 @@ struct ValidationArgs {
 address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
 address constant BATCH = 0x6Bc558A6DC48dEfa0e7022713c23D65Ab26e4Fa7;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
+uint32 constant UINT32_MAX = 2**32 - 1;
 
 library ArchetypeLogic {
   //

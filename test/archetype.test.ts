@@ -1633,9 +1633,10 @@ describe("Factory", function () {
       limit: 300,
       interval: 0, // 1000s,
       delta: ethers.utils.parseEther("0.01"),
-      maxSupply: DEFAULT_CONFIG.maxSupply - 1,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
       tokenAddress: ZERO,
+      isBlacklist: false,
     });
 
     // mint at full price

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.6.1
+// Archetype v0.6.2
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -153,7 +153,7 @@ contract Archetype is
     if (invite.limit < invite.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
     }
-    if (invite.maxSupply < config.maxSupply) {
+    if (invite.maxSupply < UINT32_MAX) {
       _listSupply[auth.key] += quantity;
     }
     ArchetypeLogic.updateBalances(
@@ -197,7 +197,7 @@ contract Archetype is
     if (i.limit < i.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
     }
-    if (i.maxSupply < config.maxSupply) {
+    if (i.maxSupply < UINT32_MAX) {
       _listSupply[auth.key] += quantity;
     }
     ArchetypeLogic.updateBalances(
