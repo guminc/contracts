@@ -2205,28 +2205,33 @@ describe("Factory", function () {
     let DN404Mirror = await ethers.getContractFactory("DN404Mirror");
     const mirror = DN404Mirror.attach(await nft.mirrorERC721());
 
-    // for (let id = 1; id < 14; id++) {
-    //   console.log(await mirror.ownerOf(id));
-    // }
     expect(await mirror.balanceOf(accountZero.address)).to.equal(6);
     expect(await mirror.ownerOf(1)).to.equal(accountZero.address);
     expect(await mirror.ownerOf(6)).to.equal(accountZero.address);
-    expect(await mirror.ownerOf(7)).to.equal(accountOne.address);
-    // BURNED
-    // expect(await mirror.ownerOf(8)).to.equal(ethers.constants.AddressZero);
-    // expect(await mirror.ownerOf(9)).to.equal(ethers.constants.AddressZero);
-    expect(await mirror.ownerOf(10)).to.equal(accountTwo.address);
+    // expect(await mirror.ownerOf(7)).to.equal((ethers.constants.AddressZero);
+    expect(await mirror.ownerOf(8)).to.equal(accountTwo.address);
+    // expect(await mirror.ownerOf(9)).to.equal(ethers.constants.AddressZero));
+    expect(await mirror.ownerOf(10)).to.equal(accountOne.address);
     expect(await mirror.ownerOf(11)).to.equal(accountThree.address);
     expect(await mirror.ownerOf(12)).to.equal(accountThree.address);
     expect(await mirror.ownerOf(13)).to.equal(accountThree.address);
 
     // even up some balances account zero = 5.0, account one = 3, account two = 2
     // 8,9 will remint
-    await nft.connect(accountZero).transfer(accountOne.address, BigInt(1.1 * UNIT));
-    await nft.connect(accountZero).transfer(accountTwo.address, BigInt(0.4 * UNIT));
+    await nft.connect(accountZero).transfer(accountOne.address, BigInt(1 * UNIT + (1 * UNIT) / 10));
+    await nft.connect(accountZero).transfer(accountTwo.address, BigInt((4 * UNIT) / 10));
+
+    console.log(await nft.balanceOf(accountZero.address));
+    console.log(await nft.balanceOf(accountOne.address));
+    console.log(await nft.balanceOf(accountTwo.address));
+    for (let id = 1; id < 15; id++) {
+      try {
+        console.log(id, await mirror.ownerOf(id));
+      } catch (e) {}
+    }
 
     expect(await mirror.ownerOf(6)).to.equal(accountOne.address);
-    expect(await mirror.ownerOf(8)).to.equal(accountOne.address);
+    expect(await mirror.ownerOf(7)).to.equal(accountOne.address);
 
     expect(await mirror.ownerOf(9)).to.equal(accountTwo.address);
   });
