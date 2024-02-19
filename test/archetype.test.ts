@@ -2212,14 +2212,23 @@ describe("Factory", function () {
     expect(await mirror.ownerOf(1)).to.equal(accountZero.address);
     expect(await mirror.ownerOf(6)).to.equal(accountZero.address);
     expect(await mirror.ownerOf(7)).to.equal(accountOne.address);
-    expect(await mirror.ownerOf(8)).to.equal(accountThree.address);
-    expect(await mirror.ownerOf(9)).to.equal(accountThree.address);
+    // BURNED
     // expect(await mirror.ownerOf(8)).to.equal(ethers.constants.AddressZero);
     // expect(await mirror.ownerOf(9)).to.equal(ethers.constants.AddressZero);
     expect(await mirror.ownerOf(10)).to.equal(accountTwo.address);
     expect(await mirror.ownerOf(11)).to.equal(accountThree.address);
-    // expect(await mirror.ownerOf(12)).to.equal(accountThree.address);
-    // expect(await mirror.ownerOf(13)).to.equal(accountThree.address);
+    expect(await mirror.ownerOf(12)).to.equal(accountThree.address);
+    expect(await mirror.ownerOf(13)).to.equal(accountThree.address);
+
+    // even up some balances account zero = 5.0, account one = 3, account two = 2
+    // 8,9 will remint
+    await nft.connect(accountZero).transfer(accountOne.address, BigInt(1.1 * UNIT));
+    await nft.connect(accountZero).transfer(accountTwo.address, BigInt(0.4 * UNIT));
+
+    expect(await mirror.ownerOf(6)).to.equal(accountOne.address);
+    expect(await mirror.ownerOf(8)).to.equal(accountOne.address);
+
+    expect(await mirror.ownerOf(9)).to.equal(accountTwo.address);
   });
 });
 

@@ -396,9 +396,12 @@ abstract contract DN404 {
       toAddressData.balance = uint96(toBalance);
       t.toEnd = toBalance / _unit();
     }
+    uint256 startId;
     uint256 maxId;
     unchecked {
-      uint256 totalSupply_ = uint256($.totalSupply) + amount;
+      uint256 preTotalSupply_ = uint256($.totalSupply);
+      startId = preTotalSupply_ / _unit() + 1;
+      uint256 totalSupply_ = preTotalSupply_ + amount;
       $.totalSupply = uint96(totalSupply_);
       uint256 overflows = _toUint(_totalSupplyOverflows(totalSupply_));
       if (overflows | _toUint(totalSupply_ < amount) != 0) revert TotalSupplyOverflow();
@@ -416,31 +419,21 @@ abstract contract DN404 {
           $.totalNFTSupply += uint32(packedLogs.logs.length);
           toAddressData.ownedLength = uint32(t.toEnd);
           t.toAlias = _registerAndResolveAlias(toAddressData, to);
-          uint32 burnedPoolHead = $.burnedPoolHead;
-          uint32 burnedPoolTail = $.burnedPoolTail;
-          uint256 nextTokenId = $.nextTokenId;
           // Mint loop.
           do {
-            uint256 id;
-            if (burnedPoolHead != burnedPoolTail) {
-              id = _get($.burnedPool, burnedPoolHead++);
-            } else {
-              id = nextTokenId;
-              while (_get(oo, _ownershipIndex(id)) != 0) {
-                id = _useExistsLookup()
-                  ? _wrapNFTId(_findFirstUnset($.exists, id + 1, maxId + 1), maxId)
-                  : _wrapNFTId(id + 1, maxId);
-              }
-              nextTokenId = _wrapNFTId(id + 1, maxId);
+            uint256 id = startId;
+            while (_get(oo, _ownershipIndex(id)) != 0) {
+              id = _useExistsLookup()
+                ? _wrapNFTId(_findFirstUnset($.exists, id + 1, maxId + 1), maxId)
+                : _wrapNFTId(id + 1, maxId);
             }
+            startId = _wrapNFTId(id + 1, maxId);
             if (_useExistsLookup()) _set($.exists, id, true);
             _set(toOwned, toIndex, uint32(id));
             _setOwnerAliasAndOwnedIndex(oo, id, t.toAlias, uint32(toIndex++));
             _packedLogsAppend(packedLogs, id);
           } while (toIndex != t.toEnd);
 
-          $.nextTokenId = uint32(nextTokenId);
-          $.burnedPoolHead = burnedPoolHead;
           _packedLogsSend(packedLogs, $.mirrorERC721);
         }
       }
