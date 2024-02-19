@@ -17,7 +17,7 @@ pragma solidity ^0.8.4;
 
 import "./Archetype.sol";
 import "./ArchetypeLogic.sol";
-import "dn404/src/DN404Mirror.sol";
+import "./dn404/DN404Mirror.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 

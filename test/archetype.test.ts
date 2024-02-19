@@ -2153,6 +2153,74 @@ describe("Factory", function () {
 
     expect(await mirror.balanceOf(accountOne.address)).to.equal(1);
   });
+
+  it("test dn404 edge cases", async function () {
+    const [accountZero, accountOne, accountTwo, accountThree] = await ethers.getSigners();
+
+    const owner = accountOne;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+
+    const newCollectionAddress = result.events[0].address || "";
+
+    const nft = Archetype.attach(newCollectionAddress);
+
+    await sleep(1000);
+
+    const invitelist = new Invitelist([accountZero.address]);
+
+    const today = new Date();
+    const tomorrow = today.setDate(today.getDate() + 1);
+
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: 0,
+      start: 0,
+      end: 0,
+      limit: 1000,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
+      unitSize: 0,
+      tokenAddress: ZERO,
+      isBlacklist: false,
+    });
+
+    await nft
+      .connect(accountZero)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 10, ZERO, "0x", { value: 0 });
+
+    await nft.connect(accountZero).transfer(accountOne.address, BigInt(3.5 * UNIT));
+
+    await nft.connect(accountOne).transfer(accountTwo.address, BigInt(1.6 * UNIT));
+
+    await nft
+      .connect(accountThree)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 3, ZERO, "0x", { value: 0 });
+
+    let DN404Mirror = await ethers.getContractFactory("DN404Mirror");
+    const mirror = DN404Mirror.attach(await nft.mirrorERC721());
+
+    // for (let id = 1; id < 14; id++) {
+    //   console.log(await mirror.ownerOf(id));
+    // }
+    expect(await mirror.balanceOf(accountZero.address)).to.equal(6);
+    expect(await mirror.ownerOf(1)).to.equal(accountZero.address);
+    expect(await mirror.ownerOf(6)).to.equal(accountZero.address);
+    expect(await mirror.ownerOf(7)).to.equal(accountOne.address);
+    expect(await mirror.ownerOf(8)).to.equal(accountThree.address);
+    expect(await mirror.ownerOf(9)).to.equal(accountThree.address);
+    // expect(await mirror.ownerOf(8)).to.equal(ethers.constants.AddressZero);
+    // expect(await mirror.ownerOf(9)).to.equal(ethers.constants.AddressZero);
+    expect(await mirror.ownerOf(10)).to.equal(accountTwo.address);
+    expect(await mirror.ownerOf(11)).to.equal(accountThree.address);
+    // expect(await mirror.ownerOf(12)).to.equal(accountThree.address);
+    // expect(await mirror.ownerOf(13)).to.equal(accountThree.address);
+  });
 });
 
 // todo: add test to ensure affiliate signer can't be zero address
