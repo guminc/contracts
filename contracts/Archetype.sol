@@ -16,7 +16,7 @@
 pragma solidity ^0.8.4;
 
 import "./ArchetypeLogic.sol";
-import "./dn404/DN404.sol";
+import "dn404/src/DN404.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
@@ -134,7 +134,7 @@ contract Archetype is
       }
       quantity += quantityToAdd;
 
-      _mint(toList[i], quantityToAdd * _unit());
+      _mintNext(toList[i], quantityToAdd * _unit());
 
       unchecked {
         ++i;
@@ -197,7 +197,7 @@ contract Archetype is
     }
 
     ArchetypeLogic.validateMint(i, config, auth, _minted, signature, args);
-    _mint(to, quantity * _unit());
+    _mintNext(to, quantity * _unit());
     numMinted += quantity;
 
     if (i.limit < i.maxSupply) {
