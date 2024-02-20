@@ -2300,6 +2300,52 @@ describe("Factory", function () {
     })).reverted;
   });
 
+  it("should refund overpaid mints", async () => {
+    const [, accountOne, user, ] = await ethers.getSigners();
+
+    const owner = accountOne;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+    const newCollectionAddress = result.events[0].address || "";
+    const nft = Archetype.attach(newCollectionAddress);
+
+    const mintPrice = ethers.utils.parseEther("0.08");
+    const paidPrice = ethers.utils.parseEther("0.12");
+    const delta = ethers.utils.parseEther("0.001");
+
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: mintPrice,
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      end: 0,
+      limit: 50,
+      maxSupply: 50,
+      unitSize: 0,
+      tokenAddress: ZERO,
+      isBlacklist: false,
+    }).then(tx => tx.wait());
+
+    const preContractBalance = await ethers.provider.getBalance(nft.address)
+    const preUserBalance = await user.getBalance()
+
+    await nft
+      .connect(user)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", { value: paidPrice })
+      .then(tx => tx.wait())
+
+    const postContractBalance = await ethers.provider.getBalance(nft.address)
+    const postUserBalance = await user.getBalance()
+
+    expect(postUserBalance).closeTo(preUserBalance.sub(mintPrice), delta)
+    expect(postContractBalance).eq(preContractBalance.add(mintPrice))
+  });
+
 });
 
 // todo: add test to ensure affiliate signer can't be zero address
