@@ -47,7 +47,6 @@ contract Archetype is
 
   string private _name;
   string private _symbol;
-  uint256 public numMinted;
   Config public config;
   Options public options;
 
@@ -147,14 +146,13 @@ contract Archetype is
         owner: owner(),
         affiliate: affiliate,
         quantity: quantity,
-        curSupply: numMinted,
+        curSupply: numMinted(),
         listSupply: _listSupply[auth.key]
       });
     }
 
     ArchetypeLogic.validateMint(invite, config, auth, _minted, signature, args);
 
-    numMinted += quantity;
     if (invite.limit < invite.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
     }
@@ -191,14 +189,13 @@ contract Archetype is
         owner: owner(),
         affiliate: affiliate,
         quantity: quantity,
-        curSupply: numMinted,
+        curSupply: numMinted(),
         listSupply: _listSupply[auth.key]
       });
     }
 
     ArchetypeLogic.validateMint(i, config, auth, _minted, signature, args);
     _mintNext(to, quantity * _unit());
-    numMinted += quantity;
 
     if (i.limit < i.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
@@ -268,6 +265,10 @@ contract Archetype is
     return _listSupply[key];
   }
 
+  function numMinted() public view returns (uint256) {
+    return totalSupply() / _unit();
+  }
+
   function platform() external pure returns (address) {
     return PLATFORM;
   }
@@ -318,7 +319,7 @@ contract Archetype is
       revert LockedForever();
     }
 
-    if (maxSupply < numMinted) {
+    if (maxSupply < numMinted()) {
       revert MaxSupplyExceeded();
     }
 
