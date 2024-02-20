@@ -2235,6 +2235,71 @@ describe("Factory", function () {
 
     expect(await mirror.ownerOf(9)).to.equal(accountTwo.address);
   });
+
+  it("test right minted supply on normal mints", async () => {
+    const [, accountOne, ] = await ethers.getSigners();
+
+    const owner = accountOne;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+    const newCollectionAddress = result.events[0].address || "";
+    const nft = Archetype.attach(newCollectionAddress);
+
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("0.0008"),
+      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      end: 0,
+      limit: 50,
+      maxSupply: 50,
+      unitSize: 0,
+      tokenAddress: ZERO,
+      isBlacklist: false,
+    });
+
+    expect(await nft.numMinted()).eq(0);
+
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+      value: ethers.utils.parseEther("0.0008"),
+    });
+
+    expect(await nft.numMinted()).eq(1);
+
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+      value: ethers.utils.parseEther("0.0008"),
+    });
+
+    expect(await nft.numMinted()).eq(2);
+
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 20, ZERO, "0x", {
+      value: ethers.utils.parseEther("0.0008").mul(20)
+    });
+
+    expect(await nft.numMinted()).eq(22);
+
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 15, ZERO, "0x", {
+      value: ethers.utils.parseEther("0.0008").mul(15)
+    });
+
+    expect(await nft.numMinted()).eq(37);
+
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 13, ZERO, "0x", {
+      value: ethers.utils.parseEther("0.0008").mul(13)
+    });
+
+    expect(await nft.numMinted()).eq(50);
+
+    await expect(nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+      value: ethers.utils.parseEther("0.0008")
+    })).reverted;
+  });
+
 });
 
 // todo: add test to ensure affiliate signer can't be zero address
