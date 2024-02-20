@@ -44,6 +44,8 @@ contract Factory is OwnableUpgradeable {
     token.initialize(name, symbol, config, mirror, _receiver);
 
     token.transferOwnership(_receiver);
+    DN404Mirror(payable(mirror)).pullOwner();
+
     if (msg.value > 0) {
       (bool sent, ) = payable(_receiver).call{ value: msg.value }("");
       require(sent, "1");
