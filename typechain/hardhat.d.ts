@@ -117,14 +117,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ContextUpgradeable__factory>;
     getContractFactory(
-      name: "DN404",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.DN404__factory>;
-    getContractFactory(
-      name: "DN404Mirror",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.DN404Mirror__factory>;
-    getContractFactory(
       name: "ERC721AOwnableUpgradeable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC721AOwnableUpgradeable__factory>;
@@ -339,16 +331,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ContextUpgradeable>;
-    getContractAt(
-      name: "DN404",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.DN404>;
-    getContractAt(
-      name: "DN404Mirror",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.DN404Mirror>;
     getContractAt(
       name: "ERC721AOwnableUpgradeable",
       address: string,
