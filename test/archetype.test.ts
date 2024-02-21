@@ -353,12 +353,6 @@ describe("Factory", function () {
       })
     ).to.be.revertedWith("InsufficientEthSent");
 
-    await expect(
-      nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
-        value: ethers.utils.parseEther("0.09"),
-      })
-    ).to.be.revertedWith("ExcessiveEthSent");
-
     await nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
       value: price,
     });
@@ -1529,15 +1523,15 @@ describe("Factory", function () {
       value: ethers.utils.parseEther("1"),
     });
 
-    // forward time 5000s
-    await ethers.provider.send("evm_increaseTime", [5000]);
-
-    // try to mint at initial price, will revert
+    // try to mint at half price, will revert
     await expect(
       nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
-        value: ethers.utils.parseEther("1"),
+        value: ethers.utils.parseEther("0.5"),
       })
-    ).to.be.revertedWith("ExcessiveEthSent");
+    ).to.be.revertedWith("InsufficientEthSent");
+
+    // forward time 5000s
+    await ethers.provider.send("evm_increaseTime", [5000]);
 
     // mint at half price
     await nft.connect(holder).mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
@@ -2237,7 +2231,7 @@ describe("Factory", function () {
   });
 
   it("test right minted supply on normal mints", async () => {
-    const [, accountOne, ] = await ethers.getSigners();
+    const [, accountOne] = await ethers.getSigners();
 
     const owner = accountOne;
 
@@ -2278,30 +2272,32 @@ describe("Factory", function () {
     expect(await nft.numMinted()).eq(2);
 
     await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 20, ZERO, "0x", {
-      value: ethers.utils.parseEther("0.0008").mul(20)
+      value: ethers.utils.parseEther("0.0008").mul(20),
     });
 
     expect(await nft.numMinted()).eq(22);
 
     await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 15, ZERO, "0x", {
-      value: ethers.utils.parseEther("0.0008").mul(15)
+      value: ethers.utils.parseEther("0.0008").mul(15),
     });
 
     expect(await nft.numMinted()).eq(37);
 
     await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 13, ZERO, "0x", {
-      value: ethers.utils.parseEther("0.0008").mul(13)
+      value: ethers.utils.parseEther("0.0008").mul(13),
     });
 
     expect(await nft.numMinted()).eq(50);
 
-    await expect(nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
-      value: ethers.utils.parseEther("0.0008")
-    })).reverted;
+    await expect(
+      nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: ethers.utils.parseEther("0.0008"),
+      })
+    ).reverted;
   });
 
   it("should refund overpaid mints", async () => {
-    const [, accountOne, user, ] = await ethers.getSigners();
+    const [, accountOne, user] = await ethers.getSigners();
 
     const owner = accountOne;
 
@@ -2320,32 +2316,34 @@ describe("Factory", function () {
     const paidPrice = ethers.utils.parseEther("0.12");
     const delta = ethers.utils.parseEther("0.001");
 
-    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
-      price: mintPrice,
-      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
-      end: 0,
-      limit: 50,
-      maxSupply: 50,
-      unitSize: 0,
-      tokenAddress: ZERO,
-      isBlacklist: false,
-    }).then(tx => tx.wait());
+    await nft
+      .connect(owner)
+      .setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+        price: mintPrice,
+        start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+        end: 0,
+        limit: 50,
+        maxSupply: 50,
+        unitSize: 0,
+        tokenAddress: ZERO,
+        isBlacklist: false,
+      })
+      .then(tx => tx.wait());
 
-    const preContractBalance = await ethers.provider.getBalance(nft.address)
-    const preUserBalance = await user.getBalance()
+    const preContractBalance = await ethers.provider.getBalance(nft.address);
+    const preUserBalance = await user.getBalance();
 
     await nft
       .connect(user)
       .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", { value: paidPrice })
-      .then(tx => tx.wait())
+      .then(tx => tx.wait());
 
-    const postContractBalance = await ethers.provider.getBalance(nft.address)
-    const postUserBalance = await user.getBalance()
+    const postContractBalance = await ethers.provider.getBalance(nft.address);
+    const postUserBalance = await user.getBalance();
 
-    expect(postUserBalance).closeTo(preUserBalance.sub(mintPrice), delta)
-    expect(postContractBalance).eq(preContractBalance.add(mintPrice))
+    expect(postUserBalance).closeTo(preUserBalance.sub(mintPrice), delta);
+    expect(postContractBalance).eq(preContractBalance.add(mintPrice));
   });
-
 });
 
 // todo: add test to ensure affiliate signer can't be zero address

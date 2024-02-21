@@ -151,17 +151,17 @@ contract Archetype is
       });
     }
 
-    uint128 cost = uint128(ArchetypeLogic.computePrice(
-      invite,
-      config.discounts,
-      args.quantity,
-      args.listSupply,
-      args.affiliate != address(0)
-    ));
-
-    ArchetypeLogic.validateMint(
-      invite, config, auth, _minted, signature, args, cost
+    uint128 cost = uint128(
+      ArchetypeLogic.computePrice(
+        invite,
+        config.discounts,
+        args.quantity,
+        args.listSupply,
+        args.affiliate != address(0)
+      )
     );
+
+    ArchetypeLogic.validateMint(invite, config, auth, _minted, signature, args, cost);
 
     if (invite.limit < invite.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
@@ -180,7 +180,9 @@ contract Archetype is
       cost
     );
 
-    _refundIfNeeded(_msgSender(), msg.value, cost);
+    if (msg.value > cost) {
+      _refund(_msgSender(), msg.value - cost);
+    }
   }
 
   function mintTo(
@@ -207,17 +209,17 @@ contract Archetype is
       });
     }
 
-    uint128 cost = uint128(ArchetypeLogic.computePrice(
-      i,
-      config.discounts,
-      args.quantity,
-      args.listSupply,
-      args.affiliate != address(0)
-    ));
-
-    ArchetypeLogic.validateMint(
-      i, config, auth, _minted, signature, args, cost
+    uint128 cost = uint128(
+      ArchetypeLogic.computePrice(
+        i,
+        config.discounts,
+        args.quantity,
+        args.listSupply,
+        args.affiliate != address(0)
+      )
     );
+
+    ArchetypeLogic.validateMint(i, config, auth, _minted, signature, args, cost);
 
     _mintNext(to, quantity * _unit());
 
@@ -238,18 +240,8 @@ contract Archetype is
       cost
     );
 
-    _refundIfNeeded(_msgSender(), msg.value, cost);
-  }
-
-  function _refundIfNeeded(
-    address to,
-    uint256 paidPrice,
-    uint128 expectedPrice
-  ) private {
-    uint256 refund = paidPrice - expectedPrice;
-    if (refund > 0) {
-      (bool success, ) = payable(to).call{value: refund}("");
-      require(success, "Could not refund user");
+    if (msg.value > cost) {
+      _refund(_msgSender(), msg.value - cost);
     }
   }
 
@@ -502,6 +494,13 @@ contract Archetype is
       revert NotOwner();
     }
     _;
+  }
+
+  function _refund(address to, uint256 refund) internal {
+    (bool success, ) = payable(to).call{ value: refund }("");
+    if (!success) {
+      revert TransferFailed();
+    }
   }
 
   function setDefaultRoyalty(address receiver, uint16 feeNumerator) public _onlyOwner {
