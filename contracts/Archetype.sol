@@ -151,7 +151,17 @@ contract Archetype is
       });
     }
 
-    ArchetypeLogic.validateMint(invite, config, auth, _minted, signature, args);
+    uint128 cost = uint128(
+      ArchetypeLogic.computePrice(
+        invite,
+        config.discounts,
+        args.quantity,
+        args.listSupply,
+        args.affiliate != address(0)
+      )
+    );
+
+    ArchetypeLogic.validateMint(invite, config, auth, _minted, signature, args, cost);
 
     if (invite.limit < invite.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
@@ -159,15 +169,20 @@ contract Archetype is
     if (invite.maxSupply < UINT32_MAX) {
       _listSupply[auth.key] += quantity;
     }
+
     ArchetypeLogic.updateBalances(
       invite,
       config,
       _ownerBalance,
       _affiliateBalance,
-      args.listSupply,
       affiliate,
-      quantity
+      quantity,
+      cost
     );
+
+    if (msg.value > cost) {
+      _refund(_msgSender(), msg.value - cost);
+    }
   }
 
   function mintTo(
@@ -194,7 +209,18 @@ contract Archetype is
       });
     }
 
-    ArchetypeLogic.validateMint(i, config, auth, _minted, signature, args);
+    uint128 cost = uint128(
+      ArchetypeLogic.computePrice(
+        i,
+        config.discounts,
+        args.quantity,
+        args.listSupply,
+        args.affiliate != address(0)
+      )
+    );
+
+    ArchetypeLogic.validateMint(i, config, auth, _minted, signature, args, cost);
+
     _mintNext(to, quantity * _unit());
 
     if (i.limit < i.maxSupply) {
@@ -203,15 +229,20 @@ contract Archetype is
     if (i.maxSupply < UINT32_MAX) {
       _listSupply[auth.key] += quantity;
     }
+
     ArchetypeLogic.updateBalances(
       i,
       config,
       _ownerBalance,
       _affiliateBalance,
-      args.listSupply,
       affiliate,
-      quantity
+      quantity,
+      cost
     );
+
+    if (msg.value > cost) {
+      _refund(_msgSender(), msg.value - cost);
+    }
   }
 
   function name() public view override returns (string memory) {
@@ -463,6 +494,13 @@ contract Archetype is
       revert NotOwner();
     }
     _;
+  }
+
+  function _refund(address to, uint256 refund) internal {
+    (bool success, ) = payable(to).call{ value: refund }("");
+    if (!success) {
+      revert TransferFailed();
+    }
   }
 
   function setDefaultRoyalty(address receiver, uint16 feeNumerator) public _onlyOwner {
