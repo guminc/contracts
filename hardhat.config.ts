@@ -5,7 +5,7 @@ import "solidity-coverage";
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-web3";
 import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-etherscan";
+import "@nomicfoundation/hardhat-verify";
 import "@nomiclabs/hardhat-truffle5";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
@@ -68,7 +68,7 @@ const config: HardhatUserConfig = {
       url: "https://mainnet.infura.io/v3/569cee6284754b9e86ff2e5e55a0dc22",
       chainId: 1,
     },
-    hardhat: {},
+    hardhat: { },
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY || "",

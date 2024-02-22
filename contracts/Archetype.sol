@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.6.1
+// Archetype v0.6.1 - DN404
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -16,21 +16,18 @@
 pragma solidity ^0.8.4;
 
 import "./ArchetypeLogic.sol";
-import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
-import "erc721a-upgradeable/contracts/ERC721A__Initializable.sol";
-import "erc721a-upgradeable/contracts/extensions/ERC721AQueryableUpgradeable.sol";
-import "./ERC721A__OwnableUpgradeable.sol";
+import "dn404/src/DN404.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
 import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
 
 contract Archetype is
-  ERC721A__Initializable,
-  ERC721AUpgradeable,
+  DN404,
+  Initializable,
+  OwnableUpgradeable,
   OperatorFilterer,
-  ERC721A__OwnableUpgradeable,
-  ERC2981Upgradeable,
-  ERC721AQueryableUpgradeable
+  ERC2981Upgradeable
 {
   //
   // EVENTS
@@ -48,25 +45,31 @@ contract Archetype is
   mapping(address => OwnerBalance) private _ownerBalance;
   mapping(address => mapping(address => uint128)) private _affiliateBalance;
 
+  string private _name;
+  string private _symbol;
   Config public config;
-  BurnConfig public burnConfig;
   Options public options;
 
   //
   // METHODS
   //
   function initialize(
-    string memory name,
-    string memory symbol,
+    string memory name_,
+    string memory symbol_,
     Config calldata config_,
+    address mirror,
     address _receiver
-  ) external initializerERC721A {
-    __ERC721A_init(name, symbol);
+  ) external initializer {
+    _name = name_;
+    _symbol = symbol_;
+
+    _initializeDN404(0, address(0), mirror);
+
     // check max bps not reached and min platform fee.
     if (
       config_.affiliateFee > MAXBPS ||
       config_.platformFee > MAXBPS ||
-      config_.platformFee < 500 ||
+      config_.platformFee < 1000 ||
       config_.discounts.affiliateDiscount > MAXBPS ||
       config_.affiliateSigner == address(0) ||
       config_.maxBatchSize == 0
@@ -130,7 +133,7 @@ contract Archetype is
       }
       quantity += quantityToAdd;
 
-      _mint(toList[i], quantityToAdd);
+      _mintNext(toList[i], quantityToAdd * _unit());
 
       unchecked {
         ++i;
@@ -143,28 +146,43 @@ contract Archetype is
         owner: owner(),
         affiliate: affiliate,
         quantity: quantity,
-        curSupply: _totalMinted(),
+        curSupply: numMinted(),
         listSupply: _listSupply[auth.key]
       });
     }
 
-    ArchetypeLogic.validateMint(invite, config, auth, _minted, signature, args);
+    uint128 cost = uint128(
+      ArchetypeLogic.computePrice(
+        invite,
+        config.discounts,
+        args.quantity,
+        args.listSupply,
+        args.affiliate != address(0)
+      )
+    );
+
+    ArchetypeLogic.validateMint(invite, config, auth, _minted, signature, args, cost);
 
     if (invite.limit < invite.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
     }
-    if (invite.maxSupply < config.maxSupply) {
+    if (invite.maxSupply < UINT32_MAX) {
       _listSupply[auth.key] += quantity;
     }
+
     ArchetypeLogic.updateBalances(
       invite,
       config,
       _ownerBalance,
       _affiliateBalance,
-      args.listSupply,
       affiliate,
-      quantity
+      quantity,
+      cost
     );
+
+    if (msg.value > cost) {
+      _refund(_msgSender(), msg.value - cost);
+    }
   }
 
   function mintTo(
@@ -186,54 +204,53 @@ contract Archetype is
         owner: owner(),
         affiliate: affiliate,
         quantity: quantity,
-        curSupply: _totalMinted(),
+        curSupply: numMinted(),
         listSupply: _listSupply[auth.key]
       });
     }
 
-    ArchetypeLogic.validateMint(i, config, auth, _minted, signature, args);
-    _mint(to, quantity);
+    uint128 cost = uint128(
+      ArchetypeLogic.computePrice(
+        i,
+        config.discounts,
+        args.quantity,
+        args.listSupply,
+        args.affiliate != address(0)
+      )
+    );
+
+    ArchetypeLogic.validateMint(i, config, auth, _minted, signature, args, cost);
+
+    _mintNext(to, quantity * _unit());
 
     if (i.limit < i.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
     }
-    if (i.maxSupply < config.maxSupply) {
+    if (i.maxSupply < UINT32_MAX) {
       _listSupply[auth.key] += quantity;
     }
+
     ArchetypeLogic.updateBalances(
       i,
       config,
       _ownerBalance,
       _affiliateBalance,
-      args.listSupply,
       affiliate,
-      quantity
+      quantity,
+      cost
     );
+
+    if (msg.value > cost) {
+      _refund(_msgSender(), msg.value - cost);
+    }
   }
 
-  function burnToMint(uint256[] calldata tokenIds) external {
-    uint256 curSupply = _totalMinted();
-    ArchetypeLogic.validateBurnToMint(config, burnConfig, tokenIds, curSupply, _minted);
+  function name() public view override returns (string memory) {
+    return _name;
+  }
 
-    address msgSender = _msgSender();
-    for (uint256 i; i < tokenIds.length; ) {
-      address burnAddress = burnConfig.burnAddress != address(0)
-        ? burnConfig.burnAddress
-        : address(0x000000000000000000000000000000000000dEaD);
-      burnConfig.archetype.transferFrom(msgSender, burnAddress, tokenIds[i]);
-      unchecked {
-        ++i;
-      }
-    }
-
-    uint256 quantity = burnConfig.reversed
-      ? tokenIds.length * burnConfig.ratio
-      : tokenIds.length / burnConfig.ratio;
-    _mint(msgSender, quantity);
-
-    if (burnConfig.limit < config.maxSupply) {
-      _minted[msgSender][bytes32("burn")] += quantity;
-    }
+  function symbol() public view override returns (string memory) {
+    return _symbol;
   }
 
   function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
@@ -279,8 +296,16 @@ contract Archetype is
     return _listSupply[key];
   }
 
+  function numMinted() public view returns (uint256) {
+    return totalSupply() / _unit();
+  }
+
   function platform() external pure returns (address) {
     return PLATFORM;
+  }
+
+  function devVault() external pure returns (address) {
+    return DEVVAULT;
   }
 
   function computePrice(
@@ -289,8 +314,8 @@ contract Archetype is
     bool affiliateUsed
   ) external view returns (uint256) {
     DutchInvite storage i = invites[key];
-    uint256 listSupply = _listSupply[key];
-    return ArchetypeLogic.computePrice(i, config.discounts, quantity, listSupply, affiliateUsed);
+    uint256 listSupply_ = _listSupply[key];
+    return ArchetypeLogic.computePrice(i, config.discounts, quantity, listSupply_, affiliateUsed);
   }
 
   //
@@ -325,7 +350,7 @@ contract Archetype is
       revert LockedForever();
     }
 
-    if (maxSupply < _totalMinted()) {
+    if (maxSupply < numMinted()) {
       revert MaxSupplyExceeded();
     }
 
@@ -449,52 +474,11 @@ contract Archetype is
     emit Invited(_key, _cid);
   }
 
-  function enableBurnToMint(
-    address archetype,
-    address burnAddress,
-    bool reversed,
-    uint16 ratio,
-    uint64 start,
-    uint64 limit
-  ) external _onlyOwner {
-    burnConfig = BurnConfig({
-      archetype: IERC721AUpgradeable(archetype),
-      burnAddress: burnAddress,
-      enabled: true,
-      reversed: reversed,
-      ratio: ratio,
-      start: start,
-      limit: limit
-    });
-  }
-
-  function disableBurnToMint() external _onlyOwner {
-    burnConfig = BurnConfig({
-      archetype: IERC721AUpgradeable(address(0)),
-      burnAddress: address(0),
-      enabled: false,
-      reversed: false,
-      ratio: 0,
-      start: 0,
-      limit: 0
-    });
-  }
-
-  //
-  // PLATFORM ONLY
-  //
-  function setSuperAffiliatePayout(address superAffiliatePayout) external _onlyPlatform {
-    config.superAffiliatePayout = superAffiliatePayout;
-  }
-
   //
   // INTERNAL
   //
-  function _startTokenId() internal view virtual override returns (uint256) {
-    return 1;
-  }
 
-  function _msgSender() internal view returns (address) {
+  function _msgSender() internal view override returns (address) {
     return msg.sender == BATCH ? tx.origin : msg.sender;
   }
 
@@ -512,93 +496,11 @@ contract Archetype is
     _;
   }
 
-  // OPTIONAL ROYALTY ENFORCEMENT WITH OPENSEA
-  function enableRoyaltyEnforcement() external _onlyOwner {
-    if (options.royaltyEnforcementLocked) {
-      revert LockedForever();
+  function _refund(address to, uint256 refund) internal {
+    (bool success, ) = payable(to).call{ value: refund }("");
+    if (!success) {
+      revert TransferFailed();
     }
-    _registerForOperatorFiltering();
-    options.royaltyEnforcementEnabled = true;
-  }
-
-  function disableRoyaltyEnforcement() external _onlyOwner {
-    if (options.royaltyEnforcementLocked) {
-      revert LockedForever();
-    }
-    options.royaltyEnforcementEnabled = false;
-  }
-
-  /// @notice the password is "forever"
-  function lockRoyaltyEnforcement(string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
-    options.royaltyEnforcementLocked = true;
-  }
-
-  function setApprovalForAll(address operator, bool approved)
-    public
-    override
-    onlyAllowedOperatorApproval(operator)
-  {
-    super.setApprovalForAll(operator, approved);
-  }
-
-  function approve(address operator, uint256 tokenId)
-    public
-    payable
-    override
-    onlyAllowedOperatorApproval(operator)
-  {
-    super.approve(operator, tokenId);
-  }
-
-  function transferFrom(
-    address from,
-    address to,
-    uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
-    super.transferFrom(from, to, tokenId);
-  }
-
-  function safeTransferFrom(
-    address from,
-    address to,
-    uint256 tokenId
-  ) public payable override onlyAllowedOperator(from) {
-    super.safeTransferFrom(from, to, tokenId);
-  }
-
-  function safeTransferFrom(
-    address from,
-    address to,
-    uint256 tokenId,
-    bytes memory data
-  ) public payable override onlyAllowedOperator(from) {
-    super.safeTransferFrom(from, to, tokenId, data);
-  }
-
-  function _operatorFilteringEnabled() internal view override returns (bool) {
-    return options.royaltyEnforcementEnabled;
-  }
-
-  //ERC2981 ROYALTY
-  function supportsInterface(bytes4 interfaceId)
-    public
-    view
-    virtual
-    override(ERC721AUpgradeable, ERC2981Upgradeable)
-    returns (bool)
-  {
-    // Supports the following `interfaceId`s:
-    // - IERC165: 0x01ffc9a7
-    // - IERC721: 0x80ac58cd
-    // - IERC721Metadata: 0x5b5e139f
-    // - IERC2981: 0x2a55205a
-    return
-      ERC721AUpgradeable.supportsInterface(interfaceId) ||
-      ERC2981Upgradeable.supportsInterface(interfaceId);
   }
 
   function setDefaultRoyalty(address receiver, uint16 feeNumerator) public _onlyOwner {
