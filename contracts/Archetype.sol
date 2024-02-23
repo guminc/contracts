@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.6.1
+// Archetype v0.6.2
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -148,23 +148,38 @@ contract Archetype is
       });
     }
 
-    ArchetypeLogic.validateMint(invite, config, auth, _minted, signature, args);
+    uint128 cost = uint128(
+      ArchetypeLogic.computePrice(
+        invite,
+        config.discounts,
+        args.quantity,
+        args.listSupply,
+        args.affiliate != address(0)
+      )
+    );
+
+    ArchetypeLogic.validateMint(invite, config, auth, _minted, signature, args, cost);
 
     if (invite.limit < invite.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
     }
-    if (invite.maxSupply < config.maxSupply) {
+    if (invite.maxSupply < UINT32_MAX) {
       _listSupply[auth.key] += quantity;
     }
+
     ArchetypeLogic.updateBalances(
       invite,
       config,
       _ownerBalance,
       _affiliateBalance,
-      args.listSupply,
       affiliate,
-      quantity
+      quantity,
+      cost
     );
+
+    if (msg.value > cost) {
+      _refund(_msgSender(), msg.value - cost);
+    }
   }
 
   function mintTo(
@@ -191,24 +206,40 @@ contract Archetype is
       });
     }
 
-    ArchetypeLogic.validateMint(i, config, auth, _minted, signature, args);
+    uint128 cost = uint128(
+      ArchetypeLogic.computePrice(
+        i,
+        config.discounts,
+        args.quantity,
+        args.listSupply,
+        args.affiliate != address(0)
+      )
+    );
+
+    ArchetypeLogic.validateMint(i, config, auth, _minted, signature, args, cost);
+
     _mint(to, quantity);
 
     if (i.limit < i.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
     }
-    if (i.maxSupply < config.maxSupply) {
+    if (i.maxSupply < UINT32_MAX) {
       _listSupply[auth.key] += quantity;
     }
+
     ArchetypeLogic.updateBalances(
       i,
       config,
       _ownerBalance,
       _affiliateBalance,
-      args.listSupply,
       affiliate,
-      quantity
+      quantity,
+      cost
     );
+
+    if (msg.value > cost) {
+      _refund(_msgSender(), msg.value - cost);
+    }
   }
 
   function burnToMint(uint256[] calldata tokenIds) external {
@@ -289,8 +320,8 @@ contract Archetype is
     bool affiliateUsed
   ) external view returns (uint256) {
     DutchInvite storage i = invites[key];
-    uint256 listSupply = _listSupply[key];
-    return ArchetypeLogic.computePrice(i, config.discounts, quantity, listSupply, affiliateUsed);
+    uint256 listSupply_ = _listSupply[key];
+    return ArchetypeLogic.computePrice(i, config.discounts, quantity, listSupply_, affiliateUsed);
   }
 
   //
@@ -510,6 +541,13 @@ contract Archetype is
       revert NotOwner();
     }
     _;
+  }
+
+  function _refund(address to, uint256 refund) internal {
+    (bool success, ) = payable(to).call{ value: refund }("");
+    if (!success) {
+      revert TransferFailed();
+    }
   }
 
   // OPTIONAL ROYALTY ENFORCEMENT WITH OPENSEA
