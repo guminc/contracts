@@ -2341,8 +2341,7 @@ describe("Factory", function () {
     expect(postUserBalance).closeTo(preUserBalance.sub(mintPrice), delta);
     expect(postContractBalance).eq(preContractBalance.add(mintPrice));
 
-    await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.064")); // 80%
-    await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.004")); // 5%
+    await expect(await nft.ownerBalance()).to.equal(ethers.utils.parseEther("0.064")); // 85%
     await expect(await nft.affiliateBalance(affiliate.address)).to.equal(
       ethers.utils.parseEther("0.012")
     ); // 15%
