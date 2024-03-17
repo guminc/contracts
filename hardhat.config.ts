@@ -5,7 +5,7 @@ import "solidity-coverage";
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-web3";
 import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-etherscan";
+import "@nomicfoundation/hardhat-verify";
 import "@nomiclabs/hardhat-truffle5";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
@@ -69,6 +69,9 @@ const config: HardhatUserConfig = {
       chainId: 1,
     },
     hardhat: {},
+  },
+  sourcify: {
+    enabled: true,
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY || "",

@@ -151,7 +151,17 @@ contract Archetype is
       });
     }
 
-    ArchetypeLogic.validateMint(invite, config, auth, _minted, signature, args);
+    uint128 cost = uint128(
+      ArchetypeLogic.computePrice(
+        invite,
+        config.discounts,
+        args.quantity,
+        args.listSupply,
+        args.affiliate != address(0)
+      )
+    );
+
+    ArchetypeLogic.validateMint(invite, config, auth, _minted, signature, args, cost);
 
     if (invite.limit < invite.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
@@ -159,15 +169,20 @@ contract Archetype is
     if (invite.maxSupply < UINT32_MAX) {
       _listSupply[auth.key] += quantity;
     }
+
     ArchetypeLogic.updateBalances(
       invite,
       config,
       _ownerBalance,
       _affiliateBalance,
-      args.listSupply,
       affiliate,
-      quantity
+      quantity,
+      cost
     );
+
+    if (msg.value > cost) {
+      _refund(_msgSender(), msg.value - cost);
+    }
   }
 
   function mintTo(
@@ -194,7 +209,18 @@ contract Archetype is
       });
     }
 
-    ArchetypeLogic.validateMint(i, config, auth, _minted, signature, args);
+    uint128 cost = uint128(
+      ArchetypeLogic.computePrice(
+        i,
+        config.discounts,
+        args.quantity,
+        args.listSupply,
+        args.affiliate != address(0)
+      )
+    );
+
+    ArchetypeLogic.validateMint(i, config, auth, _minted, signature, args, cost);
+
     _mint(to, quantity);
 
     if (i.limit < i.maxSupply) {
@@ -203,15 +229,20 @@ contract Archetype is
     if (i.maxSupply < UINT32_MAX) {
       _listSupply[auth.key] += quantity;
     }
+
     ArchetypeLogic.updateBalances(
       i,
       config,
       _ownerBalance,
       _affiliateBalance,
-      args.listSupply,
       affiliate,
-      quantity
+      quantity,
+      cost
     );
+
+    if (msg.value > cost) {
+      _refund(_msgSender(), msg.value - cost);
+    }
   }
 
   function burnToMint(uint256[] calldata tokenIds) external {
@@ -514,6 +545,84 @@ contract Archetype is
       revert NotOwner();
     }
     _;
+  }
+
+  function _refund(address to, uint256 refund) internal {
+    (bool success, ) = payable(to).call{ value: refund }("");
+    if (!success) {
+      revert TransferFailed();
+    }
+  }
+
+  // OPTIONAL ROYALTY ENFORCEMENT WITH OPENSEA
+  function enableRoyaltyEnforcement() external _onlyOwner {
+    if (options.royaltyEnforcementLocked) {
+      revert LockedForever();
+    }
+    _registerForOperatorFiltering();
+    options.royaltyEnforcementEnabled = true;
+  }
+
+  function disableRoyaltyEnforcement() external _onlyOwner {
+    if (options.royaltyEnforcementLocked) {
+      revert LockedForever();
+    }
+    options.royaltyEnforcementEnabled = false;
+  }
+
+  /// @notice the password is "forever"
+  function lockRoyaltyEnforcement(string memory password) external _onlyOwner {
+    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
+      revert WrongPassword();
+    }
+
+    options.royaltyEnforcementLocked = true;
+  }
+
+  function setApprovalForAll(address operator, bool approved)
+    public
+    override
+    onlyAllowedOperatorApproval(operator)
+  {
+    super.setApprovalForAll(operator, approved);
+  }
+
+  function approve(address operator, uint256 tokenId)
+    public
+    payable
+    override
+    onlyAllowedOperatorApproval(operator)
+  {
+    super.approve(operator, tokenId);
+  }
+
+  function transferFrom(
+    address from,
+    address to,
+    uint256 tokenId
+  ) public payable override onlyAllowedOperator(from) {
+    super.transferFrom(from, to, tokenId);
+  }
+
+  function safeTransferFrom(
+    address from,
+    address to,
+    uint256 tokenId
+  ) public payable override onlyAllowedOperator(from) {
+    super.safeTransferFrom(from, to, tokenId);
+  }
+
+  function safeTransferFrom(
+    address from,
+    address to,
+    uint256 tokenId,
+    bytes memory data
+  ) public payable override onlyAllowedOperator(from) {
+    super.safeTransferFrom(from, to, tokenId, data);
+  }
+
+  function _operatorFilteringEnabled() internal view override returns (bool) {
+    return options.royaltyEnforcementEnabled;
   }
 
   //ERC2981 ROYALTY

@@ -207,7 +207,8 @@ library ArchetypeLogic {
     Auth calldata auth,
     mapping(address => mapping(bytes32 => uint256)) storage minted,
     bytes calldata signature,
-    ValidationArgs memory args
+    ValidationArgs memory args,
+    uint128 cost
   ) public view {
     address msgSender = _msgSender();
     if (args.affiliate != address(0)) {
@@ -264,14 +265,6 @@ library ArchetypeLogic {
       revert MaxSupplyExceeded();
     }
 
-    uint256 cost = computePrice(
-      i,
-      config.discounts,
-      args.quantity,
-      args.listSupply,
-      args.affiliate != address(0)
-    );
-
     if (i.tokenAddress != address(0)) {
       IERC20Upgradeable erc20Token = IERC20Upgradeable(i.tokenAddress);
       if (erc20Token.allowance(msgSender, address(this)) < cost) {
@@ -288,10 +281,6 @@ library ArchetypeLogic {
     } else {
       if (msg.value < cost) {
         revert InsufficientEthSent();
-      }
-
-      if (msg.value > cost) {
-        revert ExcessiveEthSent();
       }
     }
   }
@@ -358,17 +347,11 @@ library ArchetypeLogic {
     Config storage config,
     mapping(address => uint128) storage _ownerBalance,
     mapping(address => mapping(address => uint128)) storage _affiliateBalance,
-    uint256 listSupply,
     address affiliate,
-    uint256 quantity
+    uint256 quantity,
+    uint128 value
   ) public {
     address tokenAddress = i.tokenAddress;
-    uint128 value = uint128(msg.value);
-    if (tokenAddress != address(0)) {
-      value = uint128(
-        computePrice(i, config.discounts, quantity, listSupply, affiliate != address(0))
-      );
-    }
 
     uint128 affiliateWad;
     if (affiliate != address(0)) {
