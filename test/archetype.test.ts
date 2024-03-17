@@ -2244,7 +2244,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -2297,7 +2298,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
