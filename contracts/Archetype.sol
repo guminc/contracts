@@ -514,15 +514,6 @@ contract Archetype is
   }
 
   //
-  // PLATFORM ONLY
-  //
-
-  // TODO: REVIST BPS SETTING FUNCTIONS
-  // function setSuperAffiliatePayout(address superAffiliatePayout) external _onlyPlatform {
-  //   config.superAffiliatePayout = superAffiliatePayout;
-  // }
-
-  //
   // INTERNAL
   //
   function _startTokenId() internal view virtual override returns (uint256) {
