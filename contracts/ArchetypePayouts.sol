@@ -26,7 +26,7 @@ error NotApprovedToWithdraw();
 
 contract ArchetypePayouts is Ownable {
   event Withdrawal(address indexed src, address token, uint256 wad);
-  event BalanceSplit(address indexed recipient, address token, uint256 amountAdded);
+  event FundsAdded(address indexed recipient, address token, uint256 amount);
 
   mapping(address => mapping(address => uint256)) private _balance;
   mapping(address => mapping(address => bool)) private _approvals;
@@ -55,7 +55,7 @@ contract ArchetypePayouts is Ownable {
       for (uint256 i = 0; i < recipients.length; i++) {
         uint256 amountToAdd = (totalReceived * splits[i]) / 10000;
         _balance[recipients[i]][token] += amountToAdd;
-        emit BalanceSplit(recipients[i], token, amountToAdd);
+        emit FundsAdded(recipients[i], token, amountToAdd);
       }
     } else {
       // ERC20 payments
@@ -65,7 +65,7 @@ contract ArchetypePayouts is Ownable {
       for (uint256 i = 0; i < recipients.length; i++) {
         uint256 amountToAdd = (totalAmount * splits[i]) / 10000;
         _balance[recipients[i]][token] += amountToAdd;
-        emit BalanceSplit(recipients[i], token, amountToAdd);
+        emit FundsAdded(recipients[i], token, amountToAdd);
       }
     }
   }
