@@ -15,6 +15,7 @@ async function main() {
 
   await archetype.deployed();
 
+  console.log("Archetype Logic deployed to:", archetypeLogic.address);
   console.log("Archetype deployed to:", archetype.address);
 
   // await sleep(180 * 1000);
