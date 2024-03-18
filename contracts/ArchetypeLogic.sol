@@ -15,7 +15,7 @@
 
 pragma solidity ^0.8.4;
 
-import "./ArchetypeSplits.sol";
+import "./ArchetypePayouts.sol";
 import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "solady/src/utils/MerkleProofLib.sol";
@@ -137,7 +137,7 @@ struct ValidationArgs {
 address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
 address constant BATCH = 0x6Bc558A6DC48dEfa0e7022713c23D65Ab26e4Fa7;
 // update to prod
-address constant SPLITS = 0x31810331b5Edf34991ce7868f991ce79F9a51128;
+address constant PAYOUTS = 0x31810331b5Edf34991ce7868f991ce79F9a51128;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 uint32 constant UINT32_MAX = 2**32 - 1;
 
@@ -440,9 +440,14 @@ library ArchetypeLogic {
       splits[3] = payoutConfig.superAffiliateBps;
 
       if (tokenAddress == address(0)) {
-        ArchetypeSplits(SPLITS).updateBalances{ value: wad }(wad, tokenAddress, recipients, splits);
+        ArchetypePayouts(PAYOUTS).updateBalances{ value: wad }(
+          wad,
+          tokenAddress,
+          recipients,
+          splits
+        );
       } else {
-        ArchetypeSplits(SPLITS).updateBalances(wad, tokenAddress, recipients, splits);
+        ArchetypePayouts(PAYOUTS).updateBalances(wad, tokenAddress, recipients, splits);
       }
       emit Withdrawal(msgSender, tokenAddress, wad);
     }

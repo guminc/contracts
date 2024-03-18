@@ -24,7 +24,7 @@ error TransferFailed();
 error BalanceEmpty();
 error NotApprovedToWithdraw();
 
-contract ArchetypeSplits is Ownable {
+contract ArchetypePayouts is Ownable {
   event Withdrawal(address indexed src, address token, uint256 wad);
 
   mapping(address => mapping(address => uint256)) private _balance;
