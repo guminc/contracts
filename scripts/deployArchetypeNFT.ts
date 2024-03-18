@@ -5,25 +5,32 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 async function main() {
   const Factory = await ethers.getContractFactory("Factory");
 
-  const factory = Factory.attach("0xACCc072242b2B8BC0B7bA9Abeb6B5192fe533304");
+  const factory = Factory.attach("0x0D040Fa59b04f94E4d17C47117BeAa890eB25F51");
 
   console.log("Contract Factory is:", factory.address);
 
+  const [accountZero] = await ethers.getSigners();
+
   const newContract = await factory.createCollection(
-    "0x60A59d7003345843BE285c15c7C78B62b61e0d7c",
-    "Pookie",
-    "POOKIE",
+    accountZero.address,
+    "test payout",
+    "PAYOUT",
     {
-      unrevealedUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
       baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
       affiliateSigner: "0x1f285dD528cf4cDE3081C6d48D9df7A4F8FA9383",
       maxSupply: 5000,
       maxBatchSize: 20,
       affiliateFee: 1500,
-      platformFee: 500,
-      ownerAltPayout: ethers.constants.AddressZero,
-      superAffiliatePayout: ethers.constants.AddressZero,
-      discounts: { affiliateDiscount: null, mintTiers: [] },
+      defaultRoyalty: 500,
+      discounts: { affiliateDiscount: 0, mintTiers: [] },
+    },
+    {
+      ownerBps: 9000,
+      platformBps: 500,
+      partnerBps: 250,
+      superAffiliateBps: 250,
+      partner: "0xC80A1105CA41506A758F19489FDCBAfF8ad84ed1",
+      superAffiliate: "0x0000000000000000000000000000000000000000",
     }
   );
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ArchetypeSplits v0.7.0
+// ArchetypePayouts v0.7.0
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -26,6 +26,7 @@ error NotApprovedToWithdraw();
 
 contract ArchetypePayouts is Ownable {
   event Withdrawal(address indexed src, address token, uint256 wad);
+  event BalanceUpdated(address indexed recipient, address token, uint256 newBalance);
 
   mapping(address => mapping(address => uint256)) private _balance;
   mapping(address => mapping(address => bool)) private _approvals;
@@ -54,6 +55,7 @@ contract ArchetypePayouts is Ownable {
       for (uint256 i = 0; i < recipients.length; i++) {
         uint256 amountToAdd = (totalReceived * splits[i]) / 10000;
         _balance[recipients[i]][token] += amountToAdd;
+        emit BalanceUpdated(recipients[i], token, _balance[recipients[i]][token]);
       }
     } else {
       // ERC20 payments
@@ -63,6 +65,7 @@ contract ArchetypePayouts is Ownable {
       for (uint256 i = 0; i < recipients.length; i++) {
         uint256 amountToAdd = (totalAmount * splits[i]) / 10000;
         _balance[recipients[i]][token] += amountToAdd;
+        emit BalanceUpdated(recipients[i], token, _balance[recipients[i]][token]);
       }
     }
   }
@@ -125,6 +128,7 @@ contract ArchetypePayouts is Ownable {
       erc20Token.transfer(to, wad);
     }
     emit Withdrawal(from, token, wad);
+    emit BalanceUpdated(from, token, 0);
   }
 
   function approveWithdrawal(address delegate, bool approved) external {
