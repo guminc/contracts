@@ -94,9 +94,7 @@ describe("Factory", function () {
     await archetype.deployed();
 
     Factory = await ethers.getContractFactory("Factory");
-    factory = await upgrades.deployProxy(Factory, [archetype.address], {
-      initializer: "initialize",
-    });
+    factory = await Factory.deploy(archetype.address);
     await factory.deployed();
 
     console.log({ factoryAddress: factory.address, archetypeAddress: archetype.address });
@@ -105,9 +103,9 @@ describe("Factory", function () {
   beforeEach(async function () {
     const [accountZero, owner, platform] = await ethers.getSigners();
     // reset split balances between tests
-    if ((await archetypePayouts.balance(owner.address)) > 0)
+    if ((await archetypePayouts.balance(owner.address)) > ethers.BigNumber.from(0))
       await archetypePayouts.connect(owner).withdraw();
-    if ((await archetypePayouts.balance(platform.address)) > 0)
+    if ((await archetypePayouts.balance(platform.address)) > ethers.BigNumber.from(0))
       await archetypePayouts.connect(platform).withdraw();
   });
 
