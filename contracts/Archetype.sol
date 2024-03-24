@@ -91,7 +91,7 @@ contract Archetype is
       payoutConfig_.partnerBps +
       payoutConfig_.superAffiliateBps;
 
-    if (payoutConfig_.platformBps < 500 || totalShares != 10000) {
+    if (payoutConfig_.platformBps < 250 || totalShares != 10000) {
       revert InvalidSplitShares();
     }
     payoutConfig = payoutConfig_;
