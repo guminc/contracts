@@ -74,6 +74,7 @@ struct Config {
   Discount discounts;
 }
 
+// allocation splits for withdrawn owner funds, must sum to 100%
 struct PayoutConfig {
   uint16 ownerBps;
   uint16 platformBps;
@@ -134,9 +135,9 @@ struct ValidationArgs {
   uint256 listSupply;
 }
 
+// UPDATE CONSTANTS BEFORE DEPLOY
 address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
 address constant BATCH = 0x6Bc558A6DC48dEfa0e7022713c23D65Ab26e4Fa7;
-// update to prod
 address constant PAYOUTS = 0x31810331b5Edf34991ce7868f991ce79F9a51128;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 uint32 constant UINT32_MAX = 2**32 - 1;

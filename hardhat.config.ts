@@ -95,7 +95,12 @@ const config: HardhatUserConfig = {
     // apiUrl: "https://staging.sourcify.dev/server",
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY || "",
+    apiKey: {
+      ethereum: process.env.ETHERSCAN_API_KEY || "",
+      sepolia: process.env.ETHERSCAN_API_KEY || "",
+      base: process.env.BASESCAN_API_KEY || "",
+      blast: process.env.BLASTSCAN_API_KEY || "",
+    },
     customChains: [
       {
         network: "blast_sepolia",
