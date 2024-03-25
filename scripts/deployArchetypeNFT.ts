@@ -5,7 +5,7 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 async function main() {
   const Factory = await ethers.getContractFactory("Factory");
 
-  const factory = Factory.attach("0x0D040Fa59b04f94E4d17C47117BeAa890eB25F51");
+  const factory = Factory.attach("0x776AE71aFd9f302CbEe71b64b113052f0Ae2aF15");
 
   console.log("Contract Factory is:", factory.address);
 
@@ -25,10 +25,10 @@ async function main() {
       discounts: { affiliateDiscount: 0, mintTiers: [] },
     },
     {
-      ownerBps: 9000,
-      platformBps: 500,
+      ownerBps: 9500,
+      platformBps: 250,
       partnerBps: 250,
-      superAffiliateBps: 250,
+      superAffiliateBps: 0,
       partner: "0xC80A1105CA41506A758F19489FDCBAfF8ad84ed1",
       superAffiliate: "0x0000000000000000000000000000000000000000",
     }
