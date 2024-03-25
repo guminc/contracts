@@ -13,6 +13,10 @@ async function replaceConstants(filePath) {
     "0x6Bc558A6DC48dEfa0e7022713c23D65Ab26e4Fa7",
     "0x5FbDB2315678afecb367f032d93F642f64180aa3"
   );
+  data = data.replace(
+    "0x31810331b5Edf34991ce7868f991ce79F9a51128",
+    "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
+  );
 
   // Write the updated data to the contract file
   fs.writeFileSync(filePath, data, "utf8");
