@@ -1,11 +1,12 @@
 import { ethers, run } from "hardhat";
+import { Archetype } from "../typechain";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function main() {
   const Factory = await ethers.getContractFactory("Factory");
 
-  const factory = Factory.attach("0x776AE71aFd9f302CbEe71b64b113052f0Ae2aF15");
+  const factory = Factory.attach("0xe71E4C7F7d0439A6b1645746838673714adE4bFf");
 
   console.log("Contract Factory is:", factory.address);
 
@@ -42,6 +43,36 @@ async function main() {
 
   const newCollectionAddress = result.events[0].address || "";
   console.log({ newCollectionAddress });
+
+  // const ArchetypeLogic = await ethers.getContractFactory("ArchetypeLogic");
+  // const archetypeLogic = await ArchetypeLogic.attach("0xBF09cF88E8Ac620e6487097Be0E4e907eDd6f789");
+  // const Archetype = await ethers.getContractFactory("Archetype", {
+  //   libraries: {
+  //     ArchetypeLogic: archetypeLogic.address,
+  //   },
+  // });
+  // const archetype = Archetype.attach(newCollectionAddress);
+
+  // await archetype.setInvite(ethers.constants.HashZero, ethers.constants.HashZero, {
+  //   price: ethers.utils.parseEther("0.001"),
+  //   start: 0,
+  //   end: 0,
+  //   limit: 2 ** 32 - 1,
+  //   maxSupply: 2 ** 32 - 1,
+  //   unitSize: 1,
+  //   tokenAddress: ethers.constants.AddressZero,
+  //   isBlacklist: false,
+  // });
+
+  // await archetype.mint(
+  //   { key: ethers.constants.HashZero, proof: [] },
+  //   1,
+  //   ethers.constants.AddressZero,
+  //   "0x",
+  //   {
+  //     value: ethers.utils.parseEther("0.001"),
+  //   }
+  // );
 
   // await sleep(1000 * 120);
 

@@ -53,9 +53,11 @@ contract ArchetypePayouts is Ownable {
       // ETH payments
       uint256 totalReceived = msg.value;
       for (uint256 i = 0; i < recipients.length; i++) {
-        uint256 amountToAdd = (totalReceived * splits[i]) / 10000;
-        _balance[recipients[i]][token] += amountToAdd;
-        emit FundsAdded(recipients[i], token, amountToAdd);
+        if (splits[i] > 0) {
+          uint256 amountToAdd = (totalReceived * splits[i]) / 10000;
+          _balance[recipients[i]][token] += amountToAdd;
+          emit FundsAdded(recipients[i], token, amountToAdd);
+        }
       }
     } else {
       // ERC20 payments
@@ -63,9 +65,11 @@ contract ArchetypePayouts is Ownable {
       paymentToken.transferFrom(msg.sender, address(this), totalAmount);
 
       for (uint256 i = 0; i < recipients.length; i++) {
-        uint256 amountToAdd = (totalAmount * splits[i]) / 10000;
-        _balance[recipients[i]][token] += amountToAdd;
-        emit FundsAdded(recipients[i], token, amountToAdd);
+        if (splits[i] > 0) {
+          uint256 amountToAdd = (totalAmount * splits[i]) / 10000;
+          _balance[recipients[i]][token] += amountToAdd;
+          emit FundsAdded(recipients[i], token, amountToAdd);
+        }
       }
     }
   }
