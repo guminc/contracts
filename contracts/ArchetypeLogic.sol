@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ArchetypeLogic v0.6.1 - DN404
+// ArchetypeLogic v0.7.0 - DN404
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -15,6 +15,7 @@
 
 pragma solidity ^0.8.4;
 
+import "./ArchetypePayouts.sol";
 import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "solady/src/utils/MerkleProofLib.sol";
@@ -33,12 +34,11 @@ error NumberOfMintsExceeded();
 error MintingPaused();
 error InvalidReferral();
 error InvalidSignature();
-error BalanceEmpty();
-error TransferFailed();
 error MaxBatchSizeExceeded();
 error NotTokenOwner();
 error NotPlatform();
 error NotOwner();
+error NotShareholder();
 error NotApprovedToTransfer();
 error InvalidAmountOfTokens();
 error WrongPassword();
@@ -67,13 +67,20 @@ struct Discount {
 struct Config {
   string baseUri;
   address affiliateSigner;
-  address ownerAltPayout; // optional alternative address for owner withdrawals.
   uint32 maxSupply;
   uint32 maxBatchSize;
   uint16 affiliateFee; //BPS
-  uint16 platformFee; //BPS
   uint16 defaultRoyalty; //BPS
   Discount discounts;
+}
+
+struct PayoutConfig {
+  uint16 ownerBps;
+  uint16 platformBps;
+  uint16 partnerBps;
+  uint16 superAffiliateBps;
+  address partner;
+  address superAffiliate;
 }
 
 struct Options {
@@ -109,11 +116,6 @@ struct Invite {
   bool isBlacklist;
 }
 
-struct OwnerBalance {
-  uint128 owner;
-  uint128 platform;
-}
-
 struct ValidationArgs {
   address owner;
   address affiliate;
@@ -122,9 +124,11 @@ struct ValidationArgs {
   uint256 listSupply;
 }
 
+// UPDATE CONSTANTS BEFORE DEPLOY
 address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
 address constant DEVVAULT = 0xe9191E06EaA1b32997FFAFB9a2AbBab525518Fa8;
 address constant BATCH = 0x6Bc558A6DC48dEfa0e7022713c23D65Ab26e4Fa7;
+address constant PAYOUTS = 0x31810331b5Edf34991ce7868f991ce79F9a51128;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 uint32 constant UINT32_MAX = 2**32 - 1;
 
@@ -265,7 +269,6 @@ library ArchetypeLogic {
       if (msg.value != 0) {
         revert ExcessiveEthSent();
       }
-
     } else {
       if (msg.value < cost) {
         revert InsufficientEthSent();
@@ -276,7 +279,7 @@ library ArchetypeLogic {
   function updateBalances(
     DutchInvite storage i,
     Config storage config,
-    mapping(address => OwnerBalance) storage _ownerBalance,
+    mapping(address => uint128) storage _ownerBalance,
     mapping(address => mapping(address => uint128)) storage _affiliateBalance,
     address affiliate,
     uint256 quantity,
@@ -291,16 +294,9 @@ library ArchetypeLogic {
       emit Referral(affiliate, tokenAddress, affiliateWad, quantity);
     }
 
-    uint128 superAffiliateWad = ((value * config.platformFee) / 2) / 10000;
-    _affiliateBalance[DEVVAULT][tokenAddress] += superAffiliateWad;
-
-    OwnerBalance memory balance = _ownerBalance[tokenAddress];
-    uint128 platformWad = ((value * config.platformFee) / 10000) - superAffiliateWad;
-    uint128 ownerWad = value - affiliateWad - platformWad - superAffiliateWad;
-    _ownerBalance[tokenAddress] = OwnerBalance({
-      owner: balance.owner + ownerWad,
-      platform: balance.platform + platformWad
-    });
+    uint128 balance = _ownerBalance[tokenAddress];
+    uint128 ownerWad = value - affiliateWad;
+    _ownerBalance[tokenAddress] = balance + ownerWad;
 
     if (tokenAddress != address(0)) {
       IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
@@ -308,31 +304,16 @@ library ArchetypeLogic {
     }
   }
 
-  function withdrawTokens(
-    Config storage config,
-    mapping(address => OwnerBalance) storage _ownerBalance,
+  function withdrawTokensAffiliate(
     mapping(address => mapping(address => uint128)) storage _affiliateBalance,
-    address owner,
     address[] calldata tokens
   ) public {
     address msgSender = _msgSender();
-    for (uint256 i; i < tokens.length; ) {
-      address tokenAddress = tokens[i];
-      uint128 wad;
 
-      if (msgSender == owner || msgSender == config.ownerAltPayout || msgSender == PLATFORM) {
-        OwnerBalance storage balance = _ownerBalance[tokenAddress];
-        if (msgSender == owner || msgSender == config.ownerAltPayout) {
-          wad = balance.owner;
-          balance.owner = 0;
-        } else {
-          wad = balance.platform;
-          balance.platform = 0;
-        }
-      } else {
-        wad = _affiliateBalance[msgSender][tokenAddress];
-        _affiliateBalance[msgSender][tokenAddress] = 0;
-      }
+    for (uint256 i; i < tokens.length; i++) {
+      address tokenAddress = tokens[i];
+      uint128 wad = _affiliateBalance[msgSender][tokenAddress];
+      _affiliateBalance[msgSender][tokenAddress] = 0;
 
       if (wad == 0) {
         revert BalanceEmpty();
@@ -340,28 +321,69 @@ library ArchetypeLogic {
 
       if (tokenAddress == address(0)) {
         bool success = false;
-        // send to ownerAltPayout if set and owner is withdrawing
-        if (msgSender == owner && config.ownerAltPayout != address(0)) {
-          (success, ) = payable(config.ownerAltPayout).call{ value: wad }("");
-        } else {
-          (success, ) = msgSender.call{ value: wad }("");
-        }
+        (success, ) = msgSender.call{ value: wad }("");
         if (!success) {
           revert TransferFailed();
         }
       } else {
         IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
+        erc20Token.transfer(msgSender, wad);
+      }
 
-        if (msgSender == owner && config.ownerAltPayout != address(0)) {
-          erc20Token.transfer(config.ownerAltPayout, wad);
-        } else {
-          erc20Token.transfer(msgSender, wad);
-        }
+      emit Withdrawal(msgSender, tokenAddress, wad);
+    }
+  }
+
+  function withdrawTokens(
+    PayoutConfig storage payoutConfig,
+    mapping(address => uint128) storage _ownerBalance,
+    address owner,
+    address[] calldata tokens
+  ) public {
+    address msgSender = _msgSender();
+    for (uint256 i; i < tokens.length; i++) {
+      address tokenAddress = tokens[i];
+      uint128 wad;
+
+      if (
+        msgSender == owner ||
+        msgSender == PLATFORM ||
+        msgSender == payoutConfig.partner ||
+        msgSender == payoutConfig.superAffiliate
+      ) {
+        wad = _ownerBalance[tokenAddress];
+        _ownerBalance[tokenAddress] = 0;
+      } else {
+        revert NotShareholder();
+      }
+
+      if (wad == 0) {
+        revert BalanceEmpty();
+      }
+
+      address[] memory recipients = new address[](4);
+      recipients[0] = owner;
+      recipients[1] = PLATFORM;
+      recipients[2] = payoutConfig.partner;
+      recipients[3] = payoutConfig.superAffiliate;
+
+      uint16[] memory splits = new uint16[](4);
+      splits[0] = payoutConfig.ownerBps;
+      splits[1] = payoutConfig.platformBps;
+      splits[2] = payoutConfig.partnerBps;
+      splits[3] = payoutConfig.superAffiliateBps;
+
+      if (tokenAddress == address(0)) {
+        ArchetypePayouts(PAYOUTS).updateBalances{ value: wad }(
+          wad,
+          tokenAddress,
+          recipients,
+          splits
+        );
+      } else {
+        ArchetypePayouts(PAYOUTS).updateBalances(wad, tokenAddress, recipients, splits);
       }
       emit Withdrawal(msgSender, tokenAddress, wad);
-      unchecked {
-        ++i;
-      }
     }
   }
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.6.1 - DN404
+// Archetype v0.7.0 - DN404
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -19,16 +19,9 @@ import "./ArchetypeLogic.sol";
 import "dn404/src/DN404.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
-import "closedsea/src/OperatorFilterer.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
 
-contract Archetype is
-  DN404,
-  Initializable,
-  OwnableUpgradeable,
-  OperatorFilterer,
-  ERC2981Upgradeable
-{
+contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeable {
   //
   // EVENTS
   //
@@ -42,12 +35,13 @@ contract Archetype is
   mapping(bytes32 => DutchInvite) public invites;
   mapping(address => mapping(bytes32 => uint256)) private _minted;
   mapping(bytes32 => uint256) private _listSupply;
-  mapping(address => OwnerBalance) private _ownerBalance;
+  mapping(address => uint128) private _ownerBalance;
   mapping(address => mapping(address => uint128)) private _affiliateBalance;
 
   string private _name;
   string private _symbol;
   Config public config;
+  PayoutConfig public payoutConfig;
   Options public options;
 
   //
@@ -57,6 +51,7 @@ contract Archetype is
     string memory name_,
     string memory symbol_,
     Config calldata config_,
+    PayoutConfig calldata payoutConfig_,
     address mirror,
     address _receiver
   ) external initializer {
@@ -68,8 +63,6 @@ contract Archetype is
     // check max bps not reached and min platform fee.
     if (
       config_.affiliateFee > MAXBPS ||
-      config_.platformFee > MAXBPS ||
-      config_.platformFee < 1000 ||
       config_.discounts.affiliateDiscount > MAXBPS ||
       config_.affiliateSigner == address(0) ||
       config_.maxBatchSize == 0
@@ -91,11 +84,21 @@ contract Archetype is
     config = config_;
     __Ownable_init();
 
-    if (config.ownerAltPayout != address(0)) {
-      setDefaultRoyalty(config.ownerAltPayout, config.defaultRoyalty);
-    } else {
-      setDefaultRoyalty(_receiver, config.defaultRoyalty);
+    uint256 totalShares = payoutConfig_.ownerBps +
+      payoutConfig_.platformBps +
+      payoutConfig_.partnerBps +
+      payoutConfig_.superAffiliateBps;
+
+    if (
+      payoutConfig_.platformBps < 250 ||
+      payoutConfig_.superAffiliate != DEVVAULT ||
+      payoutConfig.superAffiliateBps < 250 ||
+      totalShares != 10000
+    ) {
+      revert InvalidSplitShares();
     }
+    payoutConfig = payoutConfig_;
+    setDefaultRoyalty(_receiver, config.defaultRoyalty);
   }
 
   //
@@ -269,14 +272,30 @@ contract Archetype is
   }
 
   function withdrawTokens(address[] memory tokens) public {
-    ArchetypeLogic.withdrawTokens(config, _ownerBalance, _affiliateBalance, owner(), tokens);
+    ArchetypeLogic.withdrawTokens(payoutConfig, _ownerBalance, owner(), tokens);
   }
 
-  function ownerBalance() external view returns (OwnerBalance memory) {
+  function withdrawAffiliate() external {
+    address[] memory tokens = new address[](1);
+    tokens[0] = address(0);
+    withdrawTokensAffiliate(tokens);
+  }
+
+  function withdrawTokensAffiliate(address[] memory tokens) public {
+    ArchetypeLogic.withdrawTokensAffiliate(_affiliateBalance, tokens);
+  }
+
+  // Must call before withdrawing erc20 tokens
+  function approveErc20Withdraw(address erc20) public {
+    IERC20Upgradeable erc20Token = IERC20Upgradeable(erc20);
+    erc20Token.approve(PAYOUTS, 2**256 - 1);
+  }
+
+  function ownerBalance() external view returns (uint128) {
     return _ownerBalance[address(0)];
   }
 
-  function ownerBalanceToken(address token) external view returns (OwnerBalance memory) {
+  function ownerBalanceToken(address token) external view returns (uint128) {
     return _ownerBalance[token];
   }
 
@@ -420,23 +439,6 @@ contract Archetype is
     options.discountsLocked = true;
   }
 
-  function setOwnerAltPayout(address ownerAltPayout) external _onlyOwner {
-    if (options.ownerAltPayoutLocked) {
-      revert LockedForever();
-    }
-
-    config.ownerAltPayout = ownerAltPayout;
-  }
-
-  /// @notice the password is "forever"
-  function lockOwnerAltPayout(string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
-    options.ownerAltPayoutLocked = true;
-  }
-
   function setMaxBatchSize(uint32 maxBatchSize) external _onlyOwner {
     config.maxBatchSize = maxBatchSize;
   }
@@ -474,19 +476,17 @@ contract Archetype is
     emit Invited(_key, _cid);
   }
 
+  function setDefaultRoyalty(address receiver, uint16 feeNumerator) public _onlyOwner {
+    config.defaultRoyalty = feeNumerator;
+    _setDefaultRoyalty(receiver, feeNumerator);
+  }
+
   //
   // INTERNAL
   //
 
   function _msgSender() internal view override returns (address) {
     return msg.sender == BATCH ? tx.origin : msg.sender;
-  }
-
-  modifier _onlyPlatform() {
-    if (_msgSender() != PLATFORM) {
-      revert NotPlatform();
-    }
-    _;
   }
 
   modifier _onlyOwner() {
@@ -501,10 +501,5 @@ contract Archetype is
     if (!success) {
       revert TransferFailed();
     }
-  }
-
-  function setDefaultRoyalty(address receiver, uint16 feeNumerator) public _onlyOwner {
-    config.defaultRoyalty = feeNumerator;
-    _setDefaultRoyalty(receiver, feeNumerator);
   }
 }

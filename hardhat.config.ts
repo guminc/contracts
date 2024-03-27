@@ -68,10 +68,57 @@ const config: HardhatUserConfig = {
       url: "https://mainnet.infura.io/v3/569cee6284754b9e86ff2e5e55a0dc22",
       chainId: 1,
     },
-    hardhat: { },
+    blast_sepolia: {
+      accounts: [privateKey],
+      url: "https://sepolia.blast.io",
+      chainId: 168587773,
+    },
+    blast_mainnet: {
+      accounts: [privateKey],
+      url: "https://rpc.blast.io",
+      chainId: 81457,
+    },
+    base_sepolia: {
+      url: "https://sepolia.base.org",
+      accounts: [privateKey],
+      chainId: 84532,
+    },
+    base_mainnet: {
+      url: "https://mainnet.base.org",
+      accounts: [privateKey],
+      chainId: 8453,
+    },
+    hardhat: {},
+  },
+  sourcify: {
+    enabled: true,
+    // apiUrl: "https://staging.sourcify.dev/server",
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY || "",
+    apiKey: {
+      ethereum: process.env.ETHERSCAN_API_KEY || "",
+      sepolia: process.env.ETHERSCAN_API_KEY || "",
+      base: process.env.BASESCAN_API_KEY || "",
+      blast: process.env.BLASTSCAN_API_KEY || "",
+    },
+    customChains: [
+      {
+        network: "blast_sepolia",
+        chainId: 168587773,
+        urls: {
+          apiURL: "https://api-sepolia.blastscan.io/",
+          browserURL: "https://sepolia.blastscan.io/",
+        },
+      },
+      {
+        network: "base_sepolia",
+        chainId: 84532,
+        urls: {
+          apiURL: "https://api-sepolia.basescan.org/",
+          browserURL: "https://sepolia.basescan.org/",
+        },
+      },
+    ],
   },
 };
 
