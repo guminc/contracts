@@ -396,12 +396,7 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
     config.affiliateFee = affiliateFee;
   }
 
-  /// @notice the password is "forever"
-  function lockAffiliateFee(string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
+  function lockAffiliateFee() external _onlyOwner {
     options.affiliateFeeLocked = true;
   }
 
@@ -430,12 +425,7 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
     config.discounts = discounts;
   }
 
-  /// @notice the password is "forever"
-  function lockDiscounts(string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
+  function lockDiscounts() external _onlyOwner {
     options.discountsLocked = true;
   }
 
