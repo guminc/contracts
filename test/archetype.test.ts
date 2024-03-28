@@ -2339,6 +2339,76 @@ describe("Factory", function () {
       ethers.utils.parseEther("0.012")
     ); // 15%
   });
+
+  it("test payouts approval functionality", async () => {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    const owner = accountOne;
+    const ownerAlt = accountZero;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+    const newCollectionAddress = result.events[0].address || "";
+    const nft = Archetype.attach(newCollectionAddress);
+
+    await nft
+      .connect(owner)
+      .setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+        price: ethers.utils.parseEther("0.2"),
+        start: 0,
+        end: 0,
+        limit: 50,
+        maxSupply: 50,
+        unitSize: 0,
+        tokenAddress: ZERO,
+        isBlacklist: false,
+      })
+      .then(tx => tx.wait());
+
+    await nft
+      .connect(accountOne)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: ethers.utils.parseEther("0.2"),
+      })
+      .then(tx => tx.wait());
+
+    await nft.connect(owner).withdraw();
+
+    // cant withdraw from other persons account
+    await expect(
+      archetypePayouts.connect(ownerAlt).withdrawFrom(owner.address, ownerAlt.address)
+    ).to.be.revertedWith("NotApprovedToWithdraw");
+
+    await expect(
+      archetypePayouts.connect(ownerAlt).withdrawTokensFrom(owner.address, ownerAlt.address, [ZERO])
+    ).to.be.revertedWith("NotApprovedToWithdraw");
+
+    // can withdraw from own account to another address
+    await archetypePayouts.connect(owner).withdrawFrom(owner.address, ownerAlt.address);
+
+    await nft
+      .connect(accountOne)
+      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+        value: ethers.utils.parseEther("0.2"),
+      })
+      .then(tx => tx.wait());
+
+    await nft.connect(owner).withdraw();
+
+    // can withdraw from other persons account when approved
+    await archetypePayouts.connect(owner).approveWithdrawal(ownerAlt.address, true);
+    archetypePayouts.connect(ownerAlt).withdrawFrom(owner.address, ownerAlt.address);
+    await expect(
+      archetypePayouts.connect(ownerAlt).withdrawTokensFrom(owner.address, ownerAlt.address, [ZERO])
+    ).to.be.revertedWith("BalanceEmpty");
+  });
 });
 
 // todo: add test to ensure affiliate signer can't be zero address
