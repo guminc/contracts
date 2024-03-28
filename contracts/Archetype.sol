@@ -92,7 +92,7 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
     if (
       payoutConfig_.platformBps < 250 ||
       payoutConfig_.superAffiliate != DEVVAULT ||
-      payoutConfig.superAffiliateBps < 250 ||
+      payoutConfig_.superAffiliateBps < 250 ||
       totalShares != 10000
     ) {
       revert InvalidSplitShares();

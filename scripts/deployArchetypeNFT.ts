@@ -10,18 +10,28 @@ async function main() {
 
   const [accountZero] = await ethers.getSigners();
 
-  const newContract = await factory.createCollection(accountZero.address, "test 404", "404", {
-    baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
-    affiliateSigner: "0x1f285dD528cf4cDE3081C6d48D9df7A4F8FA9383",
-    ownerAltPayout: ethers.constants.AddressZero,
-    superAffiliatePayout: ethers.constants.AddressZero,
-    maxSupply: 5000,
-    maxBatchSize: 20,
-    affiliateFee: 1500,
-    platformFee: 500,
-    defaultRoyalty: 500,
-    discounts: { affiliateDiscount: 0, mintTiers: [] },
-  });
+  const newContract = await factory.createCollection(
+    accountZero.address,
+    "test payout",
+    "PAYOUT",
+    {
+      baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
+      affiliateSigner: "0x1f285dD528cf4cDE3081C6d48D9df7A4F8FA9383",
+      maxSupply: 5000,
+      maxBatchSize: 20,
+      affiliateFee: 1500,
+      defaultRoyalty: 500,
+      discounts: { affiliateDiscount: 0, mintTiers: [] },
+    },
+    {
+      ownerBps: 9500,
+      platformBps: 250,
+      partnerBps: 250,
+      superAffiliateBps: 0,
+      partner: "0xC80A1105CA41506A758F19489FDCBAfF8ad84ed1",
+      superAffiliate: "0x0000000000000000000000000000000000000000",
+    }
+  );
 
   console.log({ newContract });
 
@@ -31,6 +41,36 @@ async function main() {
 
   const newCollectionAddress = result.events[0].address || "";
   console.log({ newCollectionAddress });
+
+  // const ArchetypeLogic = await ethers.getContractFactory("ArchetypeLogic");
+  // const archetypeLogic = await ArchetypeLogic.attach("0xBF09cF88E8Ac620e6487097Be0E4e907eDd6f789");
+  // const Archetype = await ethers.getContractFactory("Archetype", {
+  //   libraries: {
+  //     ArchetypeLogic: archetypeLogic.address,
+  //   },
+  // });
+  // const archetype = Archetype.attach(newCollectionAddress);
+
+  // await archetype.setInvite(ethers.constants.HashZero, ethers.constants.HashZero, {
+  //   price: ethers.utils.parseEther("0.001"),
+  //   start: 0,
+  //   end: 0,
+  //   limit: 2 ** 32 - 1,
+  //   maxSupply: 2 ** 32 - 1,
+  //   unitSize: 1,
+  //   tokenAddress: ethers.constants.AddressZero,
+  //   isBlacklist: false,
+  // });
+
+  // await archetype.mint(
+  //   { key: ethers.constants.HashZero, proof: [] },
+  //   1,
+  //   ethers.constants.AddressZero,
+  //   "0x",
+  //   {
+  //     value: ethers.utils.parseEther("0.001"),
+  //   }
+  // );
 
   // await sleep(1000 * 120);
 

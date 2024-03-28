@@ -88,7 +88,7 @@ contract ArchetypePayouts is Ownable {
   }
 
   function withdrawFrom(address from, address to) public {
-    if (!_approvals[from][to]) {
+    if (from != msg.sender && !_approvals[from][to]) {
       revert NotApprovedToWithdraw();
     }
     _withdraw(from, to, address(0));
@@ -99,7 +99,7 @@ contract ArchetypePayouts is Ownable {
     address to,
     address[] memory tokens
   ) public {
-    if (!_approvals[from][to]) {
+    if (from != msg.sender && !_approvals[from][to]) {
       revert NotApprovedToWithdraw();
     }
     for (uint256 i = 0; i < tokens.length; i++) {
