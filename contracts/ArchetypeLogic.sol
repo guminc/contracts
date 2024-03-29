@@ -16,8 +16,8 @@
 pragma solidity ^0.8.4;
 
 import "./ArchetypePayouts.sol";
-import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "solady/src/utils/MerkleProofLib.sol";
 import "solady/src/utils/ECDSA.sol";
 
@@ -118,7 +118,7 @@ struct Invite {
 }
 
 struct BurnConfig {
-  IERC721AUpgradeable archetype;
+  IERC721 archetype;
   address burnAddress;
   bool enabled;
   bool reversed; // side of the ratio (false=burn {ratio} get 1, true=burn 1 get {ratio})
@@ -267,7 +267,7 @@ library ArchetypeLogic {
     }
 
     if (i.tokenAddress != address(0)) {
-      IERC20Upgradeable erc20Token = IERC20Upgradeable(i.tokenAddress);
+      IERC20 erc20Token = IERC20(i.tokenAddress);
       if (erc20Token.allowance(msgSender, address(this)) < cost) {
         revert NotApprovedToTransfer();
       }
@@ -366,8 +366,11 @@ library ArchetypeLogic {
     _ownerBalance[tokenAddress] = balance + ownerWad;
 
     if (tokenAddress != address(0)) {
-      IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
-      erc20Token.transferFrom(_msgSender(), address(this), value);
+      IERC20 erc20Token = IERC20(tokenAddress);
+      bool success = erc20Token.transferFrom(_msgSender(), address(this), value);
+      if (!success) {
+        revert TransferFailed();
+      }
     }
   }
 
@@ -393,7 +396,7 @@ library ArchetypeLogic {
           revert TransferFailed();
         }
       } else {
-        IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
+        IERC20 erc20Token = IERC20(tokenAddress);
         erc20Token.transfer(msgSender, wad);
       }
 

@@ -1537,8 +1537,6 @@ describe("Factory", function () {
       ethers.utils.parseEther("3")
     ); // 100%
 
-    await nft.connect(owner).approveErc20Withdraw(erc20.address);
-
     await nft.connect(owner).withdrawTokens([erc20.address]);
     await expect(await erc20.balanceOf(archetypePayouts.address)).to.be.equal(
       ethers.utils.parseEther("3")

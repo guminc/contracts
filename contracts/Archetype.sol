@@ -299,12 +299,6 @@ contract Archetype is
     ArchetypeLogic.withdrawTokensAffiliate(_affiliateBalance, tokens);
   }
 
-  // Must call before withdrawing erc20 tokens
-  function approveErc20Withdraw(address erc20) public {
-    IERC20Upgradeable erc20Token = IERC20Upgradeable(erc20);
-    erc20Token.approve(PAYOUTS, 2**256 - 1);
-  }
-
   function ownerBalance() external view returns (uint128) {
     return _ownerBalance[address(0)];
   }
@@ -454,6 +448,13 @@ contract Archetype is
     bytes32 _cid,
     Invite calldata _invite
   ) external _onlyOwner {
+    // approve token for withdrawals if erc20 list
+    if (_invite.tokenAddress != address(0)) {
+      bool success = IERC20(_invite.tokenAddress).approve(PAYOUTS, 2**256 - 1);
+      if (!success) {
+        revert NotApprovedToTransfer();
+      }
+    }
     invites[_key] = DutchInvite({
       price: _invite.price,
       reservePrice: _invite.price,
@@ -475,6 +476,13 @@ contract Archetype is
     bytes32 _cid,
     DutchInvite memory _dutchInvite
   ) external _onlyOwner {
+    // approve token for withdrawals if erc20 list
+    if (_dutchInvite.tokenAddress != address(0)) {
+      bool success = IERC20(_dutchInvite.tokenAddress).approve(PAYOUTS, 2**256 - 1);
+      if (!success) {
+        revert NotApprovedToTransfer();
+      }
+    }
     if (_dutchInvite.start < block.timestamp) {
       _dutchInvite.start = uint32(block.timestamp);
     }
@@ -491,7 +499,7 @@ contract Archetype is
     uint64 limit
   ) external _onlyOwner {
     burnConfig = BurnConfig({
-      archetype: IERC721AUpgradeable(archetype),
+      archetype: IERC721(archetype),
       burnAddress: burnAddress,
       enabled: true,
       reversed: reversed,
@@ -503,7 +511,7 @@ contract Archetype is
 
   function disableBurnToMint() external _onlyOwner {
     burnConfig = BurnConfig({
-      archetype: IERC721AUpgradeable(address(0)),
+      archetype: IERC721(address(0)),
       burnAddress: address(0),
       enabled: false,
       reversed: false,
