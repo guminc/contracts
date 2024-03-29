@@ -88,6 +88,11 @@ const config: HardhatUserConfig = {
       accounts: [privateKey],
       chainId: 8453,
     },
+    berachain_artio: {
+      url: "https://artio.rpc.berachain.com/",
+      accounts: [privateKey],
+      chainId: 80085,
+    },
     hardhat: {},
   },
   sourcify: {
