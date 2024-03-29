@@ -15,7 +15,6 @@
 
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 error InvalidLength();
@@ -24,7 +23,7 @@ error TransferFailed();
 error BalanceEmpty();
 error NotApprovedToWithdraw();
 
-contract ArchetypePayouts is Ownable {
+contract ArchetypePayouts {
   event Withdrawal(address indexed src, address token, uint256 wad);
   event FundsAdded(address indexed recipient, address token, uint256 amount);
 
@@ -62,7 +61,10 @@ contract ArchetypePayouts is Ownable {
     } else {
       // ERC20 payments
       IERC20 paymentToken = IERC20(token);
-      paymentToken.transferFrom(msg.sender, address(this), totalAmount);
+      bool success = paymentToken.transferFrom(msg.sender, address(this), totalAmount);
+      if (!success) {
+        revert TransferFailed();
+      }
 
       for (uint256 i = 0; i < recipients.length; i++) {
         if (splits[i] > 0) {
@@ -129,7 +131,10 @@ contract ArchetypePayouts is Ownable {
       }
     } else {
       IERC20 erc20Token = IERC20(token);
-      erc20Token.transfer(to, wad);
+      bool success = erc20Token.transfer(to, wad);
+      if (!success) {
+        revert TransferFailed();
+      }
     }
     emit Withdrawal(from, token, wad);
   }

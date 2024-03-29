@@ -985,10 +985,10 @@ describe("Factory", function () {
     await expect(nft.connect(owner).setBaseURI("new test uri")).to.be.reverted;
 
     // CHANGE MAX SUPPLY
-    await nft.connect(owner).setMaxSupply(100, "forever");
+    await nft.connect(owner).setMaxSupply(100);
     await expect((await nft.connect(owner).config()).maxSupply).to.be.equal(100);
     await nft.connect(owner).lockMaxSupply("forever");
-    await expect(nft.connect(owner).setMaxSupply(20, "forever")).to.be.reverted;
+    await expect(nft.connect(owner).setMaxSupply(20)).to.be.reverted;
 
     // CHANGE AFFILIATE FEE
     await nft.connect(owner).setAffiliateFee(1000);
@@ -1526,7 +1526,6 @@ describe("Factory", function () {
       ethers.utils.parseEther("3.0")
     ); // 100%
 
-    await nft.connect(owner).approveErc20Withdraw(erc20.address);
     await nft.connect(owner).withdrawTokens([erc20.address]);
 
     await expect(await erc20.balanceOf(nft.address)).to.be.equal(ethers.utils.parseEther("0"));
@@ -2130,7 +2129,7 @@ describe("Factory", function () {
           isBlacklist: false,
         },
       ]),
-      nftMint.interface.encodeFunctionData("setMaxSupply", [1000, "forever"]),
+      nftMint.interface.encodeFunctionData("setMaxSupply", [1000]),
       nftMint.interface.encodeFunctionData("setBaseURI", ["test"]),
     ];
 

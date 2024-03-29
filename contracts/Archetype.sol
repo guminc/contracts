@@ -285,12 +285,6 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
     ArchetypeLogic.withdrawTokensAffiliate(_affiliateBalance, tokens);
   }
 
-  // Must call before withdrawing erc20 tokens
-  function approveErc20Withdraw(address erc20) public {
-    IERC20Upgradeable erc20Token = IERC20Upgradeable(erc20);
-    erc20Token.approve(PAYOUTS, 2**256 - 1);
-  }
-
   function ownerBalance() external view returns (uint128) {
     return _ownerBalance[address(0)];
   }
@@ -358,13 +352,8 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
     options.uriLocked = true;
   }
 
-  /// @notice the password is "forever"
   // max supply cannot subceed total supply. Be careful changing.
-  function setMaxSupply(uint32 maxSupply, string memory password) external _onlyOwner {
-    if (keccak256(abi.encodePacked(password)) != keccak256(abi.encodePacked("forever"))) {
-      revert WrongPassword();
-    }
-
+  function setMaxSupply(uint32 maxSupply) external _onlyOwner {
     if (options.maxSupplyLocked) {
       revert LockedForever();
     }
@@ -438,6 +427,13 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
     bytes32 _cid,
     Invite calldata _invite
   ) external _onlyOwner {
+    // approve token for withdrawals if erc20 list
+    if (_invite.tokenAddress != address(0)) {
+      bool success = IERC20(_invite.tokenAddress).approve(PAYOUTS, 2**256 - 1);
+      if (!success) {
+        revert NotApprovedToTransfer();
+      }
+    }
     invites[_key] = DutchInvite({
       price: _invite.price,
       reservePrice: _invite.price,
@@ -459,6 +455,13 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
     bytes32 _cid,
     DutchInvite memory _dutchInvite
   ) external _onlyOwner {
+    // approve token for withdrawals if erc20 list
+    if (_dutchInvite.tokenAddress != address(0)) {
+      bool success = IERC20(_dutchInvite.tokenAddress).approve(PAYOUTS, 2**256 - 1);
+      if (!success) {
+        revert NotApprovedToTransfer();
+      }
+    }
     if (_dutchInvite.start < block.timestamp) {
       _dutchInvite.start = uint32(block.timestamp);
     }

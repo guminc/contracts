@@ -16,8 +16,7 @@
 pragma solidity ^0.8.4;
 
 import "./ArchetypePayouts.sol";
-import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "solady/src/utils/MerkleProofLib.sol";
 import "solady/src/utils/ECDSA.sol";
 
@@ -125,10 +124,10 @@ struct ValidationArgs {
 }
 
 // UPDATE CONSTANTS BEFORE DEPLOY
-address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
-address constant DEVVAULT = 0xe9191E06EaA1b32997FFAFB9a2AbBab525518Fa8;
-address constant BATCH = 0x6Bc558A6DC48dEfa0e7022713c23D65Ab26e4Fa7;
-address constant PAYOUTS = 0x31810331b5Edf34991ce7868f991ce79F9a51128;
+address constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
+address constant DEVVAULT = 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65;
+address constant BATCH = 0x5FbDB2315678afecb367f032d93F642f64180aa3;
+address constant PAYOUTS = 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 uint32 constant UINT32_MAX = 2**32 - 1;
 
@@ -257,7 +256,7 @@ library ArchetypeLogic {
     }
 
     if (i.tokenAddress != address(0)) {
-      IERC20Upgradeable erc20Token = IERC20Upgradeable(i.tokenAddress);
+      IERC20 erc20Token = IERC20(i.tokenAddress);
       if (erc20Token.allowance(msgSender, address(this)) < cost) {
         revert NotApprovedToTransfer();
       }
@@ -299,8 +298,11 @@ library ArchetypeLogic {
     _ownerBalance[tokenAddress] = balance + ownerWad;
 
     if (tokenAddress != address(0)) {
-      IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
-      erc20Token.transferFrom(_msgSender(), address(this), value);
+      IERC20 erc20Token = IERC20(tokenAddress);
+      bool success = erc20Token.transferFrom(_msgSender(), address(this), value);
+      if (!success) {
+        revert TransferFailed();
+      }
     }
   }
 
@@ -326,8 +328,11 @@ library ArchetypeLogic {
           revert TransferFailed();
         }
       } else {
-        IERC20Upgradeable erc20Token = IERC20Upgradeable(tokenAddress);
-        erc20Token.transfer(msgSender, wad);
+        IERC20 erc20Token = IERC20(tokenAddress);
+        bool success = erc20Token.transfer(msgSender, wad);
+        if (!success) {
+          revert TransferFailed();
+        }
       }
 
       emit Withdrawal(msgSender, tokenAddress, wad);
