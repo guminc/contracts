@@ -397,7 +397,10 @@ library ArchetypeLogic {
         }
       } else {
         IERC20 erc20Token = IERC20(tokenAddress);
-        erc20Token.transfer(msgSender, wad);
+        bool success = erc20Token.transfer(msgSender, wad);
+        if (!success) {
+          revert TransferFailed();
+        }
       }
 
       emit Withdrawal(msgSender, tokenAddress, wad);
