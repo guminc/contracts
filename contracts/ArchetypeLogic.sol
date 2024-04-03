@@ -124,10 +124,10 @@ struct ValidationArgs {
 }
 
 // UPDATE CONSTANTS BEFORE DEPLOY
-address constant PLATFORM = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
-address constant DEVVAULT = 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65;
-address constant BATCH = 0x5FbDB2315678afecb367f032d93F642f64180aa3;
-address constant PAYOUTS = 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0;
+address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
+address constant DEVVAULT = 0xe9191E06EaA1b32997FFAFB9a2AbBab525518Fa8;
+address constant BATCH = 0xEa49e7bE310716dA66725c84a5127d2F6A202eAf;
+address constant PAYOUTS = 0xaAfdfA4a935d8511bF285af11A0544ce7e4a1199;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
 uint32 constant UINT32_MAX = 2**32 - 1;
 
