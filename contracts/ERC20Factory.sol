@@ -16,6 +16,10 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+interface IERC20 {
+    function initialize(string memory name, string memory symbol, uint256 initialSupply, address owner) external;
+}
+
 contract ERC20Factory is Ownable, ReentrancyGuard {
     address[] public tokens;
     mapping(string => address) public implementations;
