@@ -64,4 +64,14 @@ contract ERC20Factory is Ownable, ReentrancyGuard {
     function getTokens() public view returns (address[] memory) {
         return tokens;
     }
+
+    // Provide a list of all available implementations
+    function getImplementations() public view returns (string[] memory) {
+    string[] memory availableImplementations = new string[](tokens.length);
+    for (uint i = 0; i < tokens.length; i++) {
+        availableImplementations[i] = tokens[i];
+    }
+    return availableImplementations;
+}
+
 }
