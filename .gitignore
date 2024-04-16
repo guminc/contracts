@@ -54,3 +54,5 @@ artifacts
 .secret*
 
 *.sw*
+
+balances.csv

@@ -1,25 +1,38 @@
-import { ethers, run } from "hardhat";
-import fetch from 'node-fetch';
+import { ethers } from "hardhat";
+import fetch from "node-fetch";
+import fs from "fs";
+import path from "path";
+
 const ZERO = "0x0000000000000000000000000000000000000000";
 
 async function main() {
-    const contracts = await (await fetch('https://scatter-api.fly.dev/api/contracts')).json()
+  const contracts = await (await fetch("https://scatter-api.fly.dev/api/contracts")).json();
 
-    let totalPlat = 0
-    for(const contract of contracts.body) {
-        // const archetype = Archetype.attach(contract);
-        try{
-            const archetype = await ethers.getContractAt("Archetype", contract);
-            const balance = await archetype.ownerBalance();
-            console.log(contract, "platform:", ethers.utils.formatEther(balance.platform), "owner:", ethers.utils.formatEther(balance.owner));
-            totalPlat += Number(ethers.utils.formatEther(balance.platform))
-        } catch(e) {
-            console.log(contract, "not Archetype");
-            continue
-        }
+  // Prepare to write to a CSV file
+  const filePath = path.join(__dirname, "balances.csv");
+  const header = "Contract Address,Owner Balance,Platform Balance\n";
+  fs.writeFileSync(filePath, header, { encoding: "utf8" });
+
+  let totalPlat = 0;
+  for (const contract of contracts.body) {
+    try {
+      const archetype = await ethers.getContractAt("Archetype", contract);
+      const balance = await archetype.ownerBalance();
+      const ownerBalance = ethers.utils.formatEther(balance.owner);
+      const platformBalance = ethers.utils.formatEther(balance.platform);
+      console.log(contract, "platform:", platformBalance, "owner:", ownerBalance);
+      totalPlat += Number(platformBalance);
+
+      // Write the contract data to the CSV file
+      const line = `${contract},${ownerBalance},${platformBalance}\n`;
+      fs.appendFileSync(filePath, line, { encoding: "utf8" });
+    } catch (e) {
+      console.error(e);
+      console.log(contract, "not Archetype");
     }
+  }
 
-    console.log("total platform:", totalPlat)
+  console.log("total platform:", totalPlat);
 }
 
 main()
