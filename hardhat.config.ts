@@ -91,31 +91,23 @@ const config: HardhatUserConfig = {
     hardhat: {},
   },
   sourcify: {
-    enabled: true,
+    enabled: true, // false
     // apiUrl: "https://staging.sourcify.dev/server",
   },
   etherscan: {
     apiKey: {
-      ethereum: process.env.ETHERSCAN_API_KEY || "",
+      mainnet: process.env.ETHERSCAN_API_KEY || "",
       sepolia: process.env.ETHERSCAN_API_KEY || "",
       base: process.env.BASESCAN_API_KEY || "",
-      blast: process.env.BLASTSCAN_API_KEY || "",
+      blast_mainnet: process.env.BLASTSCAN_API_KEY || "",
     },
     customChains: [
       {
-        network: "blast_sepolia",
-        chainId: 168587773,
+        network: "blast_mainnet",
+        chainId: 81457,
         urls: {
-          apiURL: "https://api-sepolia.blastscan.io/",
-          browserURL: "https://sepolia.blastscan.io/",
-        },
-      },
-      {
-        network: "base_sepolia",
-        chainId: 84532,
-        urls: {
-          apiURL: "https://api-sepolia.basescan.org/",
-          browserURL: "https://sepolia.basescan.org/",
+          apiURL: "https://api.blastscan.io/api",
+          browserURL: "https://blastscan.io/",
         },
       },
     ],
