@@ -88,10 +88,20 @@ const config: HardhatUserConfig = {
       accounts: [privateKey],
       chainId: 8453,
     },
+    berachain_artio: {
+      url: "https://artio.rpc.berachain.com/",
+      accounts: [privateKey],
+      chainId: 80085,
+    },
+    sanko_mainnet: {
+      accounts: [privateKey],
+      url: "https://mainnet.sanko.xyz",
+      chainId: 1996,
+    },
     hardhat: {},
   },
   sourcify: {
-    enabled: true, // false
+    enabled: false, //false,
     // apiUrl: "https://staging.sourcify.dev/server",
   },
   etherscan: {
@@ -100,6 +110,7 @@ const config: HardhatUserConfig = {
       sepolia: process.env.ETHERSCAN_API_KEY || "",
       base: process.env.BASESCAN_API_KEY || "",
       blast_mainnet: process.env.BLASTSCAN_API_KEY || "",
+      sanko_mainnet: "abc",
     },
     customChains: [
       {
@@ -108,6 +119,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.blastscan.io/api",
           browserURL: "https://blastscan.io/",
+        },
+      },
+      {
+        network: "sanko_mainnet",
+        chainId: 1996,
+        urls: {
+          apiURL: "https://explorer.sanko.xyz/api",
+          browserURL: "https://explorer.sanko.xyz/",
         },
       },
     ],
