@@ -43,7 +43,7 @@ const config: HardhatUserConfig = {
   //     },
   //   ],
   // },
-  defaultNetwork: "hardhat",
+  defaultNetwork: "berachain_bartio",
   networks: {
     sepolia: {
       accounts: [privateKey],
@@ -88,10 +88,10 @@ const config: HardhatUserConfig = {
       accounts: [privateKey],
       chainId: 8453,
     },
-    berachain_artio: {
-      url: "https://artio.rpc.berachain.com/",
+    berachain_bartio: {
+      url: "https://bartio.rpc.berachain.com",
       accounts: [privateKey],
-      chainId: 80085,
+      chainId: 80084,
     },
     sanko_mainnet: {
       accounts: [privateKey],
@@ -111,6 +111,7 @@ const config: HardhatUserConfig = {
       base: process.env.BASESCAN_API_KEY || "",
       blast_mainnet: process.env.BLASTSCAN_API_KEY || "",
       sanko_mainnet: "abc",
+      berachain_bartio: "abc",
     },
     customChains: [
       {
@@ -127,6 +128,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://explorer.sanko.xyz/api",
           browserURL: "https://explorer.sanko.xyz/",
+        },
+      },
+      {
+        network: "berachain_bartio",
+        chainId: 80084,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/testnet/evm/80084/etherscan",
+          browserURL: "https://bartio.beratrail.io",
         },
       },
     ],
