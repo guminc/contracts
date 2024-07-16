@@ -43,7 +43,7 @@ const config: HardhatUserConfig = {
   //     },
   //   ],
   // },
-  defaultNetwork: "berachain_bartio",
+  defaultNetwork: "arbitrum_mainnet",
   networks: {
     sepolia: {
       accounts: [privateKey],
@@ -98,10 +98,15 @@ const config: HardhatUserConfig = {
       url: "https://mainnet.sanko.xyz",
       chainId: 1996,
     },
+    arbitrum_mainnet: {
+      accounts: [privateKey],
+      url: "https://arbiscan.io",
+      chainId: 42161,
+    },
     hardhat: {},
   },
   sourcify: {
-    enabled: false, //false,
+    enabled: true, //false,
     // apiUrl: "https://staging.sourcify.dev/server",
   },
   etherscan: {
@@ -110,6 +115,7 @@ const config: HardhatUserConfig = {
       sepolia: process.env.ETHERSCAN_API_KEY || "",
       base: process.env.BASESCAN_API_KEY || "",
       blast_mainnet: process.env.BLASTSCAN_API_KEY || "",
+      arbitrum_mainnet: process.env.ARBSCAN_API_KEY || "",
       sanko_mainnet: "abc",
       berachain_bartio: "abc",
     },
@@ -119,7 +125,7 @@ const config: HardhatUserConfig = {
         chainId: 81457,
         urls: {
           apiURL: "https://api.blastscan.io/api",
-          browserURL: "https://blastscan.io/",
+          browserURL: "https://blastscan.io",
         },
       },
       {
@@ -127,7 +133,15 @@ const config: HardhatUserConfig = {
         chainId: 1996,
         urls: {
           apiURL: "https://explorer.sanko.xyz/api",
-          browserURL: "https://explorer.sanko.xyz/",
+          browserURL: "https://explorer.sanko.xyz",
+        },
+      },
+      {
+        network: "arbitrum_mainnet",
+        chainId: 42161,
+        urls: {
+          apiURL: "https://api.arbiscan.io/api",
+          browserURL: "https://arbiscan.io",
         },
       },
       {
