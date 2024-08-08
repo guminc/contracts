@@ -1,29 +1,37 @@
 import { ethers, run } from "hardhat";
+import { Archetype } from "../typechain";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function main() {
   const Factory = await ethers.getContractFactory("Factory");
 
-  const factory = Factory.attach("0xACCc072242b2B8BC0B7bA9Abeb6B5192fe533304");
+  const factory = Factory.attach("0xe71E4C7F7d0439A6b1645746838673714adE4bFf");
 
   console.log("Contract Factory is:", factory.address);
 
+  const [accountZero] = await ethers.getSigners();
+
   const newContract = await factory.createCollection(
-    "0x60A59d7003345843BE285c15c7C78B62b61e0d7c",
-    "Pookie",
-    "POOKIE",
+    accountZero.address,
+    "test payout",
+    "PAYOUT",
     {
-      unrevealedUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
       baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
       affiliateSigner: "0x1f285dD528cf4cDE3081C6d48D9df7A4F8FA9383",
       maxSupply: 5000,
       maxBatchSize: 20,
       affiliateFee: 1500,
-      platformFee: 500,
-      ownerAltPayout: ethers.constants.AddressZero,
-      superAffiliatePayout: ethers.constants.AddressZero,
-      discounts: { affiliateDiscount: null, mintTiers: [] },
+      defaultRoyalty: 500,
+      discounts: { affiliateDiscount: 0, mintTiers: [] },
+    },
+    {
+      ownerBps: 9500,
+      platformBps: 250,
+      partnerBps: 250,
+      superAffiliateBps: 0,
+      partner: "0xC80A1105CA41506A758F19489FDCBAfF8ad84ed1",
+      superAffiliate: "0x0000000000000000000000000000000000000000",
     }
   );
 
@@ -35,6 +43,36 @@ async function main() {
 
   const newCollectionAddress = result.events[0].address || "";
   console.log({ newCollectionAddress });
+
+  // const ArchetypeLogic = await ethers.getContractFactory("ArchetypeLogic");
+  // const archetypeLogic = await ArchetypeLogic.attach("0xBF09cF88E8Ac620e6487097Be0E4e907eDd6f789");
+  // const Archetype = await ethers.getContractFactory("Archetype", {
+  //   libraries: {
+  //     ArchetypeLogic: archetypeLogic.address,
+  //   },
+  // });
+  // const archetype = Archetype.attach(newCollectionAddress);
+
+  // await archetype.setInvite(ethers.constants.HashZero, ethers.constants.HashZero, {
+  //   price: ethers.utils.parseEther("0.001"),
+  //   start: 0,
+  //   end: 0,
+  //   limit: 2 ** 32 - 1,
+  //   maxSupply: 2 ** 32 - 1,
+  //   unitSize: 1,
+  //   tokenAddress: ethers.constants.AddressZero,
+  //   isBlacklist: false,
+  // });
+
+  // await archetype.mint(
+  //   { key: ethers.constants.HashZero, proof: [] },
+  //   1,
+  //   ethers.constants.AddressZero,
+  //   "0x",
+  //   {
+  //     value: ethers.utils.parseEther("0.001"),
+  //   }
+  // );
 
   // await sleep(1000 * 120);
 
