@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.6.0 - ERC1155-Random
+// Archetype v0.7.1 - ERC1155-Random
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -16,27 +16,20 @@
 pragma solidity ^0.8.4;
 
 import "./ArchetypeLogic.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
 import "solady/src/utils/LibString.sol";
-import "closedsea/src/OperatorFilterer.sol";
 
-contract Archetype is
-  Initializable,
-  ERC1155Upgradeable,
-  OperatorFilterer,
-  OwnableUpgradeable,
-  ERC2981Upgradeable
-{
+contract Archetype is Initializable, ERC1155Upgradeable, OwnableUpgradeable, ERC2981Upgradeable {
   //
   // EVENTS
   //
   event Invited(bytes32 indexed key, bytes32 indexed cid);
   event Referral(address indexed affiliate, address token, uint128 wad, uint256 numMints);
   event Withdrawal(address indexed src, address token, uint128 wad);
+  event RequestRandomness(uint256 indexed seedHash);
 
   //
   // VARIABLES
@@ -44,22 +37,20 @@ contract Archetype is
   mapping(bytes32 => DutchInvite) public invites;
   mapping(address => mapping(bytes32 => uint256)) private _minted;
   mapping(bytes32 => uint256) private _listSupply;
-  mapping(address => OwnerBalance) private _ownerBalance;
+  mapping(address => uint128) private _ownerBalance;
   mapping(address => mapping(address => uint128)) private _affiliateBalance;
 
   uint256 public totalSupply;
 
   Config public config;
+  PayoutConfig public payoutConfig;
   BurnConfig public burnConfig;
   Options public options;
 
   string public name;
   string public symbol;
 
-  // chainlink
-  VrfConfig public vrfConfig;
-  mapping(uint256 => VrfMintInfo) public requestIdMintInfo;
-  VRFCoordinatorV2Interface internal vrfCoordinator;
+  mapping(uint256 => MintInfo) public seedHashMintInfo;
 
   //
   // METHODS
@@ -68,19 +59,16 @@ contract Archetype is
     string memory _name,
     string memory _symbol,
     Config calldata config_,
+    PayoutConfig calldata payoutConfig_,
     address _receiver
   ) external initializer {
     name = _name;
     symbol = _symbol;
     __ERC1155_init("");
 
-    vrfCoordinator = VRFCoordinatorV2Interface(VRF_CORDINATOR);
-
     // check max bps not reached and min platform fee.
     if (
       config_.affiliateFee > MAXBPS ||
-      config_.platformFee > MAXBPS ||
-      config_.platformFee < 500 ||
       config_.discounts.affiliateDiscount > MAXBPS ||
       config_.affiliateSigner == address(0) ||
       config_.maxBatchSize == 0
@@ -99,11 +87,16 @@ contract Archetype is
     config = config_;
     __Ownable_init();
 
-    if (config.ownerAltPayout != address(0)) {
-      setDefaultRoyalty(config.ownerAltPayout, config.defaultRoyalty);
-    } else {
-      setDefaultRoyalty(_receiver, config.defaultRoyalty);
+    uint256 totalShares = payoutConfig_.ownerBps +
+      payoutConfig_.platformBps +
+      payoutConfig_.partnerBps +
+      payoutConfig_.superAffiliateBps;
+
+    if (payoutConfig_.platformBps < 250 || totalShares != 10000) {
+      revert InvalidSplitShares();
     }
+    payoutConfig = payoutConfig_;
+    setDefaultRoyalty(_receiver, config.defaultRoyalty);
   }
 
   //
@@ -114,9 +107,10 @@ contract Archetype is
     Auth calldata auth,
     uint256 quantity,
     address affiliate,
-    bytes calldata signature
+    bytes calldata signature,
+    uint256 seedHash
   ) external payable {
-    mintTo(auth, quantity, _msgSender(), affiliate, signature);
+    mintTo(auth, quantity, _msgSender(), affiliate, signature, seedHash);
   }
 
   function mintTo(
@@ -124,7 +118,8 @@ contract Archetype is
     uint256 quantity,
     address to,
     address affiliate,
-    bytes calldata signature
+    bytes calldata signature,
+    uint256 seedHash
   ) public payable {
     DutchInvite storage i = invites[auth.key];
 
@@ -133,44 +128,32 @@ contract Archetype is
     }
 
     ValidationArgs memory args = ValidationArgs({
-        owner: owner(),
-        affiliate: affiliate,
-        quantity: quantity,
-        curSupply: totalSupply
+      owner: owner(),
+      affiliate: affiliate,
+      quantity: quantity,
+      curSupply: totalSupply,
+      listSupply: _listSupply[auth.key]
     });
 
-    ArchetypeLogic.validateMint(
-      i,
-      config,
-      auth,
-      _minted,
-      _listSupply,
-      signature,
-      args
+    uint128 cost = uint128(
+      ArchetypeLogic.computePrice(
+        i,
+        config.discounts,
+        args.quantity,
+        args.listSupply,
+        args.affiliate != address(0)
+      )
     );
 
-    if(vrfConfig.enabled) {
-        uint256 requestId = requestRandomness(); // request randomness from Chainlink VRF
-        requestIdMintInfo[requestId] = VrfMintInfo({
-          key: auth.key,
-          to: to,
-          quantity: quantity
-        });
-    } else {
-      uint16[] memory tokenIds;
-      uint256 seed = ArchetypeLogic.random();
-      tokenIds = ArchetypeLogic.getRandomTokenIds(
-        config.tokenPool,
-        i.tokenIdsExcluded,
-        quantity,
-        seed
-      );
+    ArchetypeLogic.validateMint(i, config, auth, _minted, _listSupply, signature, args, cost);
 
-      for (uint256 j = 0; j < tokenIds.length; j++) {
-        bytes memory _data;
-        _mint(to, tokenIds[j], 1, _data);
-      }
-    }
+    seedHashMintInfo[seedHash] = MintInfo({
+      key: auth.key,
+      to: to,
+      quantity: quantity,
+      blockNumber: block.number
+    });
+    emit RequestRandomness(seedHash);
 
     totalSupply += quantity;
     if (i.limit < i.maxSupply) {
@@ -180,13 +163,16 @@ contract Archetype is
       _listSupply[auth.key] += quantity;
     }
 
-    ArchetypeLogic.updateBalances(i, config, _ownerBalance, _affiliateBalance, affiliate, quantity);
+    ArchetypeLogic.updateBalances(i, config, _ownerBalance, _affiliateBalance, affiliate, quantity, cost);
+
+    if (msg.value > cost) {
+      _refund(_msgSender(), msg.value - cost);
+    }
   }
 
   // simple 1 to 1 burn to mint.
   function burnToMint(uint256[] calldata tokenIdList, uint256[] calldata quantityList) external {
-
-    if(burnConfig.tokenAddress == address(0)) {
+    if (burnConfig.tokenAddress == address(0)) {
       revert BurnToMintDisabled();
     }
 
@@ -202,7 +188,13 @@ contract Archetype is
         : address(0x000000000000000000000000000000000000dEaD);
 
       bytes memory _data;
-      IERC1155Upgradeable(burnConfig.tokenAddress).safeTransferFrom(msgSender, burnAddress, tokenIdList[i], quantityList[i], _data);
+      IERC1155Upgradeable(burnConfig.tokenAddress).safeTransferFrom(
+        msgSender,
+        burnAddress,
+        tokenIdList[i],
+        quantityList[i],
+        _data
+      );
       _mint(msgSender, tokenIdList[i], quantityList[i], _data);
       quantity += quantityList[i];
     }
@@ -227,14 +219,24 @@ contract Archetype is
   }
 
   function withdrawTokens(address[] memory tokens) public {
-    ArchetypeLogic.withdrawTokens(config, _ownerBalance, _affiliateBalance, owner(), tokens);
+    ArchetypeLogic.withdrawTokens(payoutConfig, _ownerBalance, owner(), tokens);
   }
 
-  function ownerBalance() external view returns (OwnerBalance memory) {
+  function withdrawAffiliate() external {
+    address[] memory tokens = new address[](1);
+    tokens[0] = address(0);
+    withdrawTokensAffiliate(tokens);
+  }
+
+  function withdrawTokensAffiliate(address[] memory tokens) public {
+    ArchetypeLogic.withdrawTokensAffiliate(_affiliateBalance, tokens);
+  }
+
+  function ownerBalance() external view returns (uint128) {
     return _ownerBalance[address(0)];
   }
 
-  function ownerBalanceToken(address token) external view returns (OwnerBalance memory) {
+  function ownerBalanceToken(address token) external view returns (uint128) {
     return _ownerBalance[token];
   }
 
@@ -268,7 +270,8 @@ contract Archetype is
     bool affiliateUsed
   ) external view returns (uint256) {
     DutchInvite storage i = invites[key];
-    return ArchetypeLogic.computePrice(i, config.discounts, quantity, affiliateUsed);
+    uint256 listSupply_ = _listSupply[key];
+    return ArchetypeLogic.computePrice(i, config.discounts, quantity, listSupply_, affiliateUsed);
   }
 
   //
@@ -280,7 +283,6 @@ contract Archetype is
     uint256[] calldata quantityList,
     uint256[] calldata tokenIdList
   ) external _onlyOwner {
-
     if (options.airdropLocked) {
       revert LockedForever();
     }
@@ -373,7 +375,6 @@ contract Archetype is
     options.maxSupplyLocked = true;
   }
 
-
   function setAffiliateFee(uint16 affiliateFee) external _onlyOwner {
     if (options.affiliateFeeLocked) {
       revert LockedForever();
@@ -419,36 +420,8 @@ contract Archetype is
     options.discountsLocked = true;
   }
 
-  function setOwnerAltPayout(address ownerAltPayout) external _onlyOwner {
-    if (options.ownerAltPayoutLocked) {
-      revert LockedForever();
-    }
-
-    config.ownerAltPayout = ownerAltPayout;
-  }
-
-  /// @notice the password is "forever"
-  function lockOwnerAltPayout(string memory password) external _onlyOwner {
-    _checkPassword(password);
-    options.ownerAltPayoutLocked = true;
-  }
-
   function setMaxBatchSize(uint16 maxBatchSize) external _onlyOwner {
     config.maxBatchSize = maxBatchSize;
-  }
-
-  function enableChainlinkVRF(uint64 subId) external _onlyOwner {
-    vrfConfig = VrfConfig({
-      enabled: true,
-      subId: subId
-    });
-  }
-
-  function disableChainlinkVRF() external _onlyOwner {
-    vrfConfig = VrfConfig({
-      enabled: false,
-      subId: 0
-    });
   }
 
   function setInvite(
@@ -456,6 +429,12 @@ contract Archetype is
     bytes32 _cid,
     Invite calldata _invite
   ) external _onlyOwner {
+    if (_invite.tokenAddress != address(0)) {
+      bool success = IERC20(_invite.tokenAddress).approve(PAYOUTS, 2**256 - 1);
+      if (!success) {
+        revert NotApprovedToTransfer();
+      }
+    }
     invites[_key] = DutchInvite({
       price: _invite.price,
       reservePrice: _invite.price,
@@ -477,6 +456,13 @@ contract Archetype is
     bytes32 _cid,
     DutchInvite memory _dutchInvite
   ) external _onlyOwner {
+    // approve token for withdrawals if erc20 list
+    if (_dutchInvite.tokenAddress != address(0)) {
+      bool success = IERC20(_dutchInvite.tokenAddress).approve(PAYOUTS, 2**256 - 1);
+      if (!success) {
+        revert NotApprovedToTransfer();
+      }
+    }
     if (_dutchInvite.start < block.timestamp) {
       _dutchInvite.start = uint32(block.timestamp);
     }
@@ -484,80 +470,34 @@ contract Archetype is
     emit Invited(_key, _cid);
   }
 
-  function enableBurnToMint(
-    address tokenAddress,
-    address burnAddress
-  ) external _onlyOwner {
-    burnConfig = BurnConfig({
-      tokenAddress: tokenAddress,
-      burnAddress: burnAddress
-    });
+  function enableBurnToMint(address tokenAddress, address burnAddress) external _onlyOwner {
+    burnConfig = BurnConfig({ tokenAddress: tokenAddress, burnAddress: burnAddress });
   }
 
   function disableBurnToMint() external _onlyOwner {
-    burnConfig = BurnConfig({
-      tokenAddress: address(0),
-      burnAddress: address(0)
-    });
+    burnConfig = BurnConfig({ tokenAddress: address(0), burnAddress: address(0) });
   }
 
   //
-  // PLATFORM ONLY
-  //
-  function setSuperAffiliatePayout(address superAffiliatePayout) external _onlyPlatform {
-    config.superAffiliatePayout = superAffiliatePayout;
-  }
-
-  //
-  // VRF
+  // FULFILL MINT
   //
 
-  // Request randomness
-  function requestRandomness() internal returns (uint256 requestId) {
-      // The gas lane to use, which specifies the maximum gas price to bump to.
-      // For a list of available gas lanes on each network,
-      // see https://docs.chain.link/docs/vrf/v2/supported-networks/#configurations
-      bytes32 keyHash = VRF_KEYHASH;
+  function fulfillRandomMint(uint256 seed) external {
+    uint256 seedHash = uint256(keccak256(abi.encodePacked(seed)));
 
-      uint16 minimumRequestConfirmations = 5;
-      uint32 callbackGasLimit = 2500000; // max limit
-
-      // Requesting random numbers
-      requestId = vrfCoordinator.requestRandomWords(
-          keyHash,
-          vrfConfig.subId,
-          minimumRequestConfirmations,
-          callbackGasLimit,
-          1
-      );
-  }
-
-  // rawFulfillRandomness is called by VRFCoordinator when it receives a valid VRF
-  function rawFulfillRandomWords(
-      uint256 requestId,
-      uint256[] memory randomWords
-  ) external {
-      // Allow owner and platform to fulfill as backup
-      address msgSender = _msgSender();
-      if(msgSender == VRF_CORDINATOR || msgSender == PLATFORM || msgSender == owner()) {
-        fulfillRandomWords(requestId, randomWords);
-      } else {
-        revert NotVRF();
-      }
-  }
-
-  function fulfillRandomWords(uint256 requestId, uint256[] memory randomness) internal {
-    VrfMintInfo memory mintInfo = requestIdMintInfo[requestId];
-    if(mintInfo.quantity == 0) {
-      revert InvalidRequestId();
+    MintInfo memory mintInfo = seedHashMintInfo[seedHash];
+    if (mintInfo.quantity == 0) {
+      revert InvalidSeed();
     }
+
+    uint256 combinedSeed = uint256(keccak256(abi.encodePacked(seed, mintInfo.blockNumber)));
 
     uint16[] memory tokenIds;
     tokenIds = ArchetypeLogic.getRandomTokenIds(
       config.tokenPool,
       invites[mintInfo.key].tokenIdsExcluded,
       mintInfo.quantity,
-      randomness[0]
+      combinedSeed
     );
 
     for (uint256 j = 0; j < tokenIds.length; j++) {
@@ -565,7 +505,7 @@ contract Archetype is
       _mint(mintInfo.to, tokenIds[j], 1, _data);
     }
 
-    delete requestIdMintInfo[requestId];
+    delete seedHashMintInfo[seedHash];
   }
 
   //
@@ -576,7 +516,7 @@ contract Archetype is
   }
 
   function _msgSender() internal view override returns (address) {
-    return msg.sender == BATCH? tx.origin: msg.sender;
+    return msg.sender == BATCH ? tx.origin : msg.sender;
   }
 
   function _checkPassword(string memory password) internal pure {
@@ -588,9 +528,8 @@ contract Archetype is
   function _isOwner() internal view {
     if (_msgSender() != owner()) {
       revert NotOwner();
-    }  
+    }
   }
-
 
   modifier _onlyPlatform() {
     if (_msgSender() != PLATFORM) {
@@ -602,6 +541,13 @@ contract Archetype is
   modifier _onlyOwner() {
     _isOwner();
     _;
+  }
+
+  function _refund(address to, uint256 refund) internal {
+    (bool success, ) = payable(to).call{ value: refund }("");
+    if (!success) {
+      revert TransferFailed();
+    }
   }
 
   //ERC2981 ROYALTY

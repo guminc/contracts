@@ -5,7 +5,7 @@ import "solidity-coverage";
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-web3";
 import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-etherscan";
+import "@nomicfoundation/hardhat-verify";
 import "@nomiclabs/hardhat-truffle5";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
@@ -68,10 +68,91 @@ const config: HardhatUserConfig = {
       url: "https://mainnet.infura.io/v3/569cee6284754b9e86ff2e5e55a0dc22",
       chainId: 1,
     },
+    blast_sepolia: {
+      accounts: [privateKey],
+      url: "https://sepolia.blast.io",
+      chainId: 168587773,
+    },
+    blast_mainnet: {
+      accounts: [privateKey],
+      url: "https://rpc.blast.io",
+      chainId: 81457,
+    },
+    base_sepolia: {
+      url: "https://sepolia.base.org",
+      accounts: [privateKey],
+      chainId: 84532,
+    },
+    base_mainnet: {
+      url: "https://mainnet.base.org",
+      accounts: [privateKey],
+      chainId: 8453,
+    },
+    berachain_bartio: {
+      url: "https://bartio.rpc.berachain.com",
+      accounts: [privateKey],
+      chainId: 80084,
+    },
+    sanko_mainnet: {
+      accounts: [privateKey],
+      url: "https://mainnet.sanko.xyz",
+      chainId: 1996,
+    },
+    arbitrum_mainnet: {
+      accounts: [privateKey],
+      url: "https://arbiscan.io",
+      chainId: 42161,
+    },
     hardhat: {},
   },
+  sourcify: {
+    enabled: true, //false,
+    // apiUrl: "https://staging.sourcify.dev/server",
+  },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY || "",
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY || "",
+      sepolia: process.env.ETHERSCAN_API_KEY || "",
+      base: process.env.BASESCAN_API_KEY || "",
+      blast_mainnet: process.env.BLASTSCAN_API_KEY || "",
+      arbitrum_mainnet: process.env.ARBSCAN_API_KEY || "",
+      sanko_mainnet: "abc",
+      berachain_bartio: "abc",
+    },
+    customChains: [
+      {
+        network: "blast_mainnet",
+        chainId: 81457,
+        urls: {
+          apiURL: "https://api.blastscan.io/api",
+          browserURL: "https://blastscan.io",
+        },
+      },
+      {
+        network: "sanko_mainnet",
+        chainId: 1996,
+        urls: {
+          apiURL: "https://explorer.sanko.xyz/api",
+          browserURL: "https://explorer.sanko.xyz",
+        },
+      },
+      {
+        network: "arbitrum_mainnet",
+        chainId: 42161,
+        urls: {
+          apiURL: "https://api.arbiscan.io/api",
+          browserURL: "https://arbiscan.io",
+        },
+      },
+      {
+        network: "berachain_bartio",
+        chainId: 80084,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/testnet/evm/80084/etherscan",
+          browserURL: "https://bartio.beratrail.io",
+        },
+      },
+    ],
   },
 };
 

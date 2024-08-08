@@ -1,9 +1,6 @@
 {
   "name": "scatter",
   "version": "1.0.0",
-  "engines": {
-    "node": ">=8.3.0"
-  },
   "description": "Get client ready:",
   "main": "index.js",
   "scripts": {
@@ -13,9 +10,8 @@
     "test:specific": "npm run preTest && hardhat test test/archetype.test --grep && npm run postTest",
     "start": "concurrently \"cd api && npm start\" \"cd app && npm run dev\"",
     "deploy": "npx hardhat run scripts/deployArchetype.ts --network sepolia",
-    "deploy:random": "npx hardhat run scripts/deployArchetypeRandomProxy.ts --network sepolia",
     "network": "npx hardhat node",
-    "verify": "npx hardhat verify 0x30e718C873c8b3649AEFf5D917C967D0bD85b729 --network sepolia"
+    "verify": "npx hardhat verify 0x17a23A733d7B8206a4F950cFdDbdB56563Ce3b7b --network sepolia"
   },
   "repository": {
     "type": "git",
@@ -28,18 +24,14 @@
   },
   "homepage": "https://github.com/scatter-art/contracts#readme",
   "dependencies": {
-    "@chainlink/contracts": "^0.6.1",
-    "@chainlink/hardhat-chainlink": "^0.0.2",
+    "@nomicfoundation/hardhat-verify": "^2.0.4",
     "concurrently": "6.4.0",
-    "csv-parse": "^5.5.1",
     "ethereumjs-util": "7.1.4",
     "ipfsh": "0.0.6",
-    "readline-sync": "^1.4.10",
     "solady": "^0.0.19"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "2.0.5",
-    "@nomiclabs/hardhat-etherscan": "3.1.7",
     "@nomiclabs/hardhat-truffle5": "2.0.3",
     "@nomiclabs/hardhat-waffle": "2.0.1",
     "@nomiclabs/hardhat-web3": "2.0.0",
