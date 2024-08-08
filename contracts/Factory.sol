@@ -19,15 +19,14 @@ import "./Archetype.sol";
 import "./ArchetypeLogic.sol";
 import "dn404/src/DN404Mirror.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Factory is OwnableUpgradeable {
+contract Factory is Ownable {
   event CollectionAdded(address indexed sender, address indexed receiver, address collection);
   address public archetype;
 
-  function initialize(address archetype_) public initializer {
+  constructor(address archetype_) {
     archetype = archetype_;
-    __Ownable_init();
   }
 
   /// @notice config is a struct in the shape of {string placeholder; string base; uint64 supply; bool permanent;}
@@ -35,13 +34,14 @@ contract Factory is OwnableUpgradeable {
     address _receiver,
     string memory name,
     string memory symbol,
-    Config calldata config
+    Config calldata config,
+    PayoutConfig calldata payoutConfig
   ) external payable returns (address) {
     address mirror = address(new DN404Mirror(address(this)));
 
     address clone = ClonesUpgradeable.clone(archetype);
     Archetype token = Archetype(payable(clone));
-    token.initialize(name, symbol, config, mirror, _receiver);
+    token.initialize(name, symbol, config, payoutConfig, mirror, _receiver);
 
     token.transferOwnership(_receiver);
     DN404Mirror(payable(mirror)).pullOwner();

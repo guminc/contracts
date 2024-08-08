@@ -15,25 +15,17 @@ async function main() {
 
   await archetype.deployed();
 
+  console.log("Archetype Logic deployed to:", archetypeLogic.address);
+
   console.log("Archetype deployed to:", archetype.address);
 
   const Factory = await ethers.getContractFactory("Factory");
 
-  const factory = await upgrades.deployProxy(Factory, [archetype.address], {
-    initializer: "initialize",
-  });
+  const factory = await Factory.deploy(archetype.address);
 
   await factory.deployed();
 
-  console.log("Uh, Contract Factory deployed to:", factory.address);
-
-  const addresses = {
-    proxy: factory.address,
-    admin: await upgrades.erc1967.getAdminAddress(factory.address),
-    implementation: await upgrades.erc1967.getImplementationAddress(factory.address),
-  };
-
-  console.log("Factory addresses:", addresses);
+  console.log("Contract Factory deployed to:", factory.address);
 
   // await sleep(150 * 1000);
 
