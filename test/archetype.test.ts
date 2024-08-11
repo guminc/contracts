@@ -7,10 +7,9 @@ import {
   ArchetypeLogic__factory,
   ArchetypeBatch__factory,
   Factory__factory,
-  VRFCoordinatorV2Mock__factory,
 } from "../typechain";
 import Invitelist from "../lib/invitelist";
-import { IArchetypeConfig } from "../lib/types";
+import { IArchetypeConfig, IArchetypePayoutConfig } from "../lib/types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import ipfsh from "ipfsh";
 import { Contract } from "ethers";
@@ -19,6 +18,7 @@ const DEFAULT_NAME = "Pookie";
 const DEFAULT_SYMBOL = "POOKIE";
 let AFFILIATE_SIGNER: SignerWithAddress;
 let DEFAULT_CONFIG: IArchetypeConfig;
+let DEFAULT_PAYOUT_CONFIG: IArchetypePayoutConfig;
 // this is an IPFS content ID which stores a list of addresses ({address: string[]})
 // eg: https://ipfs.io/ipfs/bafkreih2kyxirba6a6dyzt4tsdqb5iim3soprumtewq6garaohkfknqlaq
 // utility for converting CID to bytes32: https://github.com/factoria-org/ipfsh
@@ -43,7 +43,6 @@ describe("Factory", function () {
   let archetypeBatch: Contract;
   let Factory: Factory__factory;
   let factory: Contract;
-  let VrfCoordinatorMock: VRFCoordinatorV2Mock__factory;
   let vrfCoordinatorMock: Contract;
 
   before(async function () {
@@ -51,12 +50,9 @@ describe("Factory", function () {
     DEFAULT_CONFIG = {
       baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
       affiliateSigner: AFFILIATE_SIGNER.address,
-      ownerAltPayout: ZERO,
-      superAffiliatePayout: ZERO,
       maxSupply: 50,
       maxBatchSize: 20,
       affiliateFee: 1500,
-      platformFee: 500,
       defaultRoyalty: 500,
       discounts: {
         affiliateDiscount: 0,
@@ -997,7 +993,7 @@ describe("Factory", function () {
       ...DEFAULT_CONFIG,
       maxBatchSize: 10,
       maxSupply: 10,
-      tokenPool: [1,1,1,1,1,2,2,2,2,2], // all tokens minted will be tokenId 1, 2
+      tokenPool: [1, 1, 1, 1, 1, 2, 2, 2, 2, 2], // all tokens minted will be tokenId 1, 2
     };
 
     const newCollectionBurn = await factory.createCollection(
@@ -1046,7 +1042,9 @@ describe("Factory", function () {
     await nftMint.connect(minter).safeTransferFrom(minter.address, owner.address, 2, 1, "0x");
 
     // try to burn unowned token
-    await expect(nftBurn.connect(minter).burnToMint([3], [1])).to.be.revertedWith("ERC1155: insufficient balance for transfer");
+    await expect(nftBurn.connect(minter).burnToMint([3], [1])).to.be.revertedWith(
+      "ERC1155: insufficient balance for transfer"
+    );
 
     // try to burn invalid number of tokens
     await expect(nftBurn.connect(minter).burnToMint([1, 2], [30, 30])).to.be.revertedWith(
@@ -1072,7 +1070,6 @@ describe("Factory", function () {
     await expect(await nftBurn.balanceOf(minter.address, 1)).to.be.equal(3);
     await expect(await nftBurn.balanceOf(minter.address, 2)).to.be.equal(4);
     await expect(await nftBurn.totalSupply()).to.be.equal(7);
-
   });
 
   it("test platform only modifier", async function () {
