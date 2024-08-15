@@ -43,7 +43,7 @@ const config: HardhatUserConfig = {
   //     },
   //   ],
   // },
-  defaultNetwork: "arbitrum_mainnet",
+  defaultNetwork: "hardhat",
   networks: {
     sepolia: {
       accounts: [privateKey],
