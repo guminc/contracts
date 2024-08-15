@@ -4,9 +4,11 @@ import { expect } from "chai";
 import {
   Archetype__factory,
   Archetype as IArchetype,
+  ArchetypePayouts as IArchetypePayouts,
   ArchetypeLogic__factory,
   ArchetypeBatch__factory,
   Factory__factory,
+  ArchetypePayouts__factory,
 } from "../typechain";
 import Invitelist from "../lib/invitelist";
 import { IArchetypeConfig, IArchetypePayoutConfig } from "../lib/types";
@@ -31,6 +33,23 @@ const BURN = "0x000000000000000000000000000000000000dEaD";
 const HASHONE = "0x0000000000000000000000000000000000000000000000000000000000000001";
 const HASH256 = "0x00000000000000000000000000000000000000000000000000000000000000ff";
 
+const randomSeedNumber = () => {
+  return ethers.BigNumber.from(ethers.utils.randomBytes(32));
+};
+
+const generateSeedHash = () => {
+  const seed = randomSeedNumber();
+
+  const seedHash = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(["uint256"], [seed]));
+
+  console.log("Seed hash generated:", {
+    seedHash,
+    seed: seed.toString(),
+  });
+
+  return { seedHash, seed: seed.toString() };
+};
+
 const generateTokenPool = (x: number): number[] =>
   [].concat(...[1, 2, 3, 4, 5].map(i => Array(x / 5).fill(i)));
 
@@ -41,6 +60,8 @@ describe("Factory", function () {
   let archetypeLogic: Contract;
   let ArchetypeBatch: ArchetypeBatch__factory;
   let archetypeBatch: Contract;
+  let ArchetypePayouts: ArchetypePayouts__factory;
+  let archetypePayouts: IArchetypePayouts;
   let Factory: Factory__factory;
   let factory: Contract;
   let vrfCoordinatorMock: Contract;
@@ -64,6 +85,16 @@ describe("Factory", function () {
       },
       tokenPool: generateTokenPool(50),
     };
+    DEFAULT_PAYOUT_CONFIG = {
+      ownerBps: 9500,
+      platformBps: 500,
+      partnerBps: 0,
+      superAffiliateBps: 0,
+      superAffiliateTwoBps: 0,
+      partner: ZERO,
+      superAffiliate: ZERO,
+      superAffiliateTwo: ZERO,
+    };
 
     ArchetypeBatch = await ethers.getContractFactory("ArchetypeBatch");
     archetypeBatch = await ArchetypeBatch.deploy();
@@ -76,24 +107,26 @@ describe("Factory", function () {
       },
     });
 
-    archetype = await Archetype.deploy();
+    ArchetypePayouts = await ethers.getContractFactory("ArchetypePayouts");
+    archetypePayouts = await ArchetypePayouts.deploy();
 
+    archetype = await Archetype.deploy();
     await archetype.deployed();
 
     Factory = await ethers.getContractFactory("Factory");
-
-    factory = await upgrades.deployProxy(Factory, [archetype.address], {
-      initializer: "initialize",
-    });
-
+    factory = await Factory.deploy(archetype.address);
     await factory.deployed();
 
     console.log({ factoryAddress: factory.address, archetypeAddress: archetype.address });
+  });
 
-    VrfCoordinatorMock = await ethers.getContractFactory("VRFCoordinatorV2Mock");
-    vrfCoordinatorMock = await VrfCoordinatorMock.deploy(1, 1);
-
-    console.log({ vrfCoordinator: vrfCoordinatorMock.address });
+  beforeEach(async function () {
+    const [accountZero, owner, platform] = await ethers.getSigners();
+    // reset split balances between tests
+    if ((await archetypePayouts.balance(owner.address)) > ethers.BigNumber.from(0))
+      await archetypePayouts.connect(owner).withdraw();
+    if ((await archetypePayouts.balance(platform.address)) > ethers.BigNumber.from(0))
+      await archetypePayouts.connect(platform).withdraw();
   });
 
   it("should have platform set to test account", async function () {
@@ -113,7 +146,8 @@ describe("Factory", function () {
       accountOne.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -136,6 +170,7 @@ describe("Factory", function () {
       "Flookie",
       DEFAULT_SYMBOL,
       DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG,
       accountOne.address
     );
     await res.wait();
@@ -143,14 +178,21 @@ describe("Factory", function () {
     expect(await archetype.name()).to.equal("Flookie");
 
     await expect(
-      archetype.initialize("Wookie", DEFAULT_SYMBOL, DEFAULT_CONFIG, accountOne.address)
+      archetype.initialize(
+        "Wookie",
+        DEFAULT_SYMBOL,
+        DEFAULT_CONFIG,
+        DEFAULT_PAYOUT_CONFIG,
+        accountOne.address
+      )
     ).to.be.revertedWith("Initializable: contract is already initialized");
 
     const newCollection = await factory.createCollection(
       accountOne.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -173,7 +215,8 @@ describe("Factory", function () {
       accountOne.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -212,7 +255,8 @@ describe("Factory", function () {
       accountOne.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result1 = await anotherCollection.wait();
@@ -235,7 +279,8 @@ describe("Factory", function () {
       accountOne.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -256,7 +301,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -282,11 +328,17 @@ describe("Factory", function () {
 
     console.log("current time", Math.floor(Date.now() / 1000));
 
-    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+    const { seedHash, seed } = generateSeedHash();
+
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", seedHash, {
       value: ethers.utils.parseEther("0.08"),
     });
 
+    // supply will be set
     expect(await nft.totalSupply()).to.equal(1);
+
+    // mint only fullfilled with original seed
+    await nft.fulfillRandomMint(seed);
   });
 
   it("should mint if user is on valid list, throw appropriate errors otherwise", async function () {
@@ -298,7 +350,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -350,24 +403,22 @@ describe("Factory", function () {
 
     console.log({ invitePrivate, invitePublic });
 
+    const { seedHash, seed } = generateSeedHash();
+
     // whitelisted wallet
     await expect(
-      nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
+      nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", seedHash, {
         value: ethers.utils.parseEther("0.07"),
       })
     ).to.be.revertedWith("InsufficientEthSent");
 
-    await expect(
-      nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
-        value: ethers.utils.parseEther("0.09"),
-      })
-    ).to.be.revertedWith("ExcessiveEthSent");
-
-    await nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", {
+    await nft.mint({ key: root, proof: proof }, 1, ZERO, "0x", seedHash, {
       value: price,
     });
 
-    await nft.mint({ key: root, proof: proof }, 5, ZERO, "0x", {
+    const { seedHash: seedHashTwo, seed: seedTwo } = generateSeedHash();
+
+    await nft.mint({ key: root, proof: proof }, 5, ZERO, "0x", seedHashTwo, {
       value: price.mul(5),
     });
 
@@ -378,16 +429,18 @@ describe("Factory", function () {
     // non-whitelisted wallet
     // private mint rejection
     await expect(
-      nft.connect(accountTwo).mint({ key: root, proof: proofTwo }, 2, ZERO, "0x", {
+      nft.connect(accountTwo).mint({ key: root, proof: proofTwo }, 2, ZERO, "0x", seedHash, {
         value: price.mul(2),
       })
     ).to.be.revertedWith("WalletUnauthorizedToMint");
 
     // public mint rejection
     await expect(
-      nft.connect(accountTwo).mint({ key: ethers.constants.HashZero, proof: [] }, 2, ZERO, "0x", {
-        value: price.mul(2),
-      })
+      nft
+        .connect(accountTwo)
+        .mint({ key: ethers.constants.HashZero, proof: [] }, 2, ZERO, "0x", seedHash, {
+          value: price.mul(2),
+        })
     ).to.be.revertedWith("MintNotYetStarted");
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
@@ -403,9 +456,11 @@ describe("Factory", function () {
 
     // ended list rejectiong
     await expect(
-      nft.connect(accountTwo).mint({ key: ethers.constants.HashZero, proof: [] }, 2, ZERO, "0x", {
-        value: price.mul(2),
-      })
+      nft
+        .connect(accountTwo)
+        .mint({ key: ethers.constants.HashZero, proof: [] }, 2, ZERO, "0x", seedHash, {
+          value: price.mul(2),
+        })
     ).to.be.revertedWith("MintEnded");
 
     expect(await nft.balanceOf(accountTwo.address, 1)).to.equal(0);
@@ -420,7 +475,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -444,8 +500,10 @@ describe("Factory", function () {
 
     console.log({ invites });
 
+    const { seedHash, seed } = generateSeedHash();
+
     await expect(
-      nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", {
+      nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", seedHash, {
         value: ethers.utils.parseEther("0.08"),
       })
     ).to.be.revertedWith("MintingPaused");
@@ -465,7 +523,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -490,6 +549,8 @@ describe("Factory", function () {
       ethers.utils.arrayify(ethers.utils.solidityKeccak256(["address"], [affiliate.address]))
     );
 
+    const { seedHash, seed } = generateSeedHash();
+
     await expect(
       nft
         .connect(accountZero)
@@ -498,6 +559,7 @@ describe("Factory", function () {
           1,
           affiliate.address,
           invalidReferral,
+          seedHash,
           {
             value: ethers.utils.parseEther("0.08"),
           }
@@ -511,12 +573,19 @@ describe("Factory", function () {
 
     await nft
       .connect(accountZero)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, affiliate.address, referral, {
-        value: ethers.utils.parseEther("0.08"),
-      });
+      .mint(
+        { key: ethers.constants.HashZero, proof: [] },
+        1,
+        affiliate.address,
+        referral,
+        seedHash,
+        {
+          value: ethers.utils.parseEther("0.08"),
+        }
+      );
+    await nft.fulfillRandomMint(seed);
 
-    await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.064")); // 80%
-    await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.004")); // 5%
+    await expect(await nft.ownerBalance()).to.equal(ethers.utils.parseEther("0.068")); // 85%
     await expect(await nft.affiliateBalance(affiliate.address)).to.equal(
       ethers.utils.parseEther("0.012")
     ); // 15%
@@ -528,43 +597,69 @@ describe("Factory", function () {
     // expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0")));
 
     // withdraw owner balance
-    let balance = await ethers.provider.getBalance(owner.address);
+    // withdraw owner balance
     await nft.connect(owner).withdraw();
+    await expect(await archetypePayouts.balance(owner.address)).to.equal(
+      ethers.utils.parseEther("0.0646")
+    );
+    await expect(await archetypePayouts.balance(platform.address)).to.equal(
+      ethers.utils.parseEther("0.0034")
+    );
+
+    // withdraw owner from split contract
+    let balance = await ethers.provider.getBalance(owner.address);
+    await archetypePayouts.connect(owner).withdraw();
     let diff = (await ethers.provider.getBalance(owner.address)).toBigInt() - balance.toBigInt();
-    // withdrawal won't be exact due to gas payment, just check range.
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.062")));
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.064")));
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.064"))); // leave room for gas
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.0648")));
 
     // mint again
+    const { seedHash: seedHashTwo, seed: seedTwo } = generateSeedHash();
+
     await nft
       .connect(accountZero)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, affiliate.address, referral, {
-        value: ethers.utils.parseEther("0.08"),
-      });
+      .mint(
+        { key: ethers.constants.HashZero, proof: [] },
+        1,
+        affiliate.address,
+        referral,
+        seedHashTwo,
+        {
+          value: ethers.utils.parseEther("0.08"),
+        }
+      );
 
-    await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.064"));
-    await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.008")); // 5% x 2 mints
+    await expect(await nft.ownerBalance()).to.equal(ethers.utils.parseEther("0.068"));
     await expect(await nft.affiliateBalance(affiliate.address)).to.equal(
       ethers.utils.parseEther("0.024")
     ); // 15% x 2 mints
 
+    await nft.connect(platform).withdraw();
+    await expect(await archetypePayouts.balance(owner.address)).to.equal(
+      ethers.utils.parseEther("0.0646")
+    );
+    await expect(await archetypePayouts.balance(platform.address)).to.equal(
+      ethers.utils.parseEther("0.0068") // accumulated from last withdraw to split
+    );
+
     // withdraw owner balance again
     balance = await ethers.provider.getBalance(owner.address);
-    await nft.connect(owner).withdraw();
+    await archetypePayouts.connect(owner).withdraw();
     diff = (await ethers.provider.getBalance(owner.address)).toBigInt() - balance.toBigInt();
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.062"))); // leave room for gas
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.064")));
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.064"))); // leave room for gas
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.0648")));
 
     // withdraw platform balance
     balance = await ethers.provider.getBalance(platform.address);
-    await nft.connect(platform).withdraw(); // partial withdraw
+    await archetypePayouts.connect(platform).withdraw();
     diff = (await ethers.provider.getBalance(platform.address)).toBigInt() - balance.toBigInt();
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.007")));
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.008")));
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.006")));
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.0068")));
 
     // withdraw affiliate balance
     balance = await ethers.provider.getBalance(affiliate.address);
-    await nft.connect(affiliate).withdraw();
+    await expect(nft.connect(affiliate).withdraw()).to.be.revertedWith("NotShareholder");
+    await nft.connect(affiliate).withdrawAffiliate();
     diff = (await ethers.provider.getBalance(affiliate.address)).toBigInt() - balance.toBigInt();
     expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.020")));
     expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.024")));
@@ -572,11 +667,14 @@ describe("Factory", function () {
     // withdraw empty owner balance
     await expect(nft.connect(owner).withdraw()).to.be.revertedWith("BalanceEmpty");
 
+    // withdraw empty owner balance
+    await expect(archetypePayouts.connect(owner).withdraw()).to.be.revertedWith("BalanceEmpty");
+
     // withdraw empty affiliate balance
-    await expect(nft.connect(affiliate).withdraw()).to.be.revertedWith("BalanceEmpty");
+    await expect(nft.connect(affiliate).withdrawAffiliate()).to.be.revertedWith("BalanceEmpty");
 
     // withdraw unused affiliate balance
-    await expect(nft.connect(accountThree).withdraw()).to.be.revertedWith("BalanceEmpty");
+    await expect(nft.connect(accountThree).withdrawAffiliate()).to.be.revertedWith("BalanceEmpty");
   });
 
   it("should set correct discounts - mint tiers and affiliate", async function () {
@@ -619,7 +717,8 @@ describe("Factory", function () {
             },
           ],
         },
-      }
+      },
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -644,69 +743,79 @@ describe("Factory", function () {
       ethers.utils.arrayify(ethers.utils.solidityKeccak256(["address"], [affiliate.address]))
     );
 
+    const { seedHash, seed } = generateSeedHash();
+
     await nft
       .connect(accountZero)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, affiliate.address, referral, {
-        value: ethers.utils.parseEther("0.09"), // 10 % discount from using an affiliate = 0.9
-      });
+      .mint(
+        { key: ethers.constants.HashZero, proof: [] },
+        1,
+        affiliate.address,
+        referral,
+        seedHash,
+        {
+          value: ethers.utils.parseEther("0.09"), // 10 % discount from using an affiliate = 0.9
+        }
+      );
 
-    await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.072")); // 80%
-    await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.0045")); // 5%
+    await expect(await nft.ownerBalance()).to.equal(ethers.utils.parseEther("0.0765")); // 85%
     await expect(await nft.affiliateBalance(affiliate.address)).to.equal(
       ethers.utils.parseEther("0.0135")
     ); // 15%
 
     // reset balances by withdrawing
-    await nft.connect(owner).withdraw();
     await nft.connect(platform).withdraw();
-    await nft.connect(affiliate).withdraw();
+    await nft.connect(affiliate).withdrawAffiliate();
+
+    const { seedHash: seedHashTwo, seed: seedTwo } = generateSeedHash();
 
     await nft
       .connect(accountZero)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 20, affiliate.address, referral, {
-        value: ethers.utils.parseEther((0.081 * 20).toString()), // 10 % discount from using an affiliate, additional 10% for minting 20 = 0.081 per
-      });
+      .mint(
+        { key: ethers.constants.HashZero, proof: [] },
+        20,
+        affiliate.address,
+        referral,
+        seedHashTwo,
+        {
+          value: ethers.utils.parseEther((0.081 * 20).toString()), // 10 % discount from using an affiliate, additional 10% for minting 20 = 0.081 per
+        }
+      );
 
     await expect(await nft.computePrice(ethers.constants.HashZero, 20, true)).to.equal(
       ethers.utils.parseEther((0.081 * 20).toString())
     );
 
-    await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("1.296")); // 80%
-    await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.081")); // 5%
+    await expect(await nft.ownerBalance()).to.equal(ethers.utils.parseEther("1.377")); // 85%
     await expect(await nft.affiliateBalance(affiliate.address)).to.equal(
       ethers.utils.parseEther("0.243")
     ); // 15%
   });
 
   it("should withdraw and credit correct amount - super affiliate", async function () {
-    const [accountZero, accountOne, accountTwo, accountThree, accountFour] =
+    const [accountZero, accountOne, accountTwo, accountThree, accountFour, accountFive] =
       await ethers.getSigners();
 
     const owner = accountOne;
     const platform = accountTwo;
     const affiliate = accountThree;
     const superAffiliate = accountFour;
+    const superAffiliateTwo = accountFive;
 
     const newCollection = await factory.createCollection(
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      // set config that has super affiliate set
+      DEFAULT_CONFIG,
       {
-        baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
-        affiliateSigner: AFFILIATE_SIGNER.address,
-        ownerAltPayout: ZERO,
-        superAffiliatePayout: superAffiliate.address,
-        maxSupply: 50,
-        tokenPool: generateTokenPool(50),
-        maxBatchSize: 20,
-        affiliateFee: 1500,
-        platformFee: 500,
-        defaultRoyalty: 500,
-        discounts: {
-          affiliateDiscount: 0, // 10%
-          mintTiers: [],
-        },
+        ownerBps: 9000,
+        platformBps: 500,
+        partnerBps: 0,
+        superAffiliateBps: 250,
+        superAffiliateTwoBps: 250,
+        partner: ZERO,
+        superAffiliate: superAffiliate.address,
+        superAffiliateTwo: superAffiliateTwo.address,
       }
     );
 
@@ -718,7 +827,7 @@ describe("Factory", function () {
 
     await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
       price: ethers.utils.parseEther("0.1"),
-      start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
+      start: 0,
       end: 0,
       limit: 300,
       maxSupply: 5000,
@@ -732,46 +841,74 @@ describe("Factory", function () {
       ethers.utils.arrayify(ethers.utils.solidityKeccak256(["address"], [affiliate.address]))
     );
 
+    const { seedHash, seed } = generateSeedHash();
     await nft
       .connect(accountZero)
-      .mint({ key: ethers.constants.HashZero, proof: [] }, 1, affiliate.address, referral, {
-        value: ethers.utils.parseEther("0.1"),
-      });
+      .mint(
+        { key: ethers.constants.HashZero, proof: [] },
+        1,
+        affiliate.address,
+        referral,
+        seedHash,
+        {
+          value: ethers.utils.parseEther("0.1"),
+        }
+      );
 
-    await expect((await nft.ownerBalance()).owner).to.equal(ethers.utils.parseEther("0.08")); // 80%
-    await expect((await nft.ownerBalance()).platform).to.equal(ethers.utils.parseEther("0.0025")); // 2.5%
-    await expect(await nft.affiliateBalance(superAffiliate.address)).to.equal(
-      ethers.utils.parseEther("0.0025")
-    ); // 2.5%
+    await expect(await nft.ownerBalance()).to.equal(ethers.utils.parseEther("0.085")); // 85%
     await expect(await nft.affiliateBalance(affiliate.address)).to.equal(
       ethers.utils.parseEther("0.015")
     ); // 15%
 
+    // withdraw to split
+    await nft.connect(owner).withdraw();
+
+    await expect(await archetypePayouts.balance(owner.address)).to.equal(
+      ethers.utils.parseEther("0.0765")
+    ); // 90%
+    await expect(await archetypePayouts.balance(superAffiliate.address)).to.equal(
+      ethers.utils.parseEther("0.002125")
+    ); // 2.5%
+    await expect(await archetypePayouts.balance(superAffiliateTwo.address)).to.equal(
+      ethers.utils.parseEther("0.002125")
+    ); // 2.5%
+    await expect(await archetypePayouts.balance(platform.address)).to.equal(
+      ethers.utils.parseEther("0.00425")
+    ); // 5%
+
     // withdraw owner balance
     let balance = await ethers.provider.getBalance(owner.address);
-    await nft.connect(owner).withdraw();
+    await archetypePayouts.connect(owner).withdraw();
     let diff = (await ethers.provider.getBalance(owner.address)).toBigInt() - balance.toBigInt();
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.078"))); // leave room for gas
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.08")));
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.076"))); // leave room for gas
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.078")));
 
     // withdraw platform balance
     balance = await ethers.provider.getBalance(platform.address);
-    await nft.connect(platform).withdraw(); // partial withdraw
+    await archetypePayouts.connect(platform).withdraw(); // partial withdraw
     diff = (await ethers.provider.getBalance(platform.address)).toBigInt() - balance.toBigInt();
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.0023")));
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.0025")));
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.004")));
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.00425")));
 
     // withdraw super affiliate balance
     balance = await ethers.provider.getBalance(superAffiliate.address);
-    await nft.connect(superAffiliate).withdraw(); // partial withdraw
+    await archetypePayouts.connect(superAffiliate).withdraw(); // partial withdraw
     diff =
       (await ethers.provider.getBalance(superAffiliate.address)).toBigInt() - balance.toBigInt();
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.0023")));
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.0025")));
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.002")));
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.00225")));
+
+    // withdraw super affiliate Two balance
+    balance = await ethers.provider.getBalance(superAffiliateTwo.address);
+    await archetypePayouts.connect(superAffiliateTwo).withdraw(); // partial withdraw
+    diff =
+      (await ethers.provider.getBalance(superAffiliateTwo.address)).toBigInt() - balance.toBigInt();
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.002")));
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.00225")));
 
     // withdraw affiliate balance
     balance = await ethers.provider.getBalance(affiliate.address);
-    await nft.connect(affiliate).withdraw();
+    await nft.connect(affiliate).withdrawAffiliate();
     diff = (await ethers.provider.getBalance(affiliate.address)).toBigInt() - balance.toBigInt();
     expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.014")));
     expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.015")));
@@ -918,7 +1055,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -1000,7 +1138,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      default_config
+      default_config,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultBurn = await newCollectionBurn.wait();
     const newCollectionAddressBurn = resultBurn.events[0].address || "";
@@ -1010,7 +1149,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      default_config
+      default_config,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1115,7 +1255,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      default_config
+      default_config,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1166,7 +1307,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -1296,7 +1438,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -1328,7 +1471,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -1410,7 +1554,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -1478,7 +1623,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const result = await newCollection.wait();
@@ -1554,7 +1700,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      default_config
+      default_config,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1606,7 +1753,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      default_config
+      default_config,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1677,7 +1825,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      default_config
+      default_config,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1740,7 +1889,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      default_config
+      default_config,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1800,7 +1950,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      default_config
+      default_config,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1863,7 +2014,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      default_config
+      default_config,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1906,7 +2058,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      default_config
+      default_config,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -1985,7 +2138,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -2098,7 +2252,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -2169,7 +2324,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      DEFAULT_CONFIG
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -2228,7 +2384,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      default_config
+      default_config,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -2295,7 +2452,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      default_config
+      default_config,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -2358,7 +2516,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      default_config
+      default_config,
+      DEFAULT_PAYOUT_CONFIG
     );
     const resultMint = await newCollectionMint.wait();
     const newCollectionAddressMint = resultMint.events[0].address || "";
@@ -2420,7 +2579,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      default_config
+      default_config,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const resultMint = await newCollectionMint.wait();
@@ -2482,7 +2642,8 @@ describe("Factory", function () {
       owner.address,
       DEFAULT_NAME,
       DEFAULT_SYMBOL,
-      default_config
+      default_config,
+      DEFAULT_PAYOUT_CONFIG
     );
 
     const resultMint = await newCollectionMint.wait();

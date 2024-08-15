@@ -388,14 +388,14 @@ library ArchetypeLogic {
         revert BalanceEmpty();
       }
 
-      address[] memory recipients = new address[](4);
+      address[] memory recipients = new address[](5);
       recipients[0] = owner;
       recipients[1] = PLATFORM;
       recipients[2] = payoutConfig.partner;
       recipients[3] = payoutConfig.superAffiliate;
       recipients[4] = payoutConfig.superAffiliateTwo;
 
-      uint16[] memory splits = new uint16[](4);
+      uint16[] memory splits = new uint16[](5);
       splits[0] = payoutConfig.ownerBps;
       splits[1] = payoutConfig.platformBps;
       splits[2] = payoutConfig.partnerBps;

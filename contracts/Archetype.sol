@@ -90,7 +90,8 @@ contract Archetype is Initializable, ERC1155Upgradeable, OwnableUpgradeable, ERC
     uint256 totalShares = payoutConfig_.ownerBps +
       payoutConfig_.platformBps +
       payoutConfig_.partnerBps +
-      payoutConfig_.superAffiliateBps;
+      payoutConfig_.superAffiliateBps +
+      payoutConfig_.superAffiliateTwoBps;
 
     if (payoutConfig_.platformBps < 250 || totalShares != 10000) {
       revert InvalidSplitShares();
@@ -163,7 +164,15 @@ contract Archetype is Initializable, ERC1155Upgradeable, OwnableUpgradeable, ERC
       _listSupply[auth.key] += quantity;
     }
 
-    ArchetypeLogic.updateBalances(i, config, _ownerBalance, _affiliateBalance, affiliate, quantity, cost);
+    ArchetypeLogic.updateBalances(
+      i,
+      config,
+      _ownerBalance,
+      _affiliateBalance,
+      affiliate,
+      quantity,
+      cost
+    );
 
     if (msg.value > cost) {
       _refund(_msgSender(), msg.value - cost);
