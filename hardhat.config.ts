@@ -100,7 +100,7 @@ const config: HardhatUserConfig = {
     },
     arbitrum_mainnet: {
       accounts: [privateKey],
-      url: "https://arbiscan.io",
+      url: "https://arb1.arbitrum.io/rpc",
       chainId: 42161,
     },
     hardhat: {},
