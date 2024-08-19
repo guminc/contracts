@@ -44,7 +44,6 @@ contract Archetype is Initializable, ERC1155Upgradeable, OwnableUpgradeable, ERC
 
   Config public config;
   PayoutConfig public payoutConfig;
-  BurnConfig public burnConfig;
   Options public options;
 
   string public name;
@@ -71,6 +70,7 @@ contract Archetype is Initializable, ERC1155Upgradeable, OwnableUpgradeable, ERC
       config_.affiliateFee > MAXBPS ||
       config_.discounts.affiliateDiscount > MAXBPS ||
       config_.affiliateSigner == address(0) ||
+      config_.fulfillmentSigner == address(0) ||
       config_.maxBatchSize == 0
     ) {
       revert InvalidConfig();
@@ -122,6 +122,14 @@ contract Archetype is Initializable, ERC1155Upgradeable, OwnableUpgradeable, ERC
     bytes calldata signature,
     uint256 seedHash
   ) public payable {
+    if (to == address(0)) {
+      revert MintToZeroAddress();
+    }
+
+    if (seedHashMintInfo[seedHash].quantity != 0) {
+      revert SeedHashAlreadyExists();
+    }
+
     DutchInvite storage i = invites[auth.key];
 
     if (i.unitSize > 1) {
@@ -177,41 +185,6 @@ contract Archetype is Initializable, ERC1155Upgradeable, OwnableUpgradeable, ERC
     if (msg.value > cost) {
       _refund(_msgSender(), msg.value - cost);
     }
-  }
-
-  // simple 1 to 1 burn to mint.
-  function burnToMint(uint256[] calldata tokenIdList, uint256[] calldata quantityList) external {
-    if (burnConfig.tokenAddress == address(0)) {
-      revert BurnToMintDisabled();
-    }
-
-    if (quantityList.length != tokenIdList.length) {
-      revert InvalidConfig();
-    }
-
-    address msgSender = _msgSender();
-    uint256 quantity = 0;
-    for (uint256 i; i < tokenIdList.length; i++) {
-      address burnAddress = burnConfig.burnAddress != address(0)
-        ? burnConfig.burnAddress
-        : address(0x000000000000000000000000000000000000dEaD);
-
-      bytes memory _data;
-      IERC1155Upgradeable(burnConfig.tokenAddress).safeTransferFrom(
-        msgSender,
-        burnAddress,
-        tokenIdList[i],
-        quantityList[i],
-        _data
-      );
-      _mint(msgSender, tokenIdList[i], quantityList[i], _data);
-      quantity += quantityList[i];
-    }
-
-    if ((totalSupply + quantity) > config.maxSupply) {
-      revert MaxSupplyExceeded();
-    }
-    totalSupply += quantity;
   }
 
   function uri(uint256 tokenId) public view override returns (string memory) {
@@ -479,20 +452,21 @@ contract Archetype is Initializable, ERC1155Upgradeable, OwnableUpgradeable, ERC
     emit Invited(_key, _cid);
   }
 
-  function enableBurnToMint(address tokenAddress, address burnAddress) external _onlyOwner {
-    burnConfig = BurnConfig({ tokenAddress: tokenAddress, burnAddress: burnAddress });
-  }
-
-  function disableBurnToMint() external _onlyOwner {
-    burnConfig = BurnConfig({ tokenAddress: address(0), burnAddress: address(0) });
+  function setFulfillmentSigner(address _fulfillmentSigner) external onlyOwner {
+    if (_fulfillmentSigner == address(0)) {
+      revert InvalidConfig();
+    }
+    config.fulfillmentSigner = _fulfillmentSigner;
   }
 
   //
   // FULFILL MINT
   //
 
-  function fulfillRandomMint(uint256 seed) external {
+  function fulfillRandomMint(uint256 seed, bytes memory signature) external {
     uint256 seedHash = uint256(keccak256(abi.encodePacked(seed)));
+
+    ArchetypeLogic.validateFulfillment(seed, signature, config.fulfillmentSigner);
 
     MintInfo memory mintInfo = seedHashMintInfo[seedHash];
     if (mintInfo.quantity == 0) {

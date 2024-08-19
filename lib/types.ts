@@ -1,6 +1,7 @@
 export type IArchetypeConfig = {
   baseUri: string;
   affiliateSigner: string;
+  fulfillmentSigner: string;
   maxSupply: number;
   maxBatchSize: number;
   affiliateFee: number;

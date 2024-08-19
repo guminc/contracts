@@ -35,7 +35,6 @@ error MintingPaused();
 error InvalidReferral();
 error InvalidSignature();
 error MaxBatchSizeExceeded();
-error BurnToMintDisabled();
 error NotTokenOwner();
 error NotPlatform();
 error NotOwner();
@@ -46,8 +45,9 @@ error WrongPassword();
 error LockedForever();
 error URIQueryForNonexistentToken();
 error InvalidTokenId();
-error MaxRetriesExceeded();
+error MintToZeroAddress();
 error InvalidSeed();
+error SeedHashAlreadyExists();
 
 //
 // STRUCTS
@@ -70,6 +70,7 @@ struct Discount {
 struct Config {
   string baseUri;
   address affiliateSigner;
+  address fulfillmentSigner;
   uint32 maxSupply;
   uint16 maxBatchSize;
   uint16 affiliateFee; //BPS
@@ -133,11 +134,6 @@ struct ValidationArgs {
   uint256 listSupply;
 }
 
-struct BurnConfig {
-  address tokenAddress;
-  address burnAddress;
-}
-
 struct MintInfo {
   bytes32 key;
   address to;
@@ -149,6 +145,7 @@ address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
 address constant BATCH = 0xEa49e7bE310716dA66725c84a5127d2F6A202eAf;
 address constant PAYOUTS = 0xaAfdfA4a935d8511bF285af11A0544ce7e4a1199;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
+uint32 constant UINT32_MAX = 2**32 - 1;
 
 library ArchetypeLogic {
   //
@@ -257,7 +254,7 @@ library ArchetypeLogic {
         }
       }
 
-      if (i.maxSupply < config.maxSupply) {
+      if (i.maxSupply < UINT32_MAX) {
         totalAfterMint = listSupply[auth.key] + args.quantity;
         if (totalAfterMint > i.maxSupply) {
           revert ListMaxSupplyExceeded();
@@ -431,6 +428,19 @@ library ArchetypeLogic {
     }
   }
 
+  function validateFulfillment(
+    uint256 seed,
+    bytes calldata signature,
+    address fulfillmentSigner
+  ) public view {
+    bytes32 signedMessageHash = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(seed)));
+    address signer = ECDSA.recover(signedMessageHash, signature);
+
+    if (signer != fulfillmentSigner) {
+      revert InvalidSignature();
+    }
+  }
+
   function verify(
     Auth calldata auth,
     address tokenAddress,
@@ -453,7 +463,7 @@ library ArchetypeLogic {
     uint16[] memory tokenIds = new uint16[](quantity);
 
     uint256 retries = 0;
-    uint256 MAX_RETRIES = 5;
+    uint256 MAX_RETRIES = 10;
 
     uint256 i = 0;
     while (i < quantity) {
@@ -465,14 +475,15 @@ library ArchetypeLogic {
       uint256 randIdx = rand % tokenPool.length;
       uint16 selectedToken = tokenPool[randIdx];
 
-      if (tokenIdsExcluded.length > 0 && isExcluded(selectedToken, tokenIdsExcluded)) {
+      if (
+        retries < MAX_RETRIES &&
+        tokenIdsExcluded.length > 0 &&
+        isExcluded(selectedToken, tokenIdsExcluded)
+      ) {
         // If the token is excluded, retry for this position in tokenIds array
+        // If after 5 retries it still hasn't found a non-excluded token, use whatever token is selected even if it's excluded.
         seed = rand; // Update the seed for the next iteration
-
         retries++;
-        if (retries >= MAX_RETRIES) {
-          revert MaxRetriesExceeded();
-        }
         continue;
       }
 
