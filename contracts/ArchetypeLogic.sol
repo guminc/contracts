@@ -373,7 +373,8 @@ library ArchetypeLogic {
         msgSender == owner ||
         msgSender == PLATFORM ||
         msgSender == payoutConfig.partner ||
-        msgSender == payoutConfig.superAffiliate
+        msgSender == payoutConfig.superAffiliate ||
+        msgSender == payoutConfig.superAffiliateTwo
       ) {
         wad = _ownerBalance[tokenAddress];
         _ownerBalance[tokenAddress] = 0;
