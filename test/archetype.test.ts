@@ -3144,10 +3144,73 @@ describe("Factory", function () {
     ).to.be.revertedWith("BalanceEmpty");
   });
 
-  // todo:
-  // test seed not valid and seed retry flows
-  // fulfilment signer
-  // super affiliate 2
+  it("test seed fulfillment and signing", async function () {
+    const [accountZero, accountOne] = await ethers.getSigners();
+
+    const owner = accountOne;
+
+    const newCollection = await factory.createCollection(
+      owner.address,
+      DEFAULT_NAME,
+      DEFAULT_SYMBOL,
+      DEFAULT_CONFIG,
+      DEFAULT_PAYOUT_CONFIG
+    );
+
+    const result = await newCollection.wait();
+
+    const newCollectionAddress = result.events[0].address || "";
+
+    const nft = Archetype.attach(newCollectionAddress);
+
+    await nft.connect(owner).setInvite(ethers.constants.HashZero, ipfsh.ctod(CID_ZERO), {
+      price: ethers.utils.parseEther("0.08"),
+      start: 0,
+      end: 0,
+      limit: 300,
+      unitSize: 0,
+      tokenIdsExcluded: [],
+      maxSupply: 500,
+      tokenAddress: ZERO,
+    });
+
+    const invites = await nft.invites(ethers.constants.HashZero);
+
+    console.log({ invites });
+
+    console.log("current time", Math.floor(Date.now() / 1000));
+
+    const { seedHash, seed, signature } = await generateSeedHash();
+
+    await nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", seedHash, {
+      value: ethers.utils.parseEther("0.08"),
+    });
+
+    // supply will be set
+    expect(await nft.totalSupply()).to.equal(1);
+
+    //seed hash cant be reused
+    await expect(
+      nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", seedHash, {
+        value: ethers.utils.parseEther("0.08"),
+      })
+    ).to.be.revertedWith("SeedHashAlreadyExists");
+
+    const fakeSignature = await accountZero.signMessage(
+      ethers.utils.arrayify(ethers.utils.solidityKeccak256(["uint256"], [seed]))
+    );
+
+    // mint only fullfilled with original seed
+    await expect(nft.fulfillRandomMint(seed, fakeSignature)).to.be.revertedWith("InvalidSignature");
+    nft.fulfillRandomMint(seed, signature);
+
+    //seed hash cant be reused
+    await await expect(
+      nft.mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", seedHash, {
+        value: ethers.utils.parseEther("0.08"),
+      })
+    ).to.be.revertedWith("SeedHashAlreadyExists");
+  });
 });
 
 // todo: add test to ensure affiliate signer can't be zero address

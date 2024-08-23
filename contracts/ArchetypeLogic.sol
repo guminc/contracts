@@ -481,7 +481,7 @@ library ArchetypeLogic {
         isExcluded(selectedToken, tokenIdsExcluded)
       ) {
         // If the token is excluded, retry for this position in tokenIds array
-        // If after 5 retries it still hasn't found a non-excluded token, use whatever token is selected even if it's excluded.
+        // If after 10 retries it still hasn't found a non-excluded token, use whatever token is selected even if it's excluded.
         seed = rand; // Update the seed for the next iteration
         retries++;
         continue;

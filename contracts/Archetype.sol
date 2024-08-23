@@ -50,6 +50,7 @@ contract Archetype is Initializable, ERC1155Upgradeable, OwnableUpgradeable, ERC
   string public symbol;
 
   mapping(uint256 => MintInfo) public seedHashMintInfo;
+  bytes32 private constant FULFILLED_KEY = bytes32("fulfilled");
 
   //
   // METHODS
@@ -122,12 +123,15 @@ contract Archetype is Initializable, ERC1155Upgradeable, OwnableUpgradeable, ERC
     bytes calldata signature,
     uint256 seedHash
   ) public payable {
-    if (to == address(0)) {
-      revert MintToZeroAddress();
-    }
+    {
+      if (to == address(0)) {
+        revert MintToZeroAddress();
+      }
 
-    if (seedHashMintInfo[seedHash].quantity != 0) {
-      revert SeedHashAlreadyExists();
+      MintInfo memory mintInfo = seedHashMintInfo[seedHash];
+      if (mintInfo.quantity != 0 || mintInfo.key == FULFILLED_KEY) {
+        revert SeedHashAlreadyExists();
+      }
     }
 
     DutchInvite storage i = invites[auth.key];
@@ -488,7 +492,8 @@ contract Archetype is Initializable, ERC1155Upgradeable, OwnableUpgradeable, ERC
       _mint(mintInfo.to, tokenIds[j], 1, _data);
     }
 
-    delete seedHashMintInfo[seedHash];
+    seedHashMintInfo[seedHash].quantity = 0;
+    seedHashMintInfo[seedHash].key = FULFILLED_KEY;
   }
 
   //
