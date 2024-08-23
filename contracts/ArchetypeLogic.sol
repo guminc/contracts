@@ -155,6 +155,7 @@ library ArchetypeLogic {
   event Referral(address indexed affiliate, address token, uint128 wad, uint256 numMints);
   event Withdrawal(address indexed src, address token, uint128 wad);
   event RequestRandomness(uint256 indexed seedHash);
+  event FulfillRandomness(uint256 indexed seedHash, uint256 seed, uint256 combinedSeed);
 
   // calculate price based on affiliate usage and mint discounts
   function computePrice(

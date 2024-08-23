@@ -30,6 +30,7 @@ contract Archetype is Initializable, ERC1155Upgradeable, OwnableUpgradeable, ERC
   event Referral(address indexed affiliate, address token, uint128 wad, uint256 numMints);
   event Withdrawal(address indexed src, address token, uint128 wad);
   event RequestRandomness(uint256 indexed seedHash);
+  event FulfillRandomness(uint256 indexed seedHash, uint256 seed, uint256 combinedSeed);
 
   //
   // VARIABLES
@@ -492,6 +493,7 @@ contract Archetype is Initializable, ERC1155Upgradeable, OwnableUpgradeable, ERC
       _mint(mintInfo.to, tokenIds[j], 1, _data);
     }
 
+    emit FulfillRandomness(seedHash, seed, combinedSeed);
     seedHashMintInfo[seedHash].quantity = 0;
     seedHashMintInfo[seedHash].key = FULFILLED_KEY;
   }
