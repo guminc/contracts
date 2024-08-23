@@ -1,34 +1,48 @@
 import { ethers, run } from "hardhat";
+import { Archetype } from "../typechain";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function main() {
-  const [signer] = await ethers.getSigners();
-
   const Factory = await ethers.getContractFactory("Factory");
 
-  const factory = Factory.attach("0x490265526998a921590dC73e732381D5E397d7A4");
+  const factory = Factory.attach("0xe71E4C7F7d0439A6b1645746838673714adE4bFf");
 
   console.log("Contract Factory is:", factory.address);
 
-  const tokenPool = Array(40).fill(130).concat(Array(20).fill(131)).concat(Array(10).fill(132)).concat(Array(5).fill(133)).concat(Array(5).fill(134)).concat(Array(1).fill(135))
+  const [accountZero] = await ethers.getSigners();
+  const tokenPool = Array(40)
+    .fill(130)
+    .concat(Array(20).fill(131))
+    .concat(Array(10).fill(132))
+    .concat(Array(5).fill(133))
+    .concat(Array(5).fill(134))
+    .concat(Array(1).fill(135));
 
   const newContract = await factory.createCollection(
-    signer.address,
-    "test",
-    "TEST",
+    accountZero.address,
+    "test erc1155 random payout",
+    "RAND",
     {
       baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
       affiliateSigner: "0x1f285dD528cf4cDE3081C6d48D9df7A4F8FA9383",
+      fulfillmentSigner: "0x1f285dD528cf4cDE3081C6d48D9df7A4F8FA9383",
       maxSupply: tokenPool.length,
       tokenPool: tokenPool,
       maxBatchSize: 20,
       affiliateFee: 1500,
-      platformFee: 500,
-      ownerAltPayout: ethers.constants.AddressZero,
-      superAffiliatePayout: ethers.constants.AddressZero,
       defaultRoyalty: 500,
       discounts: { affiliateDiscount: 0, mintTiers: [] },
+    },
+    {
+      ownerBps: 9500,
+      platformBps: 250,
+      partnerBps: 250,
+      superAffiliateBps: 0,
+      superAffiliateTwoBps: 0,
+      partner: "0xC80A1105CA41506A758F19489FDCBAfF8ad84ed1",
+      superAffiliate: "0x0000000000000000000000000000000000000000",
+      superAffiliateTwo: "0x0000000000000000000000000000000000000000",
     }
   );
 
@@ -40,6 +54,36 @@ async function main() {
 
   const newCollectionAddress = result.events[0].address || "";
   console.log({ newCollectionAddress });
+
+  // const ArchetypeLogic = await ethers.getContractFactory("ArchetypeLogic");
+  // const archetypeLogic = await ArchetypeLogic.attach("0xBF09cF88E8Ac620e6487097Be0E4e907eDd6f789");
+  // const Archetype = await ethers.getContractFactory("Archetype", {
+  //   libraries: {
+  //     ArchetypeLogic: archetypeLogic.address,
+  //   },
+  // });
+  // const archetype = Archetype.attach(newCollectionAddress);
+
+  // await archetype.setInvite(ethers.constants.HashZero, ethers.constants.HashZero, {
+  //   price: ethers.utils.parseEther("0.001"),
+  //   start: 0,
+  //   end: 0,
+  //   limit: 2 ** 32 - 1,
+  //   maxSupply: 2 ** 32 - 1,
+  //   unitSize: 1,
+  //   tokenAddress: ethers.constants.AddressZero,
+  //   isBlacklist: false,
+  // });
+
+  // await archetype.mint(
+  //   { key: ethers.constants.HashZero, proof: [] },
+  //   1,
+  //   ethers.constants.AddressZero,
+  //   "0x",
+  //   {
+  //     value: ethers.utils.parseEther("0.001"),
+  //   }
+  // );
 
   // await sleep(1000 * 120);
 
