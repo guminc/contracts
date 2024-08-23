@@ -1,12 +1,34 @@
 import { ethers, run } from "hardhat";
 import { Archetype } from "../typechain";
+import { sign } from "crypto";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const randomSeedNumber = () => {
+  return ethers.BigNumber.from(ethers.utils.randomBytes(32));
+};
+
+const generateFulfillmentSignature = async (signer, seed) => {
+  const signature = await signer.signMessage(
+    ethers.utils.arrayify(ethers.utils.solidityKeccak256(["uint256"], [seed]))
+  );
+  return signature;
+};
+
+const generateSeedHash = async signer => {
+  const seed = randomSeedNumber();
+
+  const seedHash = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(["uint256"], [seed]));
+
+  const signature = await generateFulfillmentSignature(signer, seed);
+
+  return { seedHash, seed: seed.toString(), signature };
+};
 
 async function main() {
   const Factory = await ethers.getContractFactory("Factory");
 
-  const factory = Factory.attach("0xe71E4C7F7d0439A6b1645746838673714adE4bFf");
+  const factory = Factory.attach("0xBFd3A6E72fD470A6021070197ac77c7A95A572e9");
 
   console.log("Contract Factory is:", factory.address);
 
@@ -21,12 +43,12 @@ async function main() {
 
   const newContract = await factory.createCollection(
     accountZero.address,
-    "test erc1155 random payout",
-    "RAND",
+    "test erc1155 random v71",
+    "RANDV71",
     {
       baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
       affiliateSigner: "0x1f285dD528cf4cDE3081C6d48D9df7A4F8FA9383",
-      fulfillmentSigner: "0x1f285dD528cf4cDE3081C6d48D9df7A4F8FA9383",
+      fulfillmentSigner: accountZero.address, // in reality will be mint service address
       maxSupply: tokenPool.length,
       tokenPool: tokenPool,
       maxBatchSize: 20,
@@ -55,35 +77,41 @@ async function main() {
   const newCollectionAddress = result.events[0].address || "";
   console.log({ newCollectionAddress });
 
-  // const ArchetypeLogic = await ethers.getContractFactory("ArchetypeLogic");
-  // const archetypeLogic = await ArchetypeLogic.attach("0xBF09cF88E8Ac620e6487097Be0E4e907eDd6f789");
-  // const Archetype = await ethers.getContractFactory("Archetype", {
-  //   libraries: {
-  //     ArchetypeLogic: archetypeLogic.address,
-  //   },
-  // });
-  // const archetype = Archetype.attach(newCollectionAddress);
+  const ArchetypeLogic = await ethers.getContractFactory("ArchetypeLogic");
+  const archetypeLogic = await ArchetypeLogic.attach("0xFB4c378e4deFE910D5E1f3296429cBebCe131545");
+  const Archetype = await ethers.getContractFactory("Archetype", {
+    libraries: {
+      ArchetypeLogic: archetypeLogic.address,
+    },
+  });
+  const archetype = Archetype.attach(ethers.utils.getAddress(newCollectionAddress));
 
-  // await archetype.setInvite(ethers.constants.HashZero, ethers.constants.HashZero, {
-  //   price: ethers.utils.parseEther("0.001"),
-  //   start: 0,
-  //   end: 0,
-  //   limit: 2 ** 32 - 1,
-  //   maxSupply: 2 ** 32 - 1,
-  //   unitSize: 1,
-  //   tokenAddress: ethers.constants.AddressZero,
-  //   isBlacklist: false,
-  // });
+  await archetype.setInvite(ethers.constants.HashZero, ethers.constants.HashZero, {
+    price: ethers.utils.parseEther("0.001"),
+    start: 0,
+    end: 0,
+    limit: 2 ** 32 - 1,
+    maxSupply: 2 ** 32 - 1,
+    unitSize: 1,
+    tokenAddress: ethers.constants.AddressZero,
+    tokenIdsExcluded: [],
+  });
 
-  // await archetype.mint(
-  //   { key: ethers.constants.HashZero, proof: [] },
-  //   1,
-  //   ethers.constants.AddressZero,
-  //   "0x",
-  //   {
-  //     value: ethers.utils.parseEther("0.001"),
-  //   }
-  // );
+  const { seedHash, seed, signature } = await generateSeedHash(accountZero);
+
+  await archetype.mint(
+    { key: ethers.constants.HashZero, proof: [] },
+    1,
+    ethers.constants.AddressZero,
+    "0x",
+    seedHash,
+    {
+      value: ethers.utils.parseEther("0.001"),
+    }
+  );
+
+  await sleep(1000 * 5);
+  await archetype.fulfillRandomMint(seed, signature);
 
   // await sleep(1000 * 120);
 

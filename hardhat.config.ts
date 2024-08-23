@@ -43,7 +43,7 @@ const config: HardhatUserConfig = {
   //     },
   //   ],
   // },
-  defaultNetwork: "hardhat",
+  defaultNetwork: "sepolia",
   networks: {
     sepolia: {
       accounts: [privateKey],
