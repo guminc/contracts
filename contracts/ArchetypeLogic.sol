@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ArchetypeLogic v0.7.0
+// ArchetypeLogic v0.8.0
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -117,13 +117,15 @@ struct Invite {
   bool isBlacklist;
 }
 
-struct BurnConfig {
-  IERC721 archetype;
+struct BurnInvite {
+  IERC721 burnErc721;
   address burnAddress;
-  bool enabled;
+  address tokenAddress;
+  uint128 price; // flat price - does not support discounts
   bool reversed; // side of the ratio (false=burn {ratio} get 1, true=burn 1 get {ratio})
   uint16 ratio;
-  uint64 start;
+  uint32 start;
+  uint32 end;
   uint64 limit;
 }
 
@@ -147,6 +149,7 @@ library ArchetypeLogic {
   // EVENTS
   //
   event Invited(bytes32 indexed key, bytes32 indexed cid);
+  event BurnInvited(bytes32 indexed key, bytes32 indexed cid);
   event Referral(address indexed affiliate, address token, uint128 wad, uint256 numMints);
   event Withdrawal(address indexed src, address token, uint128 wad);
 
@@ -287,24 +290,26 @@ library ArchetypeLogic {
   }
 
   function validateBurnToMint(
+    BurnInvite storage burnInvite,
     Config storage config,
-    BurnConfig storage burnConfig,
+    Auth calldata auth,
     uint256[] calldata tokenIds,
     uint256 curSupply,
-    mapping(address => mapping(bytes32 => uint256)) storage minted
+    mapping(address => mapping(bytes32 => uint256)) storage minted,
+    uint128 cost
   ) public view {
-    if (!burnConfig.enabled) {
-      revert BurnToMintDisabled();
+    if (burnInvite.limit == 0) {
+      revert MintingPaused();
     }
 
-    if (block.timestamp < burnConfig.start) {
+    if (block.timestamp < burnInvite.start) {
       revert MintNotYetStarted();
     }
 
     // check if msgSender owns tokens and has correct approvals
     address msgSender = _msgSender();
     for (uint256 i; i < tokenIds.length; ) {
-      if (burnConfig.archetype.ownerOf(tokenIds[i]) != msgSender) {
+      if (burnInvite.burnErc721.ownerOf(tokenIds[i]) != msgSender) {
         revert NotTokenOwner();
       }
       unchecked {
@@ -312,28 +317,29 @@ library ArchetypeLogic {
       }
     }
 
-    if (!burnConfig.archetype.isApprovedForAll(msgSender, address(this))) {
+    if (!burnInvite.burnErc721.isApprovedForAll(msgSender, address(this))) {
       revert NotApprovedToTransfer();
     }
 
     uint256 quantity;
-    if (burnConfig.reversed) {
-      quantity = tokenIds.length * burnConfig.ratio;
+    if (burnInvite.reversed) {
+      quantity = tokenIds.length * burnInvite.ratio;
     } else {
-      if (tokenIds.length % burnConfig.ratio != 0) {
+      if (tokenIds.length % burnInvite.ratio != 0) {
         revert InvalidAmountOfTokens();
       }
-      quantity = tokenIds.length / burnConfig.ratio;
+      quantity = tokenIds.length / burnInvite.ratio;
     }
 
     if (quantity > config.maxBatchSize) {
       revert MaxBatchSizeExceeded();
     }
 
-    if (burnConfig.limit < config.maxSupply) {
-      uint256 totalAfterMint = minted[msgSender][bytes32("burn")] + quantity;
+    if (burnInvite.limit < config.maxSupply) {
+      uint256 totalAfterMint = minted[msgSender][keccak256(abi.encodePacked("burn", auth.key))] +
+        quantity;
 
-      if (totalAfterMint > burnConfig.limit) {
+      if (totalAfterMint > burnInvite.limit) {
         revert NumberOfMintsExceeded();
       }
     }
@@ -341,10 +347,29 @@ library ArchetypeLogic {
     if ((curSupply + quantity) > config.maxSupply) {
       revert MaxSupplyExceeded();
     }
+
+    if (burnInvite.tokenAddress != address(0)) {
+      IERC20 erc20Token = IERC20(burnInvite.tokenAddress);
+      if (erc20Token.allowance(msgSender, address(this)) < cost) {
+        revert NotApprovedToTransfer();
+      }
+
+      if (erc20Token.balanceOf(msgSender) < cost) {
+        revert Erc20BalanceTooLow();
+      }
+
+      if (msg.value != 0) {
+        revert ExcessiveEthSent();
+      }
+    } else {
+      if (msg.value < cost) {
+        revert InsufficientEthSent();
+      }
+    }
   }
 
   function updateBalances(
-    DutchInvite storage i,
+    address tokenAddress,
     Config storage config,
     mapping(address => uint128) storage _ownerBalance,
     mapping(address => mapping(address => uint128)) storage _affiliateBalance,
@@ -352,8 +377,6 @@ library ArchetypeLogic {
     uint256 quantity,
     uint128 value
   ) public {
-    address tokenAddress = i.tokenAddress;
-
     uint128 affiliateWad;
     if (affiliate != address(0)) {
       affiliateWad = (value * config.affiliateFee) / 10000;
