@@ -87,14 +87,10 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
     uint256 totalShares = payoutConfig_.ownerBps +
       payoutConfig_.platformBps +
       payoutConfig_.partnerBps +
-      payoutConfig_.superAffiliateBps;
+      payoutConfig_.superAffiliateBps +
+      payoutConfig_.superAffiliateTwoBps;
 
-    if (
-      payoutConfig_.platformBps < 250 ||
-      payoutConfig_.superAffiliate != DEVVAULT ||
-      payoutConfig_.superAffiliateBps < 250 ||
-      totalShares != 10000
-    ) {
+    if (payoutConfig_.platformBps < 250 || totalShares != 10000) {
       revert InvalidSplitShares();
     }
     payoutConfig = payoutConfig_;
@@ -315,10 +311,6 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
 
   function platform() external pure returns (address) {
     return PLATFORM;
-  }
-
-  function devVault() external pure returns (address) {
-    return DEVVAULT;
   }
 
   function computePrice(

@@ -78,8 +78,10 @@ struct PayoutConfig {
   uint16 platformBps;
   uint16 partnerBps;
   uint16 superAffiliateBps;
+  uint16 superAffiliateTwoBps;
   address partner;
   address superAffiliate;
+  address superAffiliateTwo;
 }
 
 struct Options {
@@ -125,7 +127,6 @@ struct ValidationArgs {
 
 // UPDATE CONSTANTS BEFORE DEPLOY
 address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
-address constant DEVVAULT = 0xe9191E06EaA1b32997FFAFB9a2AbBab525518Fa8;
 address constant BATCH = 0xEa49e7bE310716dA66725c84a5127d2F6A202eAf;
 address constant PAYOUTS = 0xaAfdfA4a935d8511bF285af11A0544ce7e4a1199;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
@@ -354,7 +355,8 @@ library ArchetypeLogic {
         msgSender == owner ||
         msgSender == PLATFORM ||
         msgSender == payoutConfig.partner ||
-        msgSender == payoutConfig.superAffiliate
+        msgSender == payoutConfig.superAffiliate ||
+        msgSender == payoutConfig.superAffiliateTwo
       ) {
         wad = _ownerBalance[tokenAddress];
         _ownerBalance[tokenAddress] = 0;
@@ -366,17 +368,19 @@ library ArchetypeLogic {
         revert BalanceEmpty();
       }
 
-      address[] memory recipients = new address[](4);
+      address[] memory recipients = new address[](5);
       recipients[0] = owner;
       recipients[1] = PLATFORM;
       recipients[2] = payoutConfig.partner;
       recipients[3] = payoutConfig.superAffiliate;
+      recipients[4] = payoutConfig.superAffiliateTwo;
 
       uint16[] memory splits = new uint16[](4);
       splits[0] = payoutConfig.ownerBps;
       splits[1] = payoutConfig.platformBps;
       splits[2] = payoutConfig.partnerBps;
       splits[3] = payoutConfig.superAffiliateBps;
+      splits[4] = payoutConfig.superAffiliateTwoBps;
 
       if (tokenAddress == address(0)) {
         ArchetypePayouts(PAYOUTS).updateBalances{ value: wad }(
