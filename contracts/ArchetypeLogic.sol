@@ -80,8 +80,10 @@ struct PayoutConfig {
   uint16 platformBps;
   uint16 partnerBps;
   uint16 superAffiliateBps;
+  uint16 superAffiliateTwoBps;
   address partner;
   address superAffiliate;
+  address superAffiliateTwo;
 }
 
 struct Options {
@@ -445,7 +447,8 @@ library ArchetypeLogic {
         msgSender == owner ||
         msgSender == PLATFORM ||
         msgSender == payoutConfig.partner ||
-        msgSender == payoutConfig.superAffiliate
+        msgSender == payoutConfig.superAffiliate ||
+        msgSender == payoutConfig.superAffiliateTwo
       ) {
         wad = _ownerBalance[tokenAddress];
         _ownerBalance[tokenAddress] = 0;
@@ -457,17 +460,19 @@ library ArchetypeLogic {
         revert BalanceEmpty();
       }
 
-      address[] memory recipients = new address[](4);
+      address[] memory recipients = new address[](5);
       recipients[0] = owner;
       recipients[1] = PLATFORM;
       recipients[2] = payoutConfig.partner;
       recipients[3] = payoutConfig.superAffiliate;
+      recipients[4] = payoutConfig.superAffiliateTwo;
 
       uint16[] memory splits = new uint16[](4);
       splits[0] = payoutConfig.ownerBps;
       splits[1] = payoutConfig.platformBps;
       splits[2] = payoutConfig.partnerBps;
       splits[3] = payoutConfig.superAffiliateBps;
+      splits[4] = payoutConfig.superAffiliateTwoBps;
 
       if (tokenAddress == address(0)) {
         ArchetypePayouts(PAYOUTS).updateBalances{ value: wad }(
