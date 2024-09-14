@@ -103,10 +103,15 @@ const config: HardhatUserConfig = {
       url: "https://arb1.arbitrum.io/rpc",
       chainId: 42161,
     },
+    soneium_minato: {
+      accounts: [privateKey],
+      url: "https://rpc.minato.soneium.org",
+      chainId: 1946,
+    },
     hardhat: {},
   },
   sourcify: {
-    enabled: true, //false,
+    enabled: false, //false,
     // apiUrl: "https://staging.sourcify.dev/server",
   },
   etherscan: {
@@ -118,6 +123,7 @@ const config: HardhatUserConfig = {
       arbitrum_mainnet: process.env.ARBSCAN_API_KEY || "",
       sanko_mainnet: "abc",
       berachain_bartio: "abc",
+      soneium_minato: "abc",
     },
     customChains: [
       {
@@ -150,6 +156,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.routescan.io/v2/network/testnet/evm/80084/etherscan",
           browserURL: "https://bartio.beratrail.io",
+        },
+      },
+      {
+        network: "soneium_minato",
+        chainId: 1946,
+        urls: {
+          apiURL: "https://explorer-testnet.soneium.org/api",
+          browserURL: "https://explorer-testnet.soneium.org",
         },
       },
     ],
