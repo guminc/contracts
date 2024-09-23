@@ -103,10 +103,20 @@ const config: HardhatUserConfig = {
       url: "https://arb1.arbitrum.io/rpc",
       chainId: 42161,
     },
+    soneium_minato: {
+      accounts: [privateKey],
+      url: "https://rpc.minato.soneium.org",
+      chainId: 1946,
+    },
+    polygon_mainnet: {
+      accounts: [privateKey],
+      url: "https://polygon-rpc.com",
+      chainId: 137,
+    },
     hardhat: {},
   },
   sourcify: {
-    enabled: true, //false,
+    enabled: false, //false,
     // apiUrl: "https://staging.sourcify.dev/server",
   },
   etherscan: {
@@ -116,8 +126,10 @@ const config: HardhatUserConfig = {
       base: process.env.BASESCAN_API_KEY || "",
       blast_mainnet: process.env.BLASTSCAN_API_KEY || "",
       arbitrum_mainnet: process.env.ARBSCAN_API_KEY || "",
+      polygon_mainnet: process.env.POLYSCAN_API_KEY || "",
       sanko_mainnet: "abc",
       berachain_bartio: "abc",
+      soneium_minato: "abc",
     },
     customChains: [
       {
@@ -150,6 +162,22 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.routescan.io/v2/network/testnet/evm/80084/etherscan",
           browserURL: "https://bartio.beratrail.io",
+        },
+      },
+      {
+        network: "soneium_minato",
+        chainId: 1946,
+        urls: {
+          apiURL: "https://explorer-testnet.soneium.org/api",
+          browserURL: "https://explorer-testnet.soneium.org",
+        },
+      },
+      {
+        network: "polygon_mainnet",
+        chainId: 137,
+        urls: {
+          apiURL: "https://api.polygonscan.com/api",
+          browserURL: "https://polygonscan.com",
         },
       },
     ],
