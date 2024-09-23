@@ -108,6 +108,11 @@ const config: HardhatUserConfig = {
       url: "https://rpc.minato.soneium.org",
       chainId: 1946,
     },
+    polygon_mainnet: {
+      accounts: [privateKey],
+      url: "https://polygon-rpc.com",
+      chainId: 137,
+    },
     hardhat: {},
   },
   sourcify: {
@@ -121,6 +126,7 @@ const config: HardhatUserConfig = {
       base: process.env.BASESCAN_API_KEY || "",
       blast_mainnet: process.env.BLASTSCAN_API_KEY || "",
       arbitrum_mainnet: process.env.ARBSCAN_API_KEY || "",
+      polygon_mainnet: process.env.POLYSCAN_API_KEY || "",
       sanko_mainnet: "abc",
       berachain_bartio: "abc",
       soneium_minato: "abc",
@@ -164,6 +170,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://explorer-testnet.soneium.org/api",
           browserURL: "https://explorer-testnet.soneium.org",
+        },
+      },
+      {
+        network: "polygon_mainnet",
+        chainId: 137,
+        urls: {
+          apiURL: "https://api.polygonscan.com/api",
+          browserURL: "https://polygonscan.com",
         },
       },
     ],
