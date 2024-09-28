@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.7.0 - DN404
+// Archetype v0.8.0 - BRG404
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -89,12 +89,7 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
       payoutConfig_.partnerBps +
       payoutConfig_.superAffiliateBps;
 
-    if (
-      payoutConfig_.platformBps < 250 ||
-      payoutConfig_.superAffiliate != DEVVAULT ||
-      payoutConfig_.superAffiliateBps < 250 ||
-      totalShares != 10000
-    ) {
+    if (payoutConfig_.platformBps < 250 || totalShares != 10000) {
       revert InvalidSplitShares();
     }
     payoutConfig = payoutConfig_;
@@ -315,10 +310,6 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
 
   function platform() external pure returns (address) {
     return PLATFORM;
-  }
-
-  function devVault() external pure returns (address) {
-    return DEVVAULT;
   }
 
   function computePrice(

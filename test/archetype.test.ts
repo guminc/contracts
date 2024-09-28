@@ -90,13 +90,15 @@ describe("Factory", function () {
     factory = await Factory.deploy(archetype.address);
     await factory.deployed();
 
+    const superAffiliate = (await ethers.getSigners())[4];
+
     DEFAULT_PAYOUT_CONFIG = {
       ownerBps: 9000,
       platformBps: 500,
       partnerBps: 0,
       superAffiliateBps: 500,
       partner: ZERO,
-      superAffiliate: await archetype.devVault(),
+      superAffiliate: superAffiliate.address,
     };
 
     console.log({ factoryAddress: factory.address, archetypeAddress: archetype.address });
