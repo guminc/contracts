@@ -97,10 +97,9 @@ describe("Factory", function () {
       platformBps: 500,
       partnerBps: 0,
       superAffiliateBps: 0,
-      superAffiliateTwoBps: 0,
       partner: ZERO,
       superAffiliate: ZERO,
-      superAffiliateTwo: ZERO,
+      ownerAltPayout: ZERO,
     };
 
     ArchetypeBatch = await ethers.getContractFactory("ArchetypeBatch");
@@ -826,7 +825,6 @@ describe("Factory", function () {
     const platform = accountTwo;
     const affiliate = accountThree;
     const superAffiliate = accountFour;
-    const superAffiliateTwo = accountFive;
 
     const newCollection = await factory.createCollection(
       owner.address,
@@ -834,14 +832,13 @@ describe("Factory", function () {
       DEFAULT_SYMBOL,
       DEFAULT_CONFIG,
       {
-        ownerBps: 9000,
+        ownerBps: 9250,
         platformBps: 500,
         partnerBps: 0,
         superAffiliateBps: 250,
-        superAffiliateTwoBps: 250,
         partner: ZERO,
         superAffiliate: superAffiliate.address,
-        superAffiliateTwo: superAffiliateTwo.address,
+        ownerAltPayout: ZERO,
       }
     );
 
@@ -890,12 +887,9 @@ describe("Factory", function () {
     await nft.connect(owner).withdraw();
 
     await expect(await archetypePayouts.balance(owner.address)).to.equal(
-      ethers.utils.parseEther("0.0765")
-    ); // 90%
+      ethers.utils.parseEther("0.078625")
+    ); // 92.5%
     await expect(await archetypePayouts.balance(superAffiliate.address)).to.equal(
-      ethers.utils.parseEther("0.002125")
-    ); // 2.5%
-    await expect(await archetypePayouts.balance(superAffiliateTwo.address)).to.equal(
       ethers.utils.parseEther("0.002125")
     ); // 2.5%
     await expect(await archetypePayouts.balance(platform.address)).to.equal(
@@ -906,8 +900,8 @@ describe("Factory", function () {
     let balance = await ethers.provider.getBalance(owner.address);
     await archetypePayouts.connect(owner).withdraw();
     let diff = (await ethers.provider.getBalance(owner.address)).toBigInt() - balance.toBigInt();
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.076"))); // leave room for gas
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.078")));
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.0785"))); // leave room for gas
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.079")));
 
     // withdraw platform balance
     balance = await ethers.provider.getBalance(platform.address);
@@ -924,14 +918,6 @@ describe("Factory", function () {
     expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.002")));
     expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.00225")));
 
-    // withdraw super affiliate Two balance
-    balance = await ethers.provider.getBalance(superAffiliateTwo.address);
-    await archetypePayouts.connect(superAffiliateTwo).withdraw(); // partial withdraw
-    diff =
-      (await ethers.provider.getBalance(superAffiliateTwo.address)).toBigInt() - balance.toBigInt();
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.002")));
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.00225")));
-
     // withdraw affiliate balance
     balance = await ethers.provider.getBalance(affiliate.address);
     await nft.connect(affiliate).withdrawAffiliate();
@@ -941,10 +927,12 @@ describe("Factory", function () {
   });
 
   it("should withdraw to alt owner address", async function () {
-    const [accountZero, accountOne, accountFour] = await ethers.getSigners();
+    const [accountZero, accountOne, accountTwo, accountFour] = await ethers.getSigners();
 
+    const partner = accountZero;
     const owner = accountOne;
     const ownerAltPayout = accountFour;
+    const platform = accountTwo;
 
     const newCollection = await factory.createCollection(
       owner.address,
@@ -955,8 +943,6 @@ describe("Factory", function () {
         baseUri: "ipfs://bafkreieqcdphcfojcd2vslsxrhzrjqr6cxjlyuekpghzehfexi5c3w55eq",
         affiliateSigner: AFFILIATE_SIGNER.address,
         fulfillmentSigner: FULFILLMENT_SIGNER.address,
-        ownerAltPayout: ownerAltPayout.address,
-        superAffiliatePayout: ZERO,
         maxSupply: 50,
         tokenPool: generateTokenPool(50),
         maxBatchSize: 20,
@@ -968,7 +954,15 @@ describe("Factory", function () {
           mintTiers: [],
         },
       },
-      DEFAULT_PAYOUT_CONFIG
+      {
+        ownerBps: 9000,
+        platformBps: 500,
+        partnerBps: 500,
+        superAffiliateBps: 0,
+        partner: partner.address,
+        superAffiliate: ZERO,
+        ownerAltPayout: ownerAltPayout.address,
+      }
     );
 
     const result = await newCollection.wait();
@@ -982,13 +976,14 @@ describe("Factory", function () {
       start: ethers.BigNumber.from(Math.floor(Date.now() / 1000)),
       end: 0,
       limit: 300,
-      maxSupply: 5000,
+      maxSupply: DEFAULT_CONFIG.maxSupply,
       unitSize: 0,
-      tokenIdsExcluded: [],
       tokenAddress: ZERO,
+      tokenIdsExcluded: [],
     });
 
     const { seedHash, seed, signature } = await generateSeedHash();
+
     await nft
       .connect(accountZero)
       .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", seedHash, {
@@ -997,44 +992,69 @@ describe("Factory", function () {
 
     await expect(await nft.ownerBalance()).to.equal(ethers.utils.parseEther("0.1")); // 100%
 
-    // withdraw to split
-    await nft.connect(owner).withdraw();
-
-    // approve alt owner to withdraw
-    await archetypePayouts.connect(owner).approveWithdrawal(ownerAltPayout.address, true);
-
-    // first scenario - owner withdraws to alt payout.
+    // withdraw
 
     let balance = await ethers.provider.getBalance(ownerAltPayout.address);
-    await archetypePayouts.connect(owner).withdrawFrom(owner.address, ownerAltPayout.address);
-    // check that eth was sent to alt address
+
+    await nft.connect(owner).withdraw();
+
+    // owner share will go directly to owner alt
     let diff =
       (await ethers.provider.getBalance(ownerAltPayout.address)).toBigInt() - balance.toBigInt();
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.094"))); // leave room for gas
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.095")));
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.089"))); // leave room for gas
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.090")));
+
+    // rest will go to payout contract
+    await expect(await archetypePayouts.balance(owner.address)).to.equal(
+      ethers.utils.parseEther("0")
+    );
+    await expect(await archetypePayouts.balance(ownerAltPayout.address)).to.equal(
+      ethers.utils.parseEther("0")
+    );
+    await expect(await archetypePayouts.balance(platform.address)).to.equal(
+      ethers.utils.parseEther("0.005")
+    );
+    await expect(await archetypePayouts.balance(partner.address)).to.equal(
+      ethers.utils.parseEther("0.005")
+    );
 
     const {
       seedHash: seedHashTwo,
       seed: seedTwo,
       signature: signatureTwo,
     } = await generateSeedHash();
+
     await nft
       .connect(accountZero)
       .mint({ key: ethers.constants.HashZero, proof: [] }, 1, ZERO, "0x", seedHashTwo, {
         value: ethers.utils.parseEther("0.1"),
       });
 
-    await nft.connect(owner).withdraw();
+    await nft.connect(ownerAltPayout).withdraw();
 
-    // second scenario - owner alt withdraws to himself.
-
-    balance = await ethers.provider.getBalance(ownerAltPayout.address);
-    await archetypePayouts.connect(owner).withdrawFrom(owner.address, ownerAltPayout.address);
-    // check that eth was sent to alt address
+    // owner share will go directly to owner alt
     diff =
       (await ethers.provider.getBalance(ownerAltPayout.address)).toBigInt() - balance.toBigInt();
-    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.094"))); // leave room for gas
-    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.095")));
+
+    expect(Number(diff)).to.greaterThan(Number(ethers.utils.parseEther("0.179"))); // leave room for gas
+    expect(Number(diff)).to.lessThanOrEqual(Number(ethers.utils.parseEther("0.18")));
+
+    // rest will go to payout contract
+    await expect(await archetypePayouts.balance(owner.address)).to.equal(
+      ethers.utils.parseEther("0")
+    );
+    await expect(await archetypePayouts.balance(ownerAltPayout.address)).to.equal(
+      ethers.utils.parseEther("0")
+    );
+    await expect(await archetypePayouts.balance(platform.address)).to.equal(
+      ethers.utils.parseEther("0.01")
+    );
+    await expect(await archetypePayouts.balance(partner.address)).to.equal(
+      ethers.utils.parseEther("0.01")
+    );
+
+    await nft.connect(owner).setOwnerAltPayout(ethers.constants.AddressZero);
+    await expect(nft.connect(ownerAltPayout).withdraw()).to.be.revertedWith("NotShareholder");
   });
 
   // it("allow token owner to store msg", async function () {

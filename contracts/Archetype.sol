@@ -92,8 +92,7 @@ contract Archetype is Initializable, ERC1155Upgradeable, OwnableUpgradeable, ERC
     uint256 totalShares = payoutConfig_.ownerBps +
       payoutConfig_.platformBps +
       payoutConfig_.partnerBps +
-      payoutConfig_.superAffiliateBps +
-      payoutConfig_.superAffiliateTwoBps;
+      payoutConfig_.superAffiliateBps;
 
     if (payoutConfig_.platformBps < 250 || totalShares != 10000) {
       revert InvalidSplitShares();
@@ -405,6 +404,18 @@ contract Archetype is Initializable, ERC1155Upgradeable, OwnableUpgradeable, ERC
   function lockDiscounts(string memory password) external _onlyOwner {
     _checkPassword(password);
     options.discountsLocked = true;
+  }
+
+  function setOwnerAltPayout(address ownerAltPayout) external _onlyOwner {
+    if (options.ownerAltPayoutLocked) {
+      revert LockedForever();
+    }
+
+    payoutConfig.ownerAltPayout = ownerAltPayout;
+  }
+
+  function lockOwnerAltPayout() external _onlyOwner {
+    options.ownerAltPayoutLocked = true;
   }
 
   function setMaxBatchSize(uint16 maxBatchSize) external _onlyOwner {

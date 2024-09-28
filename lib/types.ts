@@ -21,8 +21,7 @@ export type IArchetypePayoutConfig = {
   platformBps: number;
   partnerBps: number;
   superAffiliateBps: number;
-  superAffiliateTwoBps: number;
   partner: string;
   superAffiliate: string;
-  superAffiliateTwo: string;
+  ownerAltPayout: string;
 };

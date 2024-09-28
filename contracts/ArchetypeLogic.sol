@@ -84,10 +84,9 @@ struct PayoutConfig {
   uint16 platformBps;
   uint16 partnerBps;
   uint16 superAffiliateBps;
-  uint16 superAffiliateTwoBps;
   address partner;
   address superAffiliate;
-  address superAffiliateTwo;
+  address ownerAltPayout;
 }
 
 struct Options {
@@ -375,7 +374,7 @@ library ArchetypeLogic {
         msgSender == PLATFORM ||
         msgSender == payoutConfig.partner ||
         msgSender == payoutConfig.superAffiliate ||
-        msgSender == payoutConfig.superAffiliateTwo
+        msgSender == payoutConfig.ownerAltPayout
       ) {
         wad = _ownerBalance[tokenAddress];
         _ownerBalance[tokenAddress] = 0;
@@ -387,29 +386,66 @@ library ArchetypeLogic {
         revert BalanceEmpty();
       }
 
-      address[] memory recipients = new address[](5);
-      recipients[0] = owner;
-      recipients[1] = PLATFORM;
-      recipients[2] = payoutConfig.partner;
-      recipients[3] = payoutConfig.superAffiliate;
-      recipients[4] = payoutConfig.superAffiliateTwo;
+      if (payoutConfig.ownerAltPayout == address(0)) {
+        address[] memory recipients = new address[](4);
+        recipients[0] = owner;
+        recipients[1] = PLATFORM;
+        recipients[2] = payoutConfig.partner;
+        recipients[3] = payoutConfig.superAffiliate;
 
-      uint16[] memory splits = new uint16[](5);
-      splits[0] = payoutConfig.ownerBps;
-      splits[1] = payoutConfig.platformBps;
-      splits[2] = payoutConfig.partnerBps;
-      splits[3] = payoutConfig.superAffiliateBps;
-      splits[4] = payoutConfig.superAffiliateTwoBps;
+        uint16[] memory splits = new uint16[](4);
+        splits[0] = payoutConfig.ownerBps;
+        splits[1] = payoutConfig.platformBps;
+        splits[2] = payoutConfig.partnerBps;
+        splits[3] = payoutConfig.superAffiliateBps;
 
-      if (tokenAddress == address(0)) {
-        ArchetypePayouts(PAYOUTS).updateBalances{ value: wad }(
-          wad,
-          tokenAddress,
-          recipients,
-          splits
-        );
+        if (tokenAddress == address(0)) {
+          ArchetypePayouts(PAYOUTS).updateBalances{ value: wad }(
+            wad,
+            tokenAddress,
+            recipients,
+            splits
+          );
+        } else {
+          ArchetypePayouts(PAYOUTS).updateBalances(wad, tokenAddress, recipients, splits);
+        }
       } else {
-        ArchetypePayouts(PAYOUTS).updateBalances(wad, tokenAddress, recipients, splits);
+        uint256 ownerShare = (uint256(wad) * payoutConfig.ownerBps) / 10000;
+        uint256 remainingShare = wad - ownerShare;
+
+        if (tokenAddress == address(0)) {
+          (bool success, ) = payable(payoutConfig.ownerAltPayout).call{ value: ownerShare }("");
+          if (!success) revert TransferFailed();
+        } else {
+          IERC20(tokenAddress).transfer(payoutConfig.ownerAltPayout, ownerShare);
+        }
+
+        address[] memory recipients = new address[](3);
+        recipients[0] = PLATFORM;
+        recipients[1] = payoutConfig.partner;
+        recipients[2] = payoutConfig.superAffiliate;
+
+        uint16[] memory splits = new uint16[](3);
+        uint16 remainingBps = 10000 - payoutConfig.ownerBps;
+        splits[1] = uint16((uint256(payoutConfig.partnerBps) * 10000) / remainingBps);
+        splits[2] = uint16((uint256(payoutConfig.superAffiliateBps) * 10000) / remainingBps);
+        splits[0] = 10000 - splits[1] - splits[2];
+
+        if (tokenAddress == address(0)) {
+          ArchetypePayouts(PAYOUTS).updateBalances{ value: remainingShare }(
+            remainingShare,
+            tokenAddress,
+            recipients,
+            splits
+          );
+        } else {
+          ArchetypePayouts(PAYOUTS).updateBalances(
+            remainingShare,
+            tokenAddress,
+            recipients,
+            splits
+          );
+        }
       }
       emit Withdrawal(msgSender, tokenAddress, wad);
     }
