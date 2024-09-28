@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ArchetypeLogic v0.7.0
+// ArchetypeLogic v0.8.0
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -82,6 +82,7 @@ struct PayoutConfig {
   uint16 superAffiliateBps;
   address partner;
   address superAffiliate;
+  address ownerAltPayout;
 }
 
 struct Options {
@@ -117,13 +118,15 @@ struct Invite {
   bool isBlacklist;
 }
 
-struct BurnConfig {
-  IERC721 archetype;
+struct BurnInvite {
+  IERC721 burnErc721;
   address burnAddress;
-  bool enabled;
+  address tokenAddress;
+  uint128 price; // flat price - does not support discounts
   bool reversed; // side of the ratio (false=burn {ratio} get 1, true=burn 1 get {ratio})
   uint16 ratio;
-  uint64 start;
+  uint32 start;
+  uint32 end;
   uint64 limit;
 }
 
@@ -147,6 +150,7 @@ library ArchetypeLogic {
   // EVENTS
   //
   event Invited(bytes32 indexed key, bytes32 indexed cid);
+  event BurnInvited(bytes32 indexed key, bytes32 indexed cid);
   event Referral(address indexed affiliate, address token, uint128 wad, uint256 numMints);
   event Withdrawal(address indexed src, address token, uint128 wad);
 
@@ -287,24 +291,30 @@ library ArchetypeLogic {
   }
 
   function validateBurnToMint(
+    BurnInvite storage burnInvite,
     Config storage config,
-    BurnConfig storage burnConfig,
+    Auth calldata auth,
     uint256[] calldata tokenIds,
     uint256 curSupply,
-    mapping(address => mapping(bytes32 => uint256)) storage minted
+    mapping(address => mapping(bytes32 => uint256)) storage minted,
+    uint128 cost
   ) public view {
-    if (!burnConfig.enabled) {
-      revert BurnToMintDisabled();
+    if (burnInvite.limit == 0) {
+      revert MintingPaused();
     }
 
-    if (block.timestamp < burnConfig.start) {
+    if (block.timestamp < burnInvite.start) {
       revert MintNotYetStarted();
+    }
+
+    if (burnInvite.end > burnInvite.start && block.timestamp > burnInvite.end) {
+      revert MintEnded();
     }
 
     // check if msgSender owns tokens and has correct approvals
     address msgSender = _msgSender();
     for (uint256 i; i < tokenIds.length; ) {
-      if (burnConfig.archetype.ownerOf(tokenIds[i]) != msgSender) {
+      if (burnInvite.burnErc721.ownerOf(tokenIds[i]) != msgSender) {
         revert NotTokenOwner();
       }
       unchecked {
@@ -312,28 +322,33 @@ library ArchetypeLogic {
       }
     }
 
-    if (!burnConfig.archetype.isApprovedForAll(msgSender, address(this))) {
+    if (!verify(auth, burnInvite.tokenAddress, msgSender)) {
+      revert WalletUnauthorizedToMint();
+    }
+
+    if (!burnInvite.burnErc721.isApprovedForAll(msgSender, address(this))) {
       revert NotApprovedToTransfer();
     }
 
     uint256 quantity;
-    if (burnConfig.reversed) {
-      quantity = tokenIds.length * burnConfig.ratio;
+    if (burnInvite.reversed) {
+      quantity = tokenIds.length * burnInvite.ratio;
     } else {
-      if (tokenIds.length % burnConfig.ratio != 0) {
+      if (tokenIds.length % burnInvite.ratio != 0) {
         revert InvalidAmountOfTokens();
       }
-      quantity = tokenIds.length / burnConfig.ratio;
+      quantity = tokenIds.length / burnInvite.ratio;
     }
 
     if (quantity > config.maxBatchSize) {
       revert MaxBatchSizeExceeded();
     }
 
-    if (burnConfig.limit < config.maxSupply) {
-      uint256 totalAfterMint = minted[msgSender][bytes32("burn")] + quantity;
+    if (burnInvite.limit < config.maxSupply) {
+      uint256 totalAfterMint = minted[msgSender][keccak256(abi.encodePacked("burn", auth.key))] +
+        quantity;
 
-      if (totalAfterMint > burnConfig.limit) {
+      if (totalAfterMint > burnInvite.limit) {
         revert NumberOfMintsExceeded();
       }
     }
@@ -341,10 +356,29 @@ library ArchetypeLogic {
     if ((curSupply + quantity) > config.maxSupply) {
       revert MaxSupplyExceeded();
     }
+
+    if (burnInvite.tokenAddress != address(0)) {
+      IERC20 erc20Token = IERC20(burnInvite.tokenAddress);
+      if (erc20Token.allowance(msgSender, address(this)) < cost) {
+        revert NotApprovedToTransfer();
+      }
+
+      if (erc20Token.balanceOf(msgSender) < cost) {
+        revert Erc20BalanceTooLow();
+      }
+
+      if (msg.value != 0) {
+        revert ExcessiveEthSent();
+      }
+    } else {
+      if (msg.value < cost) {
+        revert InsufficientEthSent();
+      }
+    }
   }
 
   function updateBalances(
-    DutchInvite storage i,
+    address tokenAddress,
     Config storage config,
     mapping(address => uint128) storage _ownerBalance,
     mapping(address => mapping(address => uint128)) storage _affiliateBalance,
@@ -352,8 +386,6 @@ library ArchetypeLogic {
     uint256 quantity,
     uint128 value
   ) public {
-    address tokenAddress = i.tokenAddress;
-
     uint128 affiliateWad;
     if (affiliate != address(0)) {
       affiliateWad = (value * config.affiliateFee) / 10000;
@@ -422,7 +454,8 @@ library ArchetypeLogic {
         msgSender == owner ||
         msgSender == PLATFORM ||
         msgSender == payoutConfig.partner ||
-        msgSender == payoutConfig.superAffiliate
+        msgSender == payoutConfig.superAffiliate ||
+        msgSender == payoutConfig.ownerAltPayout
       ) {
         wad = _ownerBalance[tokenAddress];
         _ownerBalance[tokenAddress] = 0;
@@ -434,27 +467,66 @@ library ArchetypeLogic {
         revert BalanceEmpty();
       }
 
-      address[] memory recipients = new address[](4);
-      recipients[0] = owner;
-      recipients[1] = PLATFORM;
-      recipients[2] = payoutConfig.partner;
-      recipients[3] = payoutConfig.superAffiliate;
+      if (payoutConfig.ownerAltPayout == address(0)) {
+        address[] memory recipients = new address[](4);
+        recipients[0] = owner;
+        recipients[1] = PLATFORM;
+        recipients[2] = payoutConfig.partner;
+        recipients[3] = payoutConfig.superAffiliate;
 
-      uint16[] memory splits = new uint16[](4);
-      splits[0] = payoutConfig.ownerBps;
-      splits[1] = payoutConfig.platformBps;
-      splits[2] = payoutConfig.partnerBps;
-      splits[3] = payoutConfig.superAffiliateBps;
+        uint16[] memory splits = new uint16[](4);
+        splits[0] = payoutConfig.ownerBps;
+        splits[1] = payoutConfig.platformBps;
+        splits[2] = payoutConfig.partnerBps;
+        splits[3] = payoutConfig.superAffiliateBps;
 
-      if (tokenAddress == address(0)) {
-        ArchetypePayouts(PAYOUTS).updateBalances{ value: wad }(
-          wad,
-          tokenAddress,
-          recipients,
-          splits
-        );
+        if (tokenAddress == address(0)) {
+          ArchetypePayouts(PAYOUTS).updateBalances{ value: wad }(
+            wad,
+            tokenAddress,
+            recipients,
+            splits
+          );
+        } else {
+          ArchetypePayouts(PAYOUTS).updateBalances(wad, tokenAddress, recipients, splits);
+        }
       } else {
-        ArchetypePayouts(PAYOUTS).updateBalances(wad, tokenAddress, recipients, splits);
+        uint256 ownerShare = (uint256(wad) * payoutConfig.ownerBps) / 10000;
+        uint256 remainingShare = wad - ownerShare;
+
+        if (tokenAddress == address(0)) {
+          (bool success, ) = payable(payoutConfig.ownerAltPayout).call{ value: ownerShare }("");
+          if (!success) revert TransferFailed();
+        } else {
+          IERC20(tokenAddress).transfer(payoutConfig.ownerAltPayout, ownerShare);
+        }
+
+        address[] memory recipients = new address[](3);
+        recipients[0] = PLATFORM;
+        recipients[1] = payoutConfig.partner;
+        recipients[2] = payoutConfig.superAffiliate;
+
+        uint16[] memory splits = new uint16[](3);
+        uint16 remainingBps = 10000 - payoutConfig.ownerBps;
+        splits[1] = uint16((uint256(payoutConfig.partnerBps) * 10000) / remainingBps);
+        splits[2] = uint16((uint256(payoutConfig.superAffiliateBps) * 10000) / remainingBps);
+        splits[0] = 10000 - splits[1] - splits[2];
+
+        if (tokenAddress == address(0)) {
+          ArchetypePayouts(PAYOUTS).updateBalances{ value: remainingShare }(
+            remainingShare,
+            tokenAddress,
+            recipients,
+            splits
+          );
+        } else {
+          ArchetypePayouts(PAYOUTS).updateBalances(
+            remainingShare,
+            tokenAddress,
+            recipients,
+            splits
+          );
+        }
       }
       emit Withdrawal(msgSender, tokenAddress, wad);
     }

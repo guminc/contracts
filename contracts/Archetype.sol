@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.7.0
+// Archetype v0.8.0
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -34,6 +34,7 @@ contract Archetype is
   // EVENTS
   //
   event Invited(bytes32 indexed key, bytes32 indexed cid);
+  event BurnInvited(bytes32 indexed key, bytes32 indexed cid);
   event Referral(address indexed affiliate, address token, uint128 wad, uint256 numMints);
   event Withdrawal(address indexed src, address token, uint128 wad);
 
@@ -41,6 +42,7 @@ contract Archetype is
   // VARIABLES
   //
   mapping(bytes32 => DutchInvite) public invites;
+  mapping(bytes32 => BurnInvite) public burnInvites;
   mapping(address => mapping(bytes32 => uint256)) private _minted;
   mapping(bytes32 => uint256) private _listSupply;
   mapping(address => uint128) private _ownerBalance;
@@ -48,7 +50,6 @@ contract Archetype is
 
   Config public config;
   PayoutConfig public payoutConfig;
-  BurnConfig public burnConfig;
   Options public options;
 
   //
@@ -171,7 +172,7 @@ contract Archetype is
     }
 
     ArchetypeLogic.updateBalances(
-      invite,
+      invite.tokenAddress,
       config,
       _ownerBalance,
       _affiliateBalance,
@@ -231,7 +232,7 @@ contract Archetype is
     }
 
     ArchetypeLogic.updateBalances(
-      i,
+      i.tokenAddress,
       config,
       _ownerBalance,
       _affiliateBalance,
@@ -245,28 +246,45 @@ contract Archetype is
     }
   }
 
-  function burnToMint(uint256[] calldata tokenIds) external {
+  function burnToMint(Auth calldata auth, uint256[] calldata tokenIds) external payable {
+    BurnInvite storage burnInvite = burnInvites[auth.key];
+
     uint256 curSupply = _totalMinted();
-    ArchetypeLogic.validateBurnToMint(config, burnConfig, tokenIds, curSupply, _minted);
+    uint128 cost = burnInvite.price;
+    ArchetypeLogic.validateBurnToMint(burnInvite, config, auth, tokenIds, curSupply, _minted, cost);
 
     address msgSender = _msgSender();
     for (uint256 i; i < tokenIds.length; ) {
-      address burnAddress = burnConfig.burnAddress != address(0)
-        ? burnConfig.burnAddress
+      address burnAddress = burnInvite.burnAddress != address(0)
+        ? burnInvite.burnAddress
         : address(0x000000000000000000000000000000000000dEaD);
-      burnConfig.archetype.transferFrom(msgSender, burnAddress, tokenIds[i]);
+      burnInvite.burnErc721.transferFrom(msgSender, burnAddress, tokenIds[i]);
       unchecked {
         ++i;
       }
     }
 
-    uint256 quantity = burnConfig.reversed
-      ? tokenIds.length * burnConfig.ratio
-      : tokenIds.length / burnConfig.ratio;
+    uint256 quantity = burnInvite.reversed
+      ? tokenIds.length * burnInvite.ratio
+      : tokenIds.length / burnInvite.ratio;
     _mint(msgSender, quantity);
 
-    if (burnConfig.limit < config.maxSupply) {
-      _minted[msgSender][bytes32("burn")] += quantity;
+    if (burnInvite.limit < config.maxSupply) {
+      _minted[msgSender][keccak256(abi.encodePacked("burn", auth.key))] += quantity;
+    }
+
+    ArchetypeLogic.updateBalances(
+      burnInvite.tokenAddress,
+      config,
+      _ownerBalance,
+      _affiliateBalance,
+      address(0), // burn to mint does not support affiliates
+      quantity,
+      cost
+    );
+
+    if (msg.value > cost) {
+      _refund(_msgSender(), msg.value - cost);
     }
   }
 
@@ -439,6 +457,18 @@ contract Archetype is
     options.discountsLocked = true;
   }
 
+  function setOwnerAltPayout(address ownerAltPayout) external _onlyOwner {
+    if (options.ownerAltPayoutLocked) {
+      revert LockedForever();
+    }
+
+    payoutConfig.ownerAltPayout = ownerAltPayout;
+  }
+
+  function lockOwnerAltPayout() external _onlyOwner {
+    options.ownerAltPayoutLocked = true;
+  }
+
   function setMaxBatchSize(uint32 maxBatchSize) external _onlyOwner {
     config.maxBatchSize = maxBatchSize;
   }
@@ -490,35 +520,16 @@ contract Archetype is
     emit Invited(_key, _cid);
   }
 
-  function enableBurnToMint(
-    address archetype,
-    address burnAddress,
-    bool reversed,
-    uint16 ratio,
-    uint64 start,
-    uint64 limit
+  function setBurnInvite(
+    bytes32 _key,
+    bytes32 _cid,
+    BurnInvite memory _burnInvite
   ) external _onlyOwner {
-    burnConfig = BurnConfig({
-      archetype: IERC721(archetype),
-      burnAddress: burnAddress,
-      enabled: true,
-      reversed: reversed,
-      ratio: ratio,
-      start: start,
-      limit: limit
-    });
-  }
-
-  function disableBurnToMint() external _onlyOwner {
-    burnConfig = BurnConfig({
-      archetype: IERC721(address(0)),
-      burnAddress: address(0),
-      enabled: false,
-      reversed: false,
-      ratio: 0,
-      start: 0,
-      limit: 0
-    });
+    if (_burnInvite.start < block.timestamp) {
+      _burnInvite.start = uint32(block.timestamp);
+    }
+    burnInvites[_key] = _burnInvite;
+    emit BurnInvited(_key, _cid);
   }
 
   //
