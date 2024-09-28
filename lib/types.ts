@@ -1,12 +1,10 @@
 export type IArchetypeConfig = {
   baseUri: string;
   affiliateSigner: string;
-  ownerAltPayout: string;
-  superAffiliatePayout: string;
+  fulfillmentSigner: string;
   maxSupply: number;
   maxBatchSize: number;
   affiliateFee: number;
-  platformFee: number;
   defaultRoyalty: number;
   discounts: {
     affiliateDiscount: number;
@@ -16,4 +14,14 @@ export type IArchetypeConfig = {
     }[];
   };
   tokenPool: number[];
+};
+
+export type IArchetypePayoutConfig = {
+  ownerBps: number;
+  platformBps: number;
+  partnerBps: number;
+  superAffiliateBps: number;
+  partner: string;
+  superAffiliate: string;
+  ownerAltPayout: string;
 };
