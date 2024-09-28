@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archetype v0.7.1 - ERC1155-Random
+// Archetype v0.8.0 - ERC1155-Random
 //
 //        d8888                 888               888
 //       d88888                 888               888
