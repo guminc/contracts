@@ -11,7 +11,8 @@
     "start": "concurrently \"cd api && npm start\" \"cd app && npm run dev\"",
     "deploy": "npx hardhat run scripts/deployArchetype.ts --network sepolia",
     "network": "npx hardhat node",
-    "verify": "npx hardhat verify 0x17a23A733d7B8206a4F950cFdDbdB56563Ce3b7b --network sepolia"
+    "verify": "npx hardhat verify 0x17a23A733d7B8206a4F950cFdDbdB56563Ce3b7b --network sepolia",
+    "withdraw": "npx hardhat run --network mainnet scripts/getWithdrawable.ts"
   },
   "repository": {
     "type": "git",
