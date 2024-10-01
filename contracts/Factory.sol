@@ -37,14 +37,12 @@ contract Factory is Ownable {
     Config calldata config,
     PayoutConfig calldata payoutConfig
   ) external payable returns (address) {
-    address mirror = address(new DN404Mirror(address(this)));
-
-    address clone = ClonesUpgradeable.clone(archetype);
+    bytes32 salt = keccak256(abi.encodePacked(block.timestamp, msg.sender, block.chainid));
+    address clone = ClonesUpgradeable.cloneDeterministic(archetype, salt);
     Archetype token = Archetype(payable(clone));
-    token.initialize(name, symbol, config, payoutConfig, mirror, _receiver);
+    token.initialize(name, symbol, config, payoutConfig, _receiver);
 
     token.transferOwnership(_receiver);
-    DN404Mirror(payable(mirror)).pullOwner();
 
     if (msg.value > 0) {
       (bool sent, ) = payable(_receiver).call{ value: msg.value }("");

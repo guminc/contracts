@@ -16,12 +16,12 @@
 pragma solidity ^0.8.4;
 
 import "./ArchetypeLogic.sol";
-import "dn404/src/DN404.sol";
+import "dn404/src/DN420.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "solady/src/utils/LibString.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
 
-contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeable {
+contract Archetype is DN420, Initializable, OwnableUpgradeable, ERC2981Upgradeable {
   //
   // EVENTS
   //
@@ -52,13 +52,12 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
     string memory symbol_,
     Config calldata config_,
     PayoutConfig calldata payoutConfig_,
-    address mirror,
     address _receiver
   ) external initializer {
     _name = name_;
     _symbol = symbol_;
 
-    _initializeDN404(0, address(0), mirror);
+    _initializeDN420(0, address(0));
 
     // check max bps not reached and min platform fee.
     if (
@@ -131,7 +130,8 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
       }
       quantity += quantityToAdd;
 
-      _mintNext(toList[i], quantityToAdd * _unit());
+      bytes memory _data;
+      _mintNext(toList[i], quantityToAdd * _unit(), _data);
 
       unchecked {
         ++i;
@@ -219,7 +219,8 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
 
     ArchetypeLogic.validateMint(i, config, auth, _minted, signature, args, cost);
 
-    _mintNext(to, quantity * _unit());
+    bytes memory _data;
+    _mintNext(to, quantity * _unit(), _data);
 
     if (i.limit < i.maxSupply) {
       _minted[_msgSender()][auth.key] += quantity;
@@ -251,7 +252,7 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
     return _symbol;
   }
 
-  function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+  function uri(uint256 tokenId) public view override returns (string memory) {
     if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
     return
@@ -380,30 +381,30 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
     options.affiliateFeeLocked = true;
   }
 
-  function setDiscounts(Discount calldata discounts) external _onlyOwner {
-    if (options.discountsLocked) {
-      revert LockedForever();
-    }
+  // function setDiscounts(Discount calldata discounts) external _onlyOwner {
+  //   if (options.discountsLocked) {
+  //     revert LockedForever();
+  //   }
 
-    if (discounts.affiliateDiscount > MAXBPS) {
-      revert InvalidConfig();
-    }
+  //   if (discounts.affiliateDiscount > MAXBPS) {
+  //     revert InvalidConfig();
+  //   }
 
-    // ensure mint tiers are correctly ordered from highest to lowest.
-    for (uint256 i = 1; i < discounts.mintTiers.length; ) {
-      if (
-        discounts.mintTiers[i].mintDiscount > MAXBPS ||
-        discounts.mintTiers[i].numMints > discounts.mintTiers[i - 1].numMints
-      ) {
-        revert InvalidConfig();
-      }
-      unchecked {
-        ++i;
-      }
-    }
+  //   // ensure mint tiers are correctly ordered from highest to lowest.
+  //   for (uint256 i = 1; i < discounts.mintTiers.length; ) {
+  //     if (
+  //       discounts.mintTiers[i].mintDiscount > MAXBPS ||
+  //       discounts.mintTiers[i].numMints > discounts.mintTiers[i - 1].numMints
+  //     ) {
+  //       revert InvalidConfig();
+  //     }
+  //     unchecked {
+  //       ++i;
+  //     }
+  //   }
 
-    config.discounts = discounts;
-  }
+  //   config.discounts = discounts;
+  // }
 
   function lockDiscounts() external _onlyOwner {
     options.discountsLocked = true;
@@ -460,11 +461,6 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
     emit Invited(_key, _cid);
   }
 
-  function setDefaultRoyalty(address receiver, uint16 feeNumerator) public _onlyOwner {
-    config.defaultRoyalty = feeNumerator;
-    _setDefaultRoyalty(receiver, feeNumerator);
-  }
-
   //
   // INTERNAL
   //
@@ -485,5 +481,27 @@ contract Archetype is DN404, Initializable, OwnableUpgradeable, ERC2981Upgradeab
     if (!success) {
       revert TransferFailed();
     }
+  }
+
+  //ERC2981 ROYALTY
+  function supportsInterface(bytes4 interfaceId)
+    public
+    view
+    virtual
+    override(DN420, ERC2981Upgradeable)
+    returns (bool)
+  {
+    // Supports the following `interfaceId`s:
+    // - IERC165: 0x01ffc9a7
+    // - ERC1155: 0xd9b67a26
+    // - ERC1155MetadataURI: 0x0e89341c
+    // - IERC2981: 0x2a55205a
+    return
+      DN420.supportsInterface(interfaceId) || ERC2981Upgradeable.supportsInterface(interfaceId);
+  }
+
+  function setDefaultRoyalty(address receiver, uint16 feeNumerator) public _onlyOwner {
+    config.defaultRoyalty = feeNumerator;
+    _setDefaultRoyalty(receiver, feeNumerator);
   }
 }
