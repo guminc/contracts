@@ -26,7 +26,7 @@
   "dependencies": {
     "@nomicfoundation/hardhat-verify": "^2.0.4",
     "concurrently": "6.4.0",
-    "dn404": "^0.0.8",
+    "dn404": "^0.0.19",
     "ethereumjs-util": "7.1.4",
     "ipfsh": "0.0.6",
     "solady": "^0.0.19"

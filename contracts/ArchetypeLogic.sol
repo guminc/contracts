@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// ArchetypeLogic v0.7.0 - DN404
+// ArchetypeLogic v0.8.0 - BRG404
 //
 //        d8888                 888               888
 //       d88888                 888               888
@@ -125,7 +125,6 @@ struct ValidationArgs {
 
 // UPDATE CONSTANTS BEFORE DEPLOY
 address constant PLATFORM = 0x86B82972282Dd22348374bC63fd21620F7ED847B;
-address constant DEVVAULT = 0xe9191E06EaA1b32997FFAFB9a2AbBab525518Fa8;
 address constant BATCH = 0xEa49e7bE310716dA66725c84a5127d2F6A202eAf;
 address constant PAYOUTS = 0xaAfdfA4a935d8511bF285af11A0544ce7e4a1199;
 uint16 constant MAXBPS = 5000; // max fee or discount is 50%
