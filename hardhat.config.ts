@@ -9,6 +9,8 @@ import "@nomicfoundation/hardhat-verify";
 import "@nomiclabs/hardhat-truffle5";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
+import "@matterlabs/hardhat-zksync-solc";
+import "@matterlabs/hardhat-zksync-deploy";
 require("hardhat-log-remover");
 require("hardhat-contract-sizer");
 
@@ -43,7 +45,14 @@ const config: HardhatUserConfig = {
   //     },
   //   ],
   // },
-  defaultNetwork: "hardhat",
+  zksolc: {
+    version: "latest",
+    settings: {
+      // find all available options in the official documentation
+      // https://era.zksync.io/docs/tools/hardhat/hardhat-zksync-solc.html#configuration
+    },
+  },
+  defaultNetwork: "abstract_testnet",
   networks: {
     sepolia: {
       accounts: [privateKey],
@@ -112,6 +121,12 @@ const config: HardhatUserConfig = {
       accounts: [privateKey],
       url: "https://polygon-rpc.com",
       chainId: 137,
+    },
+    abstract_testnet: {
+      accounts: [privateKey],
+      url: "https://api.testnet.abs.xyz",
+      chainId: 11124,
+      zksync: true,
     },
     hardhat: {},
   },
