@@ -1,3 +1,5 @@
+## \* Project has been moved to [contracts-archetype](https://github.com/guminc/contracts-archetype)
+
 # Advanced Sample Hardhat Project
 
 This project demonstrates an advanced Hardhat use case, integrating other tools commonly used alongside Hardhat in the ecosystem.
